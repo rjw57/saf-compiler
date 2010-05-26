@@ -1,6 +1,6 @@
 tokeniser_output {
   display: block;
-  background-color: black;
+  background-color: #888888;
   font-family: sans-serif;
 }
 
@@ -9,12 +9,15 @@ file {
   margin: 0.5em;
   color: black;
   background-color: white;
+  border: 1px solid #666666;
+  padding-bottom: 0.25em;
 }
 
 file_name {
   display: block;
   padding: 0.25em 0.5em;
   background-color: #dddddd;
+  border-bottom: 1px solid #666666;
 }
 
 file_name::before {
@@ -24,6 +27,15 @@ file_name::before {
 tokens {
   display: block;
   padding: 0.25em 0.5em;
+}
+
+tokens > line {
+  display: block;
+  height: 1.2em;
+}
+
+tokens > line:nth-child(odd) {
+  background-color: #eeeeee;
 }
 
 token {
@@ -49,6 +61,7 @@ token meta {
   color: #dddddd;
   font-size: 70%;
   font-family: sans-serif;
+  font-style: normal;
   z-index: 1;
 
   -webkit-border-radius: 3px;
@@ -73,6 +86,10 @@ token meta type::before {
 
 token meta location::before {
   content: "loc: ";
+}
+
+token meta value::before {
+  content: "value: ";
 }
 
 token meta location line::after {
@@ -107,21 +124,28 @@ token[type="WHITESPACE"] {
 
 token[type="COMMENT"] {
   color: green;
+  font-style: italic;
 }
 
 token[type="IDENTIFIER"] {
   color: black;
 }
 
+token[type="STRING"] {
+  color: green;
+}
+
 /* reserved words */
 token[type="CALLED"],
+token[type="END"],
 token[type="GIVING"],
 token[type="GOBBET"],
 token[type="IMPLEMENT"],
 token[type="MAKE"],
 token[type="ONLY"],
 token[type="TAKING"],
-token[type="WITH"]
+token[type="WITH"],
+token[type="WHILE"]
 {
   color: blue;
 }

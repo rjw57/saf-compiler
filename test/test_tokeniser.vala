@@ -9,7 +9,7 @@ public static class MainProgram {
 		document.set_root_element(root_node);
 
 		var stylesheet_node = document.new_pi("xml-stylesheet", 
-				"type=\"text/css\" href=\"http://l4.me.uk/~rjw57/temp/tokeniser.css\"");
+				"type=\"text/css\" href=\"tokeniser.css\"");
 		root_node->add_prev_sibling(stylesheet_node);
 
 		for(uint i=1; i<args.length; ++i)
@@ -76,13 +76,29 @@ public static class MainProgram {
 					token_location_node->add_child(token_end_node);
 					token_meta_node->add_child(token_location_node);
 
+					if(token.value.type() != GLib.Type.INVALID) 
+					{
+						string value_desc = token.value.strdup_contents();
+
+						// special case strings...
+						if(token.value.type() == typeof(string)) {
+							value_desc = token.value.get_string();
+						}
+
+						var token_value_node = document.new_node(null, "value");
+						token_value_node->add_child(document.new_text(value_desc));
+						token_meta_node->add_child(token_value_node);
+					}
+
 					tokens_node->add_child(token_node);
 				} while(token.type != Saf.Token.Type.EOF);
 
 				file_node->add_child(tokens_node);
 				root_node->add_child(file_node);
 			} catch (GLib.FileError e) {
-				stderr.printf("File error: %s.\n", e.message);
+				stderr.printf("File error: %s\n", e.message);
+			} catch (Saf.TokeniserError e) {
+				stderr.printf("Tokeniser error: %s\n", e.message);
 			} catch {
 				stderr.printf("Other error\n");
 			}
