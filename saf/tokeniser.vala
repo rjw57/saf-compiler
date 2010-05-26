@@ -127,6 +127,8 @@ namespace Saf {
 			}
 
 			// update the current character string.
+			int req_len = current_char.to_utf8(null);
+			current_char_str = string.nfill(req_len, '\0');
 			current_char.to_utf8(current_char_str);
 
 			// increment the consumed character count.
