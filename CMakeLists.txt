@@ -21,4 +21,7 @@ list(APPEND CMAKE_MODULE_PATH
 # Compile the SAF language
 add_subdirectory(saf)
 
+# Compile the test programs
+add_subdirectory(test)
+
 # vim:sw=4:ts=4:autoindent
