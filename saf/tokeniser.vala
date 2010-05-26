@@ -79,6 +79,7 @@ namespace Saf {
 		private bool			is_at_eof = false;
 		private Map<string, Token.Type>
 								symbol_map = new HashMap<string, Token.Type>();
+		private bool			last_char_was_break = false;
 
 		public Tokeniser(IOChannel _io_channel)
 		{
@@ -127,14 +128,19 @@ namespace Saf {
 				throw new TokeniserError.EOF("End of file reached.");
 			}
 
+			if(last_char_was_break) {
+				last_char_was_break = false;
+				current_location.column = 1;
+				++current_location.line;
+			}
+
 			// increment the column count.
 			++current_location.column;
 
 			// if the next character is a line break, increment line number and
 			// reset column count to 0.
 			if(current_char.isspace() && is_line_break(current_char)) {
-				current_location.column = 0;
-				++current_location.line;
+				last_char_was_break = true;
 			}
 
 			// update the current character string.
