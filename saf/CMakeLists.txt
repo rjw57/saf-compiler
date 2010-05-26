@@ -36,16 +36,19 @@ link_directories(${GEE_LIBRARY_DIRS})
 include_directories(${GEE_INCLUDE_DIRS})
 
 vala_precompile(_saf_vala_c_sources
-	main.vala
 	tokeniser.vala
 CUSTOM_VAPIS
 	LLVM.vapi
+GENERATE_VAPI
+	saf
+GENERATE_HEADER
+	saf
 PACKAGES
 	posix
 	gee-1.0
 )
 
-add_executable("saf" ${_saf_vala_c_sources})
-set_target_properties("saf" PROPERTIES LINKER_LANGUAGE CXX)
+add_library(saf SHARED ${_saf_vala_c_sources})
+set_target_properties(saf PROPERTIES LINKER_LANGUAGE CXX)
 
 # vim:sw=4:ts=4:autoindent
