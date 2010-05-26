@@ -305,14 +305,6 @@ namespace Saf {
 			unichar quote_char = "\"".get_char();
 			unichar escape_char = "\\".get_char();
 
-			if(current_char != escape_char)
-				return;
-
-			// consume the escape sequence
-			token.end = current_location;
-			token.text += current_char_str;
-			get_next_char();
-
 			if((current_char == quote_char) || (current_char == escape_char)) {
 				token.end = current_location;
 				token.text += current_char_str;
@@ -344,6 +336,7 @@ namespace Saf {
 					token.text += current_char_str;
 
 					if(current_char == escape_char) {
+						get_next_char();
 						consume_escape_sequence(ref token, ref string_val);
 					} else {
 						string_val += current_char_str;
