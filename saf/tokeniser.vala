@@ -20,8 +20,9 @@ namespace Saf {
 		{
 			/* special types */
 			NONE,
-			CHARACTER,
 			EOF,
+			CHARACTER,
+			STRING,     /* a string literal, value is the parsed form */
 
 			/* numbers */
 			INTEGER, 	/* value is a uin64 */
@@ -36,6 +37,7 @@ namespace Saf {
 
 			/* reserved words */
 			CALLED,
+			END,
 			GIVING,
 			GOBBET,
 			IMPLEMENT,
@@ -43,6 +45,7 @@ namespace Saf {
 			ONLY,
 			TAKING,
 			WITH,
+			WHILE,
 		}
 
 		public Location start;
@@ -61,6 +64,7 @@ namespace Saf {
 	errordomain TokeniserError
 	{
 		EOF,
+		INVALID_TOKEN,
 	}
 
 	public class Tokeniser
@@ -79,6 +83,7 @@ namespace Saf {
 			io_channel = _io_channel;
 
 			symbol_map.set("called", Token.Type.CALLED);
+			symbol_map.set("end", Token.Type.END);
 			symbol_map.set("giving", Token.Type.GIVING);
 			symbol_map.set("gobbet", Token.Type.GOBBET);
 			symbol_map.set("implement", Token.Type.IMPLEMENT);
@@ -86,6 +91,7 @@ namespace Saf {
 			symbol_map.set("only", Token.Type.ONLY);
 			symbol_map.set("taking", Token.Type.TAKING);
 			symbol_map.set("with", Token.Type.WITH);
+			symbol_map.set("while", Token.Type.WHILE);
 		}
 
 		private bool is_line_break(unichar c)
@@ -139,7 +145,7 @@ namespace Saf {
 			return current_char;
 		}
 
-		private Token? consume_white_space() throws ConvertError, IOChannelError
+		private Token? consume_white_space() throws ConvertError, IOChannelError, TokeniserError
 		{
 			if(!current_char.isspace())
 				return null;
@@ -159,13 +165,13 @@ namespace Saf {
 				if(e is TokeniserError.EOF)
 					is_at_eof = true;
 				else
-					assert(false);
+					throw e;
 			}
 
 			return token;
 		}
 
-		private Token? consume_identifier() throws ConvertError, IOChannelError
+		private Token? consume_identifier() throws ConvertError, IOChannelError, TokeniserError
 		{
 			if(!is_identifier_start(current_char))
 				return null;
@@ -185,13 +191,13 @@ namespace Saf {
 				if(e is TokeniserError.EOF)
 					is_at_eof = true;
 				else
-					assert(false);
+					throw e;
 			}
 
 			return token;
 		}
 
-		private Token? consume_comment() throws ConvertError, IOChannelError
+		private Token? consume_comment() throws ConvertError, IOChannelError, TokeniserError
 		{
 			if(!is_single_line_comment_start(current_char))
 				return null;
@@ -211,13 +217,13 @@ namespace Saf {
 				if(e is TokeniserError.EOF)
 					is_at_eof = true;
 				else
-					assert(false);
+					throw e;
 			}
 
 			return token;
 		}
 
-		private Token? consume_number() throws ConvertError, IOChannelError
+		private Token? consume_number() throws ConvertError, IOChannelError, TokeniserError
 		{
 			if(!current_char.isdigit())
 				return null;
@@ -237,7 +243,7 @@ namespace Saf {
 				if(e is TokeniserError.EOF)
 					is_at_eof = true;
 				else
-					assert(false);
+					throw e;
 			}
 
 			// if the next token is a decimal point, we've got a float
@@ -259,7 +265,7 @@ namespace Saf {
 					if(e is TokeniserError.EOF)
 						is_at_eof = true;
 					else
-						assert(false);
+						throw e;
 				}
 			}
 
@@ -274,7 +280,76 @@ namespace Saf {
 			return token;
 		}
 
-		public Token get_next_token() throws ConvertError, IOChannelError
+		private void consume_escape_sequence(ref Token token, ref string string_val) 
+			throws ConvertError, IOChannelError, TokeniserError
+		{
+			unichar quote_char = "\"".get_char();
+			unichar escape_char = "\\".get_char();
+
+			if(current_char != escape_char)
+				return;
+
+			// consume the escape sequence
+			token.end = current_location;
+			token.text += current_char_str;
+			get_next_char();
+
+			if((current_char == quote_char) || (current_char == escape_char)) {
+				token.end = current_location;
+				token.text += current_char_str;
+				string_val += current_char_str;
+				get_next_char();
+			} else {
+				throw new TokeniserError.INVALID_TOKEN("Invalid escape character: '%s'", 
+						current_char_str);
+			}
+		}
+
+		private Token? consume_string() throws ConvertError, IOChannelError, TokeniserError
+		{
+			unichar quote_char = "\"".get_char();
+			unichar escape_char = "\\".get_char();
+
+			if(current_char != quote_char)
+				return null;
+
+			var token = new Token(current_location, current_location,
+					Token.Type.STRING, current_char_str);
+			
+			var string_val = "";
+
+			try {
+				get_next_char();
+				while(current_char != quote_char) {
+					token.end = current_location;
+					token.text += current_char_str;
+
+					if(current_char == escape_char) {
+						consume_escape_sequence(ref token, ref string_val);
+					} else {
+						string_val += current_char_str;
+						get_next_char();
+					}
+				}
+
+				// and suck up quote
+				token.end = current_location;
+				token.text += current_char_str;
+				get_next_char();
+			} catch (TokeniserError e) {
+				/* silently ignore EOF */
+				if(e is TokeniserError.EOF)
+					is_at_eof = true;
+				else
+					throw e;
+			}
+
+			token.value = string_val;
+
+			return token;
+		}
+
+		public Token get_next_token() throws ConvertError, IOChannelError, TokeniserError
 		{
 			// If necessary, 'prime' the tokeniser by getting the first
 			// character from the stream.
@@ -300,6 +375,14 @@ namespace Saf {
 				var ws_token = consume_white_space();
 				assert(ws_token != null);
 				return ws_token;
+			}
+
+			// suck up any strings
+			if(current_char == "\"".get_char())
+			{
+				var string_token = consume_string();
+				assert(string_token != null);
+				return string_token;
 			}
 
 			// suck up any comments
@@ -346,7 +429,7 @@ namespace Saf {
 				if(e is TokeniserError.EOF)
 					is_at_eof = true;
 				else
-					assert(false);
+					throw e;
 			}
 
 			return token;

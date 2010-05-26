@@ -11,8 +11,8 @@ gobbet power taking number, exponent giving result:
     make times_count = times_count + 1;
     end while power loop;
 
-print "The square of 4 is " + implement square with A = 4;
-print "The square of 5 is " + implement square with A = 5;
+print "The \"square\" of 4 is " + implement square with A = 4;
+print "The \"square\" of 5 is " + implement square with A = 5;
 print "Raising 3 to the power of 4 is " + implement power with number = 3, exponent = 4;
 
 make does_not_ツ_look_like_a_smiley = 4;
