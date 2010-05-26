@@ -61,6 +61,16 @@ namespace Saf {
 		{
 			start = _start; end = _end; text = _text; type = _type;
 		}
+
+		public bool is_whitespace()
+		{
+			return (type >= Type.WHITESPACE) && (type <= Type.LINE_BREAK);
+		}
+
+		public bool is_reserved_word()
+		{
+			return (type >= Type.CALLED) && (type <= Type.WHILE);
+		}
 	}
 
 	errordomain TokeniserError
