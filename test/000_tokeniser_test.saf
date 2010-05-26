@@ -17,5 +17,9 @@ print "Raising 3 to the power of 4 is " + implement power with number = 3, expon
 
 make does_not_ツ_look_like_a_smiley = 4;
 
+if a ≥ 5:
+  make foo = 5;
+end if;
+
 make A = 43;
 make B = 3.4;
