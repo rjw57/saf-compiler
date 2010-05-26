@@ -1,0 +1,127 @@
+tokeniser_output {
+  display: block;
+  background-color: black;
+  font-family: sans-serif;
+}
+
+file {
+  display: block;
+  margin: 0.5em;
+  color: black;
+  background-color: white;
+}
+
+file_name {
+  display: block;
+  padding: 0.25em 0.5em;
+  background-color: #dddddd;
+}
+
+file_name::before {
+  content: "File: ";
+}
+
+tokens {
+  display: block;
+  padding: 0.25em 0.5em;
+}
+
+token {
+  white-space: pre;
+  font-family: monospace;
+  position: relative;
+  color: red; /* if we see any red tokens, we're in trouble */
+}
+
+token:hover {
+  background-color: #dddddd;
+}
+
+token meta {
+  display: block;
+  visibility: hidden;
+  position: absolute;
+  top: 1.75em;
+  left: 0;
+  padding: 0.25em 0.5em;
+  background-color: #333333;
+  opacity: 0.8;
+  color: #dddddd;
+  font-size: 70%;
+  font-family: sans-serif;
+  z-index: 1;
+
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+}
+
+token meta {
+  content: string(token-type);
+}
+
+token meta > *::after {
+  content: ", ";
+}
+
+token meta > *:last-child::after {
+  content: "";
+}
+
+token meta type::before {
+  content: "type: ";
+}
+
+token meta location::before {
+  content: "loc: ";
+}
+
+token meta location line::after {
+  content: ":"; 
+}
+
+token meta location start::after {
+  content: " - "; 
+}
+
+token:hover meta {
+  visibility: visible;
+}
+
+token[type="CHARACTER"] {
+  color: #996600;
+}
+
+token[type="INTEGER"] {
+  color: black;
+  background-color: #ccffcc;
+}
+
+token[type="REAL"] {
+  color: black;
+  background-color: #ccccff;
+}
+
+token[type="WHITESPACE"] {
+  color: red;
+}
+
+token[type="COMMENT"] {
+  color: green;
+}
+
+token[type="IDENTIFIER"] {
+  color: black;
+}
+
+/* reserved words */
+token[type="CALLED"],
+token[type="GIVING"],
+token[type="GOBBET"],
+token[type="IMPLEMENT"],
+token[type="MAKE"],
+token[type="ONLY"],
+token[type="TAKING"],
+token[type="WITH"]
+{
+  color: blue;
+}
