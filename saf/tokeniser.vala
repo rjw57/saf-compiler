@@ -31,6 +31,7 @@ namespace Saf {
 			/* whitespace */
 			WHITESPACE,
 			COMMENT,
+			LINE_BREAK,
 
 			/* identifier */
 			IDENTIFIER,
@@ -157,7 +158,7 @@ namespace Saf {
 
 			try {
 				get_next_char();
-				while(current_char.isspace()) {
+				while(current_char.isspace() && !is_line_break(current_char)) {
 					token.end = current_location;
 					token.text += current_char_str;
 					get_next_char();
@@ -372,7 +373,7 @@ namespace Saf {
 
 			// if the current character is white space, skip until we get
 			// something non WS.
-			if(current_char.isspace())
+			if(current_char.isspace() && !is_line_break(current_char))
 			{
 				var ws_token = consume_white_space();
 				assert(ws_token != null);
@@ -422,6 +423,11 @@ namespace Saf {
 			// single character.
 			var token = new Token(current_location, current_location, 
 					Token.Type.CHARACTER, current_char_str);
+
+			// this is actually a line break.
+			if(current_char.isspace() && is_line_break(current_char)) {
+				token.type = Token.Type.LINE_BREAK;
+			}
 
 			// advance the stream.
 			try {
