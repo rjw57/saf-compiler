@@ -40,6 +40,7 @@ namespace Saf {
 			END,
 			GIVING,
 			GOBBET,
+			IF,
 			IMPLEMENT,
 			MAKE,
 			ONLY,
@@ -86,6 +87,7 @@ namespace Saf {
 			symbol_map.set("end", Token.Type.END);
 			symbol_map.set("giving", Token.Type.GIVING);
 			symbol_map.set("gobbet", Token.Type.GOBBET);
+			symbol_map.set("if", Token.Type.IF);
 			symbol_map.set("implement", Token.Type.IMPLEMENT);
 			symbol_map.set("make", Token.Type.MAKE);
 			symbol_map.set("only", Token.Type.ONLY);
