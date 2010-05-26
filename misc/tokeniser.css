@@ -27,11 +27,26 @@ file_name::before {
 tokens {
   display: block;
   padding: 0.25em 0.5em;
+  counter-reset: line;
+}
+
+tokens > line::before {
+  counter-increment: line;
+  content: counter(line);
+  font-family: monospace;
+  width: 3em;
+  display: block;
+  float: left;
+  text-align: right;
+  padding-right: 1em;
+  font-size: 75%;
+  padding-top: 0.5em;
+  color: #888888;
 }
 
 tokens > line {
   display: block;
-  height: 1.2em;
+  min-height: 1.2em;
 }
 
 tokens > line:nth-child(odd) {

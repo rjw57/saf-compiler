@@ -26,18 +26,30 @@ public static class MainProgram {
 
 				var tokens_node = document.new_node(null, "tokens");
 
+				var line_node = document.new_node(null, "line");
+				uint current_line = 1;
+
 				Saf.Token token = null;
 				do {
 					token = tokeniser.get_next_token();
-					string value_str = "";
-					if(token.value.type() != GLib.Type.INVALID)
-						value_str = token.value.strdup_contents();
+
+					// skip EOF
+					if(token.type == Saf.Token.Type.EOF)
+						continue;
+
+					if(token.start.line != current_line) {
+						current_line = token.start.line;
+						tokens_node->add_child(line_node);
+						line_node = document.new_node(null, "line");
+					}
 
 					var token_node = document.new_node(null, "token");
 					token_node->set_prop("type",
 							token.type.to_string().replace("SAF_TOKEN_TYPE_",""));
 
-					token_node->add_child(document.new_text(token.text));
+					// special case line breaks.
+					if(token.type != Saf.Token.Type.LINE_BREAK)
+						token_node->add_child(document.new_text(token.text));
 
 					var token_meta_node = document.new_node(null, "meta");
 					token_node->add_child(token_meta_node);
@@ -90,8 +102,11 @@ public static class MainProgram {
 						token_meta_node->add_child(token_value_node);
 					}
 
-					tokens_node->add_child(token_node);
+					line_node->add_child(token_node);
 				} while(token.type != Saf.Token.Type.EOF);
+
+				if(line_node->child_element_count() > 0)
+					tokens_node->add_child(line_node);
 
 				file_node->add_child(tokens_node);
 				root_node->add_child(file_node);
