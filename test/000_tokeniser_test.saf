@@ -1,0 +1,19 @@
+gobbet square taking A giving B:
+  make B = A * A;
+  end gobbet;
+
+# A Gobbet that'll take a number and raise it to the power of exponent.
+gobbet power taking number, exponent giving result:
+  make result = number;
+  make times_count = 1;
+  while times_count < exponent, called power loop;
+    make result = result * number;
+    make times_count = times_count + 1;
+    end while power loop;
+
+print "The square of 4 is " + implement square with A = 4;
+print "The square of 5 is " + implement square with A = 5;
+print "Raising 3 to the power of 4 is " + implement power with number = 3, exponent = 4;
+
+make A = 43;
+make B = 3.4;

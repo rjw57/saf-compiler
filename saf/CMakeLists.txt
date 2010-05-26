@@ -36,7 +36,8 @@ link_directories(${GEE_LIBRARY_DIRS})
 include_directories(${GEE_INCLUDE_DIRS})
 
 vala_precompile(_saf_vala_c_sources
-	"main.vala"
+	main.vala
+	tokeniser.vala
 CUSTOM_VAPIS
 	LLVM.vapi
 PACKAGES
