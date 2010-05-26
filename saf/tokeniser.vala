@@ -76,7 +76,7 @@ namespace Saf {
 	errordomain TokeniserError
 	{
 		EOF,
-		INVALID_TOKEN,
+		INVALID_ESCAPE,
 	}
 
 	public class Tokeniser
@@ -311,7 +311,7 @@ namespace Saf {
 				string_val += current_char_str;
 				get_next_char();
 			} else {
-				throw new TokeniserError.INVALID_TOKEN("Invalid escape character: '%s'", 
+				throw new TokeniserError.INVALID_ESCAPE("Invalid escape character: '%s'", 
 						current_char_str);
 			}
 		}
