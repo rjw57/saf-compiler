@@ -126,7 +126,7 @@ token:hover meta {
   visibility: visible;
 }
 
-token[type="CHARACTER"] {
+token[type="GLYPH"] {
   color: #996600;
 }
 

@@ -20,7 +20,7 @@ namespace Saf {
 			/* special types */
 			NONE,
 			EOF,
-			CHARACTER,  /* a character, value is the unicode character code,
+			GLYPH,  /* a character, value is the unicode character code,
 						   text could be a ligature */
 			STRING,     /* a string literal, value is the parsed form */
 
@@ -461,7 +461,7 @@ namespace Saf {
 			// if we get this far, the token is unknown, tokenise it as a
 			// single character.
 			var token = new Token(current_location, current_location, 
-					Token.Type.CHARACTER, current_char_str);
+					Token.Type.GLYPH, current_char_str);
 			token.value = current_char;
 
 			// this is actually a line break.
@@ -533,7 +533,7 @@ namespace Saf {
 			// get the next raw token from the stack
 			Token token = pop_next_raw_token();
 
-			if((token.type == Token.Type.CHARACTER) && 
+			if((token.type == Token.Type.GLYPH) && 
 					(ligature_prefix_set.contains((uint32) token.value)))
 			{
 				string current_ligature_str = unichar_to_string((uint32) token.value);
@@ -550,7 +550,7 @@ namespace Saf {
 					var peeked_token = pop_next_raw_token();
 					peeked_tokens.offer_head(peeked_token);
 
-					if(peeked_token.type == Token.Type.CHARACTER) {
+					if(peeked_token.type == Token.Type.GLYPH) {
 						current_ligature_str += unichar_to_string((uint32) peeked_token.value);
 						current_ligature_text += peeked_token.text;
 
@@ -562,7 +562,7 @@ namespace Saf {
 							if(entry.key == current_ligature_str) {
 								/* bingo! */
 								var lig_token = new Token(token.start, peeked_token.end,
-										Token.Type.CHARACTER, current_ligature_text);
+										Token.Type.GLYPH, current_ligature_text);
 								lig_token.value = entry.value;
 								return lig_token;
 							}
@@ -572,7 +572,7 @@ namespace Saf {
 							}
 						}
 					} else {
-						// ligatures don't have anything other than CHARACTER
+						// ligatures don't have anything other than GLYPH
 						// tokens making them up.
 						could_be_ligature = false;
 					}

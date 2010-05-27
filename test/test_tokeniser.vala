@@ -95,7 +95,7 @@ public static class MainProgram {
 						if(token.value.type() == typeof(string)) {
 							// special case strings...
 							value_desc = token.value.get_string();
-						} else if(token.type == Saf.Token.Type.CHARACTER) {
+						} else if(token.type == Saf.Token.Type.GLYPH) {
 							// special case characters...
 							unichar character = (uint) token.value;
 							int n_bytes = character.to_utf8(null);
