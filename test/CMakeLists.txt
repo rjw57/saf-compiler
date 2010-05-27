@@ -28,6 +28,13 @@ link_libraries(${LIBXML_LIBRARIES})
 link_directories(${LIBXML_LIBRARY_DIRS})
 include_directories(${LIBXML_INCLUDE_DIRS})
 
+# Check libgee is installed
+pkg_check_modules(GEE REQUIRED gee-1.0)
+add_definitions(${GEE_CFLAGS} ${GEE_CFLAGS_OTHER})
+link_libraries(${GEE_LIBRARIES})
+link_directories(${GEE_LIBRARY_DIRS})
+include_directories(${GEE_INCLUDE_DIRS})
+
 # Add the SAF include directories
 include_directories(../saf)
 link_libraries(saf)
@@ -38,9 +45,21 @@ CUSTOM_VAPIS
 	../saf/saf.vapi
 PACKAGES
 	libxml-2.0
+	gee-1.0
 )
 
 add_executable(test_tokeniser ${_test_tokeniser_vala_c_sources})
 target_link_libraries(test_tokeniser)
+
+vala_precompile(_test_parser_vala_c_sources
+	test_parser.vala
+CUSTOM_VAPIS
+	../saf/saf.vapi
+PACKAGES
+	gee-1.0
+)
+
+add_executable(test_parser ${_test_parser_vala_c_sources})
+target_link_libraries(test_parser)
 
 # vim:sw=4:ts=4:autoindent
