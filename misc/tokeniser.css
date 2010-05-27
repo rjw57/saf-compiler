@@ -60,20 +60,6 @@ token {
   color: red; /* if we see any red tokens, we're in trouble */
 }
 
-line:hover token {
-  border-right: 1px solid #ccc;
-  margin-right: -1px; /* magic to make the border effectively zero width */
-}
-
-line:hover token:first-child {
-  border-left: 1px solid #ccc;
-  margin-left: -1px; /* magic to make the border effectively zero width */
-}
-
-token:hover {
-  background-color: #ccc;
-}
-
 token meta {
   display: block;
   visibility: hidden;
@@ -181,4 +167,18 @@ token[type="WITH"],
 token[type="WHILE"]
 {
   color: blue;
+}
+
+line:hover token {
+  border-right: 1px solid #ccc;
+  margin-right: -1px; /* magic to make the border effectively zero width */
+}
+
+line:hover token:first-child {
+  border-left: 1px solid #ccc;
+  margin-left: -1px; /* magic to make the border effectively zero width */
+}
+
+token:hover {
+  background-color: #ccc;
 }
