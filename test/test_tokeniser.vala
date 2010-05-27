@@ -92,9 +92,16 @@ public static class MainProgram {
 					{
 						string value_desc = token.value.strdup_contents();
 
-						// special case strings...
 						if(token.value.type() == typeof(string)) {
+							// special case strings...
 							value_desc = token.value.get_string();
+						} else if(token.type == Saf.Token.Type.CHARACTER) {
+							// special case characters...
+							unichar character = (uint) token.value;
+							int n_bytes = character.to_utf8(null);
+							string char_str = string.nfill(n_bytes, '\0');
+							character.to_utf8(char_str);
+							value_desc = "'" + char_str + "'";
 						}
 
 						var token_value_node = document.new_node(null, "value");

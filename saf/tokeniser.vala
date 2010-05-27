@@ -21,7 +21,7 @@ namespace Saf {
 			/* special types */
 			NONE,
 			EOF,
-			CHARACTER,
+			CHARACTER,  /* a character, value is the unicode character code, text could be a ligature */
 			STRING,     /* a string literal, value is the parsed form */
 
 			/* numbers */
@@ -432,6 +432,7 @@ namespace Saf {
 			// single character.
 			var token = new Token(current_location, current_location, 
 					Token.Type.CHARACTER, current_char_str);
+			token.value = current_char;
 
 			// this is actually a line break.
 			if(current_char.isspace() && is_line_break(current_char)) {
