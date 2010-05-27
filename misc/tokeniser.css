@@ -58,16 +58,20 @@ token {
   font-family: monospace;
   position: relative;
   color: red; /* if we see any red tokens, we're in trouble */
+}
+
+line:hover token {
   border-right: 1px solid #ccc;
   margin-right: -1px; /* magic to make the border effectively zero width */
 }
 
-token:first-child {
+line:hover token:first-child {
   border-left: 1px solid #ccc;
+  margin-left: -1px; /* magic to make the border effectively zero width */
 }
 
 token:hover {
-  background-color: #ddd;
+  background-color: #ccc;
 }
 
 token meta {
