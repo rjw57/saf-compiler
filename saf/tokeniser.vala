@@ -165,14 +165,14 @@ namespace Saf {
 				throw new TokeniserError.EOF("End of file reached.");
 			}
 
+			// increment the column count.
+			++current_location.column;
+
 			if(last_char_was_break) {
 				last_char_was_break = false;
 				current_location.column = 1;
 				++current_location.line;
 			}
-
-			// increment the column count.
-			++current_location.column;
 
 			// if the next character is a line break, increment line number and
 			// reset column count to 0.
