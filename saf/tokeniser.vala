@@ -34,7 +34,7 @@ namespace Saf {
 			LINE_BREAK,
 
 			/* identifier */
-			IDENTIFIER,
+			IDENTIFIER, /* value is identifier string */
 
 			/* reserved words */
 			CALLED,
@@ -212,6 +212,9 @@ namespace Saf {
 				else
 					throw e;
 			}
+
+			// for identifiers, this is simple!
+			token.value = token.text;
 
 			return token;
 		}
