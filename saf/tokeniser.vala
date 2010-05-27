@@ -500,7 +500,7 @@ namespace Saf {
 		// are none to pop. If you are writing a parser with more than a token
 		// of lookahead, you might find it useful to use the
 		// {pop,push}_next_token() methods.
-		public Token pop_next_token() 
+		public Token pop_token() 
 			throws ConvertError, IOChannelError, TokeniserError
 		{
 			// are there any on the token stack to pop first?
@@ -515,13 +515,13 @@ namespace Saf {
 		// operation succeeded. If you are writing a parser with more than a
 		// token of lookahead, you might find it useful to use the
 		// {pop,push}_next_token() methods.
-		public bool push_next_token(Token token)
+		public bool push_token(Token token)
 		{
 			return token_stack.offer_head(token);
 		}
 
 		// Get the next token from the input stream. Should only ever be
-		// accessed via pop_next_token().
+		// accessed via pop_token().
 		//
 		// The method to do a greedy match on the ligature strings is in no-way
 		// the most optimal given a large number of ligatures. Given the small
@@ -580,7 +580,7 @@ namespace Saf {
 
 				// if we get here, it's not a ligature, push back the tokens we pop-ed.
 				while(peeked_tokens.size > 0) {
-					push_next_token(peeked_tokens.poll_head());
+					push_token(peeked_tokens.poll_head());
 				}
 			}
 

@@ -31,7 +31,7 @@ public static class MainProgram {
 
 				Saf.Token token = null;
 				do {
-					token = tokeniser.pop_next_token();
+					token = tokeniser.pop_token();
 
 					// skip EOF
 					if(token.type == Saf.Token.Type.EOF)
