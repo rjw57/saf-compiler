@@ -16,7 +16,7 @@ file {
 file_name {
   display: block;
   padding: 0.25em 0.5em;
-  background-color: #dddddd;
+  background-color: #ddd;
   border-bottom: 1px solid #666666;
 }
 
@@ -50,18 +50,25 @@ tokens > line {
 }
 
 tokens > line:nth-child(odd) {
-  background-color: #eeeeee;
+  background-color: #eee;
 }
 
 token {
+  line-height: 1.2em;
   white-space: pre;
   font-family: monospace;
   position: relative;
   color: red; /* if we see any red tokens, we're in trouble */
+  border-right: 1px solid #ccc;
+  margin-right: -1px; /* magic to make the border effectively zero width */
+}
+
+token:first-child {
+  border-left: 1px solid #ccc;
 }
 
 token:hover {
-  background-color: #dddddd;
+  background-color: #ddd;
 }
 
 token meta {
@@ -71,9 +78,9 @@ token meta {
   top: 1.75em;
   left: 0;
   padding: 0.25em 0.5em;
-  background-color: #333333;
+  background-color: #333;
   opacity: 0.8;
-  color: #dddddd;
+  color: #ddd;
   font-size: 70%;
   font-family: sans-serif;
   font-style: normal;

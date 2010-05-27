@@ -1,7 +1,6 @@
 using Gee;
 
 namespace Saf {
-	[Compact]
 	public class Token
 	{
 		[Compact]
@@ -21,7 +20,8 @@ namespace Saf {
 			/* special types */
 			NONE,
 			EOF,
-			CHARACTER,  /* a character, value is the unicode character code, text could be a ligature */
+			CHARACTER,  /* a character, value is the unicode character code,
+						   text could be a ligature */
 			STRING,     /* a string literal, value is the parsed form */
 
 			/* numbers */
@@ -91,6 +91,13 @@ namespace Saf {
 								symbol_map = new HashMap<string, Token.Type>();
 		private bool			last_char_was_break = false;
 
+		private Deque<Token>	token_stack = new LinkedList<Token>();
+
+		private Map<string, unichar>
+								ligature_map = new HashMap<string, unichar>();
+		// a list of ligature first characters to speed up ligature processing.
+		private Set<unichar>	ligature_prefix_set = new HashSet<unichar>();
+
 		public Tokeniser(IOChannel _io_channel)
 		{
 			io_channel = _io_channel;
@@ -106,6 +113,26 @@ namespace Saf {
 			symbol_map.set("taking", Token.Type.TAKING);
 			symbol_map.set("with", Token.Type.WITH);
 			symbol_map.set("while", Token.Type.WHILE);
+
+			// add ligatures
+			ligature_map.set("=/=", "≠".get_char());
+			ligature_map.set(">=", "≥".get_char());
+			ligature_map.set("<=", "≤".get_char());
+
+			// form the ligature prefix table
+			foreach(string ligature in ligature_map.keys)
+			{
+				ligature_prefix_set.add(ligature.substring(0,1).get_char());
+			}
+		}
+
+		/* *surely* there should be a standard method to do this? */
+		private string unichar_to_string(unichar c)
+		{
+			int req_len = c.to_utf8(null);
+			var str = string.nfill(req_len, '\0');
+			c.to_utf8(str);
+			return str;
 		}
 
 		private bool is_line_break(unichar c)
@@ -154,9 +181,7 @@ namespace Saf {
 			}
 
 			// update the current character string.
-			int req_len = current_char.to_utf8(null);
-			current_char_str = string.nfill(req_len, '\0');
-			current_char.to_utf8(current_char_str);
+			current_char_str = unichar_to_string(current_char);
 
 			// increment the consumed character count.
 			++consumed_chars;
@@ -364,7 +389,9 @@ namespace Saf {
 			return token;
 		}
 
-		public Token get_next_token() throws ConvertError, IOChannelError, TokeniserError
+		// Net a 'raw' (non-ligatured) token from the stream. Normally one
+		// would use 'pop_raw_token()' in preference to this.
+		private Token get_next_raw_token() throws ConvertError, IOChannelError, TokeniserError
 		{
 			// If necessary, 'prime' the tokeniser by getting the first
 			// character from the stream.
@@ -451,6 +478,110 @@ namespace Saf {
 					is_at_eof = true;
 				else
 					throw e;
+			}
+
+			return token;
+		}
+
+		// Pop the next token from the stack or call get_next_raw_token() if
+		// there are none to pop.
+		private Token pop_next_raw_token() 
+			throws ConvertError, IOChannelError, TokeniserError
+		{
+			// are there any on the token stack to pop first?
+			if(token_stack.size > 0)
+				return token_stack.poll_head();
+
+			// otherwise, just get the next token
+			return get_next_raw_token();
+		}
+
+		// Pop the next token from the stack or call get_next_token() if there
+		// are none to pop. If you are writing a parser with more than a token
+		// of lookahead, you might find it useful to use the
+		// {pop,push}_next_token() methods.
+		public Token pop_next_token() 
+			throws ConvertError, IOChannelError, TokeniserError
+		{
+			// are there any on the token stack to pop first?
+			if(token_stack.size > 0)
+				return token_stack.poll_head();
+
+			// otherwise, just get the next token
+			return get_next_token();
+		}
+
+		// Push a previous token back onto the token stack. Returns true if the
+		// operation succeeded. If you are writing a parser with more than a
+		// token of lookahead, you might find it useful to use the
+		// {pop,push}_next_token() methods.
+		public bool push_next_token(Token token)
+		{
+			return token_stack.offer_head(token);
+		}
+
+		// Get the next token from the input stream. Should only ever be
+		// accessed via pop_next_token().
+		//
+		// The method to do a greedy match on the ligature strings is in no-way
+		// the most optimal given a large number of ligatures. Given the small
+		// number we generally have though, it is better than forming a
+		// prefix-tree structure.
+		private Token get_next_token() 
+			throws ConvertError, IOChannelError, TokeniserError
+		{
+			// get the next raw token from the stack
+			Token token = pop_next_raw_token();
+
+			if((token.type == Token.Type.CHARACTER) && 
+					(ligature_prefix_set.contains((uint32) token.value)))
+			{
+				string current_ligature_str = unichar_to_string((uint32) token.value);
+				string current_ligature_text = token.text;
+
+				// firstly, keep a stack of the extra tokens we pop-ed out in case we
+				// have to give them back.
+				Deque<Token> peeked_tokens = new LinkedList<Token>();
+
+				// start searching through the set of ligatures looking for a
+				// greedy (i.e. shortest) match.
+				bool could_be_ligature = true;
+				do {
+					var peeked_token = pop_next_raw_token();
+					peeked_tokens.offer_head(peeked_token);
+
+					if(peeked_token.type == Token.Type.CHARACTER) {
+						current_ligature_str += unichar_to_string((uint32) peeked_token.value);
+						current_ligature_text += peeked_token.text;
+
+						// this could be a ligature if any of the ligature map
+						// keys have the current ligature string as a prefix.
+						could_be_ligature = false;
+						foreach(var entry in ligature_map.entries)
+						{
+							if(entry.key == current_ligature_str) {
+								/* bingo! */
+								var lig_token = new Token(token.start, peeked_token.end,
+										Token.Type.CHARACTER, current_ligature_text);
+								lig_token.value = entry.value;
+								return lig_token;
+							}
+
+							if(entry.key.has_prefix(current_ligature_str)) {
+								could_be_ligature = true;
+							}
+						}
+					} else {
+						// ligatures don't have anything other than CHARACTER
+						// tokens making them up.
+						could_be_ligature = false;
+					}
+				} while(could_be_ligature);
+
+				// if we get here, it's not a ligature, push back the tokens we pop-ed.
+				while(peeked_tokens.size > 0) {
+					push_next_token(peeked_tokens.poll_head());
+				}
 			}
 
 			return token;
