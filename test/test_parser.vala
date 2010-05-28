@@ -1,58 +1,58 @@
 using Xml;
 
-public static class MainProgram {
-	public static Xml.Node* new_token_node(Xml.Doc* doc, Saf.Token token)
+public class MainProgram {
+	private Xml.Doc* document;
+
+	private Xml.Node* new_token_node(Saf.Token token)
 	{
-		var token_node = doc->new_node(null, "token");
+		var token_node = document->new_node(null, "token");
 		return token_node;
 	}
 
-	public static Xml.Node* new_program_node(Xml.Doc* doc, Saf.AST.Program prog)
+	private Xml.Node* new_program_node(Saf.AST.Program prog)
 	{
-		var prog_node = doc->new_node(null, "program");
+		var prog_node = document->new_node(null, "program");
 
-		var gobbets_node = doc->new_node(null, "gobbets");
+		var gobbets_node = document->new_node(null, "gobbets");
 		foreach(var gobbet in prog.gobbets) {
-			gobbets_node->add_child( new_gobbet_node(doc, gobbet) );
+			gobbets_node->add_child(new_gobbet_node(gobbet));
 		}
 		prog_node->add_child(gobbets_node);
 
-		var statements_node = doc->new_node(null, "statements");
+		var statements_node = document->new_node(null, "statements");
 		foreach(var statement in prog.statements) {
-			statements_node->add_child( new_statement_node(doc, statement) );
+			statements_node->add_child(new_statement_node(statement));
 		}
 		prog_node->add_child(statements_node);
 
 		return prog_node;
 	}
 
-	public static Xml.Node* new_gobbet_node(Xml.Doc* doc,
-			Saf.AST.Gobbet gobbet)
+	private Xml.Node* new_gobbet_node(Saf.AST.Gobbet gobbet)
 	{
-		var gobbet_node = doc->new_node(null, "gobbet");
+		var gobbet_node = document->new_node(null, "gobbet");
 
-		var statements_node = doc->new_node(null, "statements");
+		var statements_node = document->new_node(null, "statements");
 		foreach(var statement in gobbet.statements) {
-			statements_node->add_child( new_statement_node(doc, statement) );
+			statements_node->add_child(new_statement_node(statement));
 		}
 		gobbet_node->add_child(statements_node);
 
 		return gobbet_node;
 	}
 
-	public static Xml.Node* new_statement_node(Xml.Doc* doc, 
-			Saf.AST.Statement statement)
+	private Xml.Node* new_statement_node(Saf.AST.Statement statement)
 	{
-		var statement_node = doc->new_node(null, "statement");
+		var statement_node = document->new_node(null, "statement");
 		return statement_node;
 	}
 
-	public static int main(string[] args)
+	public int run(string[] args)
 	{
-		var document = new Doc();
+		document = new Doc();
 
-		var root_node = document.new_node(null, "parser_output");
-		document.set_root_element(root_node);
+		var root_node = document->new_node(null, "parser_output");
+		document->set_root_element(root_node);
 
 		for(uint i=1; i<args.length; ++i)
 		{
@@ -63,17 +63,17 @@ public static class MainProgram {
 				parser.parse_from(tokeniser);
 
 				// output tokens
-				var tokens_node = document.new_node(null, "tokens");
+				var tokens_node = document->new_node(null, "tokens");
 				foreach(var token in parser.tokens)
 				{
-					tokens_node->add_child(new_token_node(document, token)); 
+					tokens_node->add_child(new_token_node(token));
 				}
 				root_node->add_child(tokens_node);
 
 				// output programs
 				foreach(var program in parser.programs)
 				{
-					root_node->add_child(new_program_node(document, program)); 
+					root_node->add_child(new_program_node(program)); 
 				}
 
 				// output errors
@@ -97,9 +97,15 @@ public static class MainProgram {
 			}
 		}
 
-		document.dump_format(stdout, true);
+		document->dump_format(stdout, true);
 
 		return 0;
+	}
+
+	public static int main(string[] args)
+	{
+		var main_prog = new MainProgram();
+		return main_prog.run(args);
 	}
 }
 
