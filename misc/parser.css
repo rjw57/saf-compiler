@@ -79,6 +79,7 @@ h1, h2 {
 
 .ast_node > .description, .ast_node > .type {
   padding: 0.1em 0.5em;
+  padding-top: 0.2em;
 }
 
 .ast_node > .type {
@@ -140,6 +141,7 @@ h1, h2 {
 
 .ast_node > .description > .children > .label {
   padding: 0.1em 0.5em;
+  padding-top: 0.3em;
   font-style: italic;
 }
 
