@@ -1,0 +1,77 @@
+tokens {
+	font-family: monospace;
+	display: block;
+	background-color: white;
+	color: black;
+}
+
+token {
+	display: block;
+	float: left;
+	white-space: pre;
+	height: 1.3em;
+	color: red;
+}
+
+token[type="line_break"] {
+	float: none;
+	display: block;
+	white-space: pre;
+	color: #999;
+	clear: right;
+}
+
+token[type="line_break"]::before {
+	content: "↵";
+}
+
+token[type="glyph"] {
+  color: #960;
+}
+
+token[type="integer"] {
+  color: black;
+  background-color: #ccffcc;
+}
+
+token[type="real"] {
+  color: black;
+  background-color: #ccccff;
+}
+
+token[type="whitespace"] {
+  color: red;
+}
+
+token[type="comment"] {
+  color: #060;
+  font-style: italic;
+}
+
+token[type="identifier"] {
+  color: black;
+}
+
+token[type="string"] {
+  color: #060;
+}
+
+/* reserved words */
+token[type="called"],
+token[type="end"],
+token[type="giving"],
+token[type="gobbet"],
+token[type="if"],
+token[type="implement"],
+token[type="make"],
+token[type="only"],
+token[type="taking"],
+token[type="with"],
+token[type="while"]
+{
+  color: blue;
+}
+
+token:not([type="line_break"]):hover {
+  background-color: #ddd;
+}

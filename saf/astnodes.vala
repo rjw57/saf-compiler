@@ -7,16 +7,8 @@ namespace Saf.AST
 		private Gee.List<Token> _tokens = null;
 		public Gee.List<Token> tokens { get { return _tokens; } }
 
-		private int _first_token_idx;
-		private int _last_token_idx;
-
-		public int first_token_index { get { return _first_token_idx; } }
-		public int last_token_index { get { return _last_token_idx; } }
-
 		internal Node(Parser _p, int _f, int _l) {
 			_tokens = _p.token_slice(_f, _l); 
-			_first_token_idx = _f;
-			_last_token_idx = _l;
 		}
 	}
 
