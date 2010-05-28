@@ -1,77 +1,209 @@
-tokens {
-	font-family: monospace;
-	display: block;
-	background-color: white;
-	color: black;
+/* {{{ GLOBAL STYLE */
+
+html, body {
+  font-family: sans-serif;
+  background-color: #aaa;
+  padding: 0; margin: 0;
 }
 
-token {
-	display: block;
-	float: left;
-	white-space: pre;
-	height: 1.3em;
-	color: red;
+h1, h2 {
+  display: none;
 }
 
-token[type="line_break"] {
-	float: none;
-	display: block;
-	white-space: pre;
-	color: #999;
-	clear: right;
+/* {{{ TOP LEVEL SECTIONS */
+
+#programs_section, #tokens_section {
+  padding: 0.5em;
+  overflow: auto;
+  background-color: white;
 }
 
-token[type="line_break"]::before {
-	content: "↵";
+#tokens_section {
+  position: fixed;
+  left: 0; top: 0; bottom: 0;
+  margin-right: 0.5em;
+  right: 33%;
 }
 
-token[type="glyph"] {
+#programs_section {
+  position: fixed;
+  right: 0; top: 0; bottom: 0;
+  margin-left: 0.5em;
+  left: 66%;
+  background-color: #777;
+}
+
+#programs {
+  font-size: 80%;
+}
+
+#programs > ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+#programs > li {
+  margin: 0;
+  padding: 0;
+}
+
+/* }}} */
+
+/* }}} */
+
+/* {{{ APPEARANCE OF AST NODES */
+
+/* reset any margins/padding and font size */
+.ast_node * { 
+  margin: 0; padding: 0; font-size: 100%;
+}
+
+.ast_node {
+  border: 1px solid #ccc;
+  background-color: #ddd;
+  border-radius: 6px;
+}
+
+.ast_node > .location {
+  display: none;
+}
+
+.ast_node ul {
+  list-style-type: none;
+}
+
+.ast_node ul > li {
+  margin-bottom: 0.5em;
+}
+
+.ast_node > .description, .ast_node > .type {
+  padding: 0.1em 0.5em;
+}
+
+.ast_node > .type {
+  display: block;
+  font-size: 100%;
+}
+
+.ast_node > .type,
+.ast_node > .description > .children > .label {
+  font-weight: normal;
+}
+
+.ast_node > .type:first-letter {
+  text-transform: uppercase;
+}
+
+.ast_node > .description {
+  border-top: 1px solid #ccc;
+  background-color: #eee;
+  border-bottom-left-radius: 6px;
+  border-bottom-right-radius: 6px;
+  padding-top: 0.1em;
+  padding-bottom: 0.1em;
+}
+
+.ast_node > .description > .label {
+  display: none;
+}
+
+.ast_node > .description p {
+  margin: 0.5em 0em;
+}
+
+.ast_node > .description > .children {
+  border: 1px solid #bbd;
+  background-color: #cce;
+  border-radius: 6px;
+  margin: 0.5em 0em;
+}
+
+.ast_node > .description > .children > .label, 
+.ast_node > .description > .children > ul {
+  padding: 0.1em 0.5em;
+}
+
+.ast_node > .description > .children > .label:first-letter {
+  text-transform: uppercase;
+}
+
+.ast_node > .description > .children > ul {
+  display: block;
+  background-color: #ddf;
+  border-top: 1px solid #bbd;
+  border-bottom-left-radius: 6px;
+  border-bottom-right-radius: 6px;
+  margin-top: 0.1em;
+  padding-top: 0.5em;
+}
+
+.ast_node > .description > .children > .label {
+  padding: 0.1em 0.5em;
+  font-style: italic;
+}
+
+/* }}} */
+
+/* {{{ SYNTAX HIGHLIGHTING OF TOKENS */
+
+.token.line_break::before {
+  content: "↵";
+  color: #aaa;
+}
+
+.token.glyph {
   color: #960;
 }
 
-token[type="integer"] {
+.token.integer {
   color: black;
   background-color: #ccffcc;
 }
 
-token[type="real"] {
+.token.real {
   color: black;
   background-color: #ccccff;
 }
 
-token[type="whitespace"] {
+.token.whitespace {
   color: red;
 }
 
-token[type="comment"] {
+.token.comment {
   color: #060;
   font-style: italic;
 }
 
-token[type="identifier"] {
+.token.identifier {
   color: black;
 }
 
-token[type="string"] {
+.token.string {
   color: #060;
 }
 
 /* reserved words */
-token[type="called"],
-token[type="end"],
-token[type="giving"],
-token[type="gobbet"],
-token[type="if"],
-token[type="implement"],
-token[type="make"],
-token[type="only"],
-token[type="taking"],
-token[type="with"],
-token[type="while"]
+.token.called,
+.token.end,
+.token.giving,
+.token.gobbet,
+.token.if,
+.token.implement,
+.token.make,
+.token.only,
+.token.taking,
+.token.with,
+.token.while
 {
   color: blue;
 }
 
-token:not([type="line_break"]):hover {
+.token:hover {
   background-color: #ddd;
 }
+
+/* }}} */
+
+/* vim:sw=2:ts=2:autoindent:et:foldmethod=marker
+ */

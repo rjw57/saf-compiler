@@ -78,13 +78,15 @@ public class MainProgram {
 		var prog_node = new_ast_node(prog);
 		prog_node->set_prop("input-name", prog.input_name);
 
-		var gobbets_node = document->new_node(ns, "gobbets");
+		var gobbets_node = document->new_node(ns, "children");
+		gobbets_node->set_prop("type", "gobbet");
 		foreach(var gobbet in prog.gobbets) {
 			gobbets_node->add_child(new_gobbet_node(gobbet));
 		}
 		prog_node->add_child(gobbets_node);
 
-		var statements_node = document->new_node(ns, "statements");
+		var statements_node = document->new_node(ns, "children");
+		statements_node->set_prop("type", "statement");
 		foreach(var statement in prog.statements) {
 			statements_node->add_child(new_statement_node(statement));
 		}
