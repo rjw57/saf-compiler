@@ -10,6 +10,7 @@ gobbet power taking number only a number, exponent only a number giving result o
     make result = result * number;
     make times_count = times_count + 1;
     end while power loop;
+  end gobbet;
 
 print "The \"square\" of 4 is " + implement square with A = 4;
 print "The \"square\" of 5 is " + implement square with A = 5;

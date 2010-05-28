@@ -56,6 +56,7 @@ vala_precompile(_test_parser_vala_c_sources
 CUSTOM_VAPIS
 	../saf/saf.vapi
 PACKAGES
+	libxml-2.0
 	gee-1.0
 )
 

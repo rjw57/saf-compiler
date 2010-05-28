@@ -1,7 +1,7 @@
 using Gee;
 
 namespace Saf {
-	public class Token
+	public class Token : Object
 	{
 		[Compact]
 		public struct Location 
@@ -62,6 +62,11 @@ namespace Saf {
 			start = _start; end = _end; text = _text; type = _type;
 		}
 
+		public bool is_eof()
+		{
+			return type == Type.EOF;
+		}
+
 		public bool is_whitespace()
 		{
 			return (type >= Type.WHITESPACE) && (type <= Type.LINE_BREAK);
@@ -71,6 +76,11 @@ namespace Saf {
 		{
 			return (type >= Type.CALLED) && (type <= Type.WHILE);
 		}
+
+		public bool is_glyph(string glyph_str)
+		{
+			return (type == Type.GLYPH) && (value == glyph_str.get_char());
+		}
 	}
 
 	errordomain TokeniserError
@@ -79,7 +89,7 @@ namespace Saf {
 		INVALID_ESCAPE,
 	}
 
-	public class Tokeniser
+	public class Tokeniser : Object
 	{
 		private IOChannel		io_channel = null;
 		private uint			consumed_chars = 0;
@@ -98,9 +108,14 @@ namespace Saf {
 		// a list of ligature first characters to speed up ligature processing.
 		private Set<unichar>	ligature_prefix_set = new HashSet<unichar>();
 
-		public Tokeniser(IOChannel _io_channel)
+		private string 			_input_name = "";
+
+		public string input_name { get { return _input_name; } }
+
+		public Tokeniser(IOChannel _io_channel, string _name = "")
 		{
 			io_channel = _io_channel;
+			_input_name = _name;
 
 			symbol_map.set("called", Token.Type.CALLED);
 			symbol_map.set("end", Token.Type.END);

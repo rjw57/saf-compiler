@@ -2,23 +2,43 @@ using Gee;
 
 namespace Saf.AST
 {
-	public interface Node 
+	public class Node : Object
 	{
-		public abstract Collection<Token> tokens { get; }
+		private Gee.List<Token> _tokens = null;
+		public Gee.List<Token> tokens { get { return _tokens; } }
+
+		private int _first_token_idx;
+		private int _last_token_idx;
+
+		public int first_token_index { get { return _first_token_idx; } }
+		public int last_token_index { get { return _last_token_idx; } }
+
+		internal Node(Parser _p, int _f, int _l) {
+			_tokens = _p.token_slice(_f, _l); 
+			_first_token_idx = _f;
+			_last_token_idx = _l;
+		}
 	}
 
-	protected class Base : Node
+	public class Error : Node
 	{
-		Parser p = null;
-		Collection<Token> _tokens = null;
+		private string _message = null;
+		private bool _is_err = false;
+		private string _input_name = null;
 
-		public Parser parser { get { return p; } }
-		public Collection<Token> tokens { get { return tokens; } }
+		public string message { get { return _message; } }
+		public bool is_err { get { return _is_err; } }
+		public string input_name { get { return _input_name; } }
 
-		internal Base(Parser _p, int _f, int _l) { p = _p; _tokens = parser.get_tokens(_f, _l); }
+		internal Error(Parser p, int f, int l, string m, bool ie = true)
+		{
+			base(p,f,l); 
+			_message = m; _is_err = ie;
+			_input_name = p.current_tokeniser.input_name;
+		}
 	}
 
-	public class Program : Base
+	public class Program : Node
 	{
 		private Collection<Gobbet> _gobbets = null;
 		private Collection<Statement> _statements = null;
@@ -35,15 +55,19 @@ namespace Saf.AST
 		}
 	}
 
-	public class Gobbet : Base
+	public class Gobbet : Node
 	{
-		internal Gobbet(Parser p, int f, int l)
+		private Collection<Statement> _statements = null;
+		public Collection<Statement> statements { get { return _statements; } }
+
+		internal Gobbet(Parser p, int f, int l, Collection<Statement> s)
 		{
 			base(p,f,l);
+			_statements = s.read_only_view;
 		}
 	}
 
-	public class Statement : Base
+	public class Statement : Node
 	{
 		internal Statement(Parser p, int f, int l)
 		{
