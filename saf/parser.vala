@@ -130,7 +130,7 @@ namespace Saf
 
 			return new AST.Program(this, 
 					first_token_idx, cur_token_idx,
-					gobbets, statements);
+					tokeniser.input_name, gobbets, statements);
 		}
 
 		// gobbet := GOBBET ..., statement := ...

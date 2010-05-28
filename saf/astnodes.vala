@@ -34,16 +34,19 @@ namespace Saf.AST
 	{
 		private Collection<Gobbet> _gobbets = null;
 		private Collection<Statement> _statements = null;
+		private string _input_name = null;
 
 		public Collection<Gobbet> gobbets { get { return _gobbets; } }
 		public Collection<Statement> statements { get { return _statements; } }
+		public string input_name { get { return _input_name; } }
 
 		internal Program(Parser p, int f, int l,
-				Collection<Gobbet> g, Collection<Statement> s)
+				string _n, Collection<Gobbet> g, Collection<Statement> s)
 		{
 			base(p,f,l); 
 			_gobbets = g.read_only_view;
 			_statements = s.read_only_view;
+			_input_name = _n;
 		}
 	}
 

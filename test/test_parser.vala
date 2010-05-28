@@ -76,6 +76,7 @@ public class MainProgram {
 	private Xml.Node* new_program_node(Saf.AST.Program prog)
 	{
 		var prog_node = new_ast_node(prog);
+		prog_node->set_prop("input-name", prog.input_name);
 
 		var gobbets_node = document->new_node(ns, "gobbets");
 		foreach(var gobbet in prog.gobbets) {
