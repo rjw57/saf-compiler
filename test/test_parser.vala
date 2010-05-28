@@ -13,10 +13,11 @@ public class MainProgram {
 		assert(first_index != -1);
 		assert(last_index != -1);
 
-		// generate an element name from the type name.
-		string element_name = ast_node.get_type().name().replace("SafAST","").down();
+		// generate an node type from the type name.
+		string node_type = ast_node.get_type().name().replace("SafAST","").down();
 
-		var xml_node = document->new_node(ns, element_name);
+		var xml_node = document->new_node(ns, "node");
+		xml_node->set_prop("type", node_type);
 
 		var tokens_node = document->new_node(ns, "tokens");
 		tokens_node->set_prop("first", first_index.to_string());
