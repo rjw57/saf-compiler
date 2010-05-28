@@ -46,7 +46,7 @@ namespace Saf
 			pop_token();
 
 			// start parsing
-			var program = parse_file();
+			var program = parse_program();
 
 			// stop using the tokeniser
 			tokeniser = null;
@@ -104,8 +104,8 @@ namespace Saf
 			} while(cur_token.is_whitespace() && (token_list.size > 0));
 		}
 
-		// file := { ( statement | gobbet ) }* EOF
-		private AST.Program parse_file()
+		// program := { ( statement | gobbet ) }* EOF
+		private AST.Program parse_program()
 			throws IOChannelError, ConvertError, TokeniserError, ParserError
 		{
 			Collection<AST.Gobbet> gobbets = new ArrayList<AST.Gobbet>();
