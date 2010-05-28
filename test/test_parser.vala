@@ -126,33 +126,6 @@ public class MainProgram {
 				var channel = new IOChannel.file(args[i], "r");
 				var tokeniser = new Saf.Tokeniser(channel, args[i]);
 				parser.parse_from(tokeniser);
-
-				// output tokens
-				var tokens_node = document->new_node(ns, "tokens");
-				foreach(var token in parser.tokens)
-				{
-					tokens_node->add_child(new_token_node(token));
-				}
-				root_node->add_child(tokens_node);
-
-				// output programs
-				foreach(var program in parser.programs)
-				{
-					root_node->add_child(new_program_node(program)); 
-				}
-
-				// output errors
-				foreach(var err in parser.errors)
-				{
-					Saf.Token first_token = err.tokens.first();
-					Saf.Token last_token = err.tokens.last();
-					stderr.printf("%s:%u.%u-%u.%u: %s: %s\n",
-							err.input_name,
-							first_token.start.line, first_token.start.column,
-							last_token.end.line, last_token.end.column,
-							err.is_err ? "error" : "warning",
-							err.message);
-				}
 			} catch (GLib.FileError e) {
 				stderr.printf("File error: %s\n", e.message);
 			} catch (Saf.TokeniserError e) {
@@ -162,7 +135,36 @@ public class MainProgram {
 			}
 		}
 
+		// output tokens
+		var tokens_node = document->new_node(ns, "tokens");
+		foreach(var token in parser.tokens)
+		{
+			tokens_node->add_child(new_token_node(token));
+		}
+		root_node->add_child(tokens_node);
+
+		// output programs
+		var programs_node = document->new_node(ns, "programs");
+		foreach(var program in parser.programs)
+		{
+			programs_node->add_child(new_program_node(program)); 
+		}
+		root_node->add_child(programs_node);
+
 		document->dump_format(stdout, true);
+
+		// output errors
+		foreach(var err in parser.errors)
+		{
+			Saf.Token first_token = err.tokens.first();
+			Saf.Token last_token = err.tokens.last();
+			stderr.printf("%s:%u.%u-%u.%u: %s: %s\n",
+					err.input_name,
+					first_token.start.line, first_token.start.column,
+					last_token.end.line, last_token.end.column,
+					err.is_err ? "error" : "warning",
+					err.message);
+		}
 
 		return 0;
 	}
