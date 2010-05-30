@@ -52,12 +52,27 @@ namespace Saf.AST
 
 	public class Gobbet : Node
 	{
+		private string _name = null;
+		private Collection<VariableDeclaration> _taking_decls = null;
+		private VariableDeclaration _giving_decl = null;
 		private Collection<Statement> _statements = null;
+
+		public string name { get { return _name; } }
+		public Collection<VariableDeclaration> taking {
+			get { return _taking_decls; }
+		}
+		public VariableDeclaration? giving { get { return _giving_decl; } }
 		public Collection<Statement> statements { get { return _statements; } }
 
-		internal Gobbet(Parser p, int f, int l, Collection<Statement> s)
+		internal Gobbet(Parser p, int f, int l, string n, 
+				Collection<VariableDeclaration> t,
+				VariableDeclaration? g,
+				Collection<Statement> s)
 		{
 			base(p,f,l);
+			_name = n;
+			_taking_decls = t;
+			_giving_decl = g;
 			_statements = s.read_only_view;
 		}
 	}
@@ -67,6 +82,18 @@ namespace Saf.AST
 		internal Statement(Parser p, int f, int l)
 		{
 			base(p,f,l);
+		}
+	}
+
+	public class VariableDeclaration : Node
+	{
+		private string _name = null;
+		public string name { get { return _name; } }
+
+		internal VariableDeclaration(Parser p, int f, int l, string n)
+		{
+			base(p,f,l);
+			_name = n;
 		}
 	}
 }

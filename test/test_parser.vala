@@ -76,7 +76,7 @@ public class MainProgram {
 	private Xml.Node* new_program_node(Saf.AST.Program prog)
 	{
 		var prog_node = new_ast_node(prog);
-		prog_node->set_prop("input-name", prog.input_name);
+		prog_node->set_prop("name", prog.input_name);
 
 		var gobbets_node = document->new_node(ns, "children");
 		gobbets_node->set_prop("type", "gobbet");
@@ -98,14 +98,40 @@ public class MainProgram {
 	private Xml.Node* new_gobbet_node(Saf.AST.Gobbet gobbet)
 	{
 		var gobbet_node = new_ast_node(gobbet);
+		gobbet_node->set_prop("name", gobbet.name);
 
-		var statements_node = document->new_node(ns, "statements");
+		if(gobbet.taking.size > 0) {
+			var taking_node = document->new_node(ns, "children");
+			taking_node->set_prop("type", "taking");
+			foreach(var var_decl in gobbet.taking) {
+				taking_node->add_child(new_var_decl_node(var_decl));
+			}
+			gobbet_node->add_child(taking_node);
+		}
+
+		if(gobbet.giving != null) {
+			var giving_node = document->new_node(ns, "children");
+			giving_node->set_prop("type", "giving");
+			giving_node->add_child(new_var_decl_node(gobbet.giving));
+			gobbet_node->add_child(giving_node);
+		}
+
+		var statements_node = document->new_node(ns, "children");
+		statements_node->set_prop("type", "statement");
 		foreach(var statement in gobbet.statements) {
 			statements_node->add_child(new_statement_node(statement));
 		}
 		gobbet_node->add_child(statements_node);
 
 		return gobbet_node;
+	}
+
+	private Xml.Node* new_var_decl_node(Saf.AST.VariableDeclaration var_decl)
+	{
+		var var_decl_node = new_ast_node(var_decl);
+		var_decl_node->set_prop("name", var_decl.name);
+
+		return var_decl_node;
 	}
 
 	private Xml.Node* new_statement_node(Saf.AST.Statement statement)

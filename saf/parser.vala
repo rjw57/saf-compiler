@@ -144,7 +144,7 @@ namespace Saf
 			}
 		}
 
-		// gobbet := GOBBET { ^ ':' }* ':' { statement }* END GOBBET ';'
+		// gobbet := GOBBET identifier(name) { TAKING var_decl { ',' var_decl }* }? { GIVING var_decl }? ':' { statement }* END GOBBET ';' := ...
 		private AST.Node parse_gobbet()
 			throws IOChannelError, ConvertError, TokeniserError, ParserError
 		{
@@ -155,15 +155,76 @@ namespace Saf
 						"parse_gobbet() called with invalid context.");
 			}
 
-			do {
-				pop_token();
-			} while(!cur_token.is_glyph(":") && !cur_token.is_eof());
+			pop_token();
+			if(cur_token.type != Token.Type.IDENTIFIER) {
+				return new AST.Error(this, 
+						first_token_idx, cur_token_idx,
+						"A gobbet should always have a name which immediately " +
+						"follows the 'gobbet' word.");
+			}
+			string gobbet_name = cur_token.value.get_string();
+
+			pop_token();
+
+			Collection<AST.VariableDeclaration> taking_decls = 
+				new ArrayList<AST.VariableDeclaration>();
+
+			// do we have a 'TAKING' clause?
+			if(cur_token.type == Token.Type.TAKING) {
+				do {
+					if((cur_token.type != Token.Type.TAKING) && 
+							(!cur_token.is_glyph(","))) {
+						return new AST.Error(this, 
+								first_token_idx, cur_token_idx,
+								"I'm expecting either a colon (:) or the word " +
+								"'taking' after the gobbet's name.");
+					}
+					pop_token(); // chomp TAKING or COMMA
+					AST.Node node = parse_var_decl();
+
+					if(node.get_type() == typeof(AST.VariableDeclaration)) {
+						taking_decls.add((AST.VariableDeclaration) node);
+					} else if(node.get_type() == typeof(AST.Error)) {
+						error_list.add((AST.Error) node);
+					} else {
+						throw new ParserError.INTERNAL(
+								"parse_var_decl() returned a node which was " +
+								"not either a VariableDeclaration or an Error.");
+					}
+				} while(cur_token.is_glyph(","));
+			}
+
+			AST.VariableDeclaration giving_decl = null;
+
+			// do we have a 'GIVING' clause?
+			if(cur_token.type == Token.Type.GIVING) {
+				pop_token(); // chomp GIVING
+				AST.Node node = parse_var_decl();
+
+				if(node.get_type() == typeof(AST.VariableDeclaration)) {
+					giving_decl = (AST.VariableDeclaration) node;
+				} else if(node.get_type() == typeof(AST.Error)) {
+					error_list.add((AST.Error) node);
+				} else {
+					throw new ParserError.INTERNAL(
+							"parse_var_decl() returned a node which was " +
+							"not either a VariableDeclaration or an Error.");
+				}
+			}
 
 			if(cur_token.is_eof()) {
 				return new AST.Error(this, 
 						first_token_idx, cur_token_idx,
 						"The gobbet never seemed to end by the time the file " +
 						"was finished. Did you remember the colon (:)?");
+			}
+
+			if(!cur_token.is_glyph(":")) {
+				return new AST.Error(this, 
+						first_token_idx, cur_token_idx,
+						"Gobbets need to be of the form 'gobbet name: " +
+						"statements; end gobbet'. It looks like you forgot to " +
+						"put the colon (:) in.");
 			}
 
 			pop_token(); // chomp ':'
@@ -226,7 +287,44 @@ namespace Saf
 			pop_token(); // chomp ';'.
 
 			return new AST.Gobbet(this, first_token_idx, cur_token_idx,
+					gobbet_name, taking_decls, giving_decl, 
 					gobbet_statements);
+		}
+
+		// var_decl := identifier(var_name) { ONLY 'a'? type }?
+		private AST.Node parse_var_decl()
+			throws IOChannelError, ConvertError, TokeniserError, ParserError
+		{
+			int first_token_idx = cur_token_idx;
+			if(cur_token.type != Token.Type.IDENTIFIER) {
+				return new AST.Error(this,
+						first_token_idx, cur_token_idx,
+						"I need to know what the name of what the gobbet " +
+						"is taking is.");
+			}
+
+			string var_name = cur_token.value.get_string();
+			pop_token();
+
+			if(cur_token.type == Token.Type.ONLY) {
+				pop_token();
+
+				// skip the optional 'a'
+				if((cur_token.type == Token.Type.IDENTIFIER) && 
+					(cur_token.value.get_string() == "a")) {
+					pop_token();
+				}
+
+				// PARSE TYPE (FIXME)
+				if(cur_token.type != Token.Type.IDENTIFIER) {
+					stderr.printf("unexpected token: '%s'\n", cur_token.text);
+				}
+				pop_token();
+			}
+
+			return new AST.VariableDeclaration(this,
+					first_token_idx, cur_token_idx,
+					var_name);
 		}
 
 		// statement := { ^ ';' }* ';'

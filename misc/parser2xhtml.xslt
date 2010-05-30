@@ -78,12 +78,22 @@
   <xsl:template match="node">
     <div>
       <xsl:attribute name="class">ast_node <xsl:value-of select="@type" /></xsl:attribute>
-      <h3 class="type"><xsl:value-of select="@type" /> node</h3>
+      <h3 class="type">
+        <xsl:value-of select="@type" /><xsl:if test="@name != ''">:
+        <xsl:value-of select="@name" />
+        </xsl:if>
+      </h3>
       <div class="description">
         <h3 class="label">Description</h3>
         <xsl:choose>
           <xsl:when test="@type='program'">
             <xsl:call-template name="program_node" />
+          </xsl:when>
+          <xsl:when test="@type='gobbet'">
+            <xsl:call-template name="gobbet_node" />
+          </xsl:when>
+          <xsl:when test="@type='variabledeclaration'">
+            <xsl:call-template name="variabledeclaration_node" />
           </xsl:when>
           <xsl:otherwise>
             AST node of type: <xsl:value-of select="@type" />
@@ -124,7 +134,17 @@
 
   <!-- A program node -->
   <xsl:template name="program_node">
-    <p>Program loaded from: <span class="input_name"><xsl:value-of select="@input-name" /></span></p>
+    <p>Program loaded from: <span class="input_name"><xsl:value-of select="@name" /></span></p>
+  </xsl:template>
+
+  <!-- A gobbet node -->
+  <xsl:template name="gobbet_node">
+    <p>A gobbet called: <span class="gobbet_name"><xsl:value-of select="@name" /></span></p>
+  </xsl:template>
+
+  <!-- A variable declaration node -->
+  <xsl:template name="variabledeclaration_node">
+    <p>Variable called: <span class="variable_declaration_name"><xsl:value-of select="@name" /></span></p>
   </xsl:template>
 
 </xsl:stylesheet>
