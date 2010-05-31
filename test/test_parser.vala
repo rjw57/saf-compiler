@@ -194,20 +194,38 @@ public class MainProgram {
 		}
 		root_node->add_child(programs_node);
 
-		document->dump_format(stdout, true);
-
 		// output errors
-		foreach(var err in parser.errors)
-		{
-			Saf.Token first_token = err.tokens.first();
-			Saf.Token last_token = err.tokens.last();
-			stderr.printf("%s:%u.%u-%u.%u: %s: %s\n",
-					err.input_name,
-					first_token.start.line, first_token.start.column,
-					last_token.end.line, last_token.end.column,
-					err.is_err ? "error" : "warning",
-					err.message);
+		if(parser.errors.size > 0) {
+			var errors_node = document->new_node(ns, "errors");
+			foreach(var err in parser.errors)
+			{
+				Saf.Token first_token = err.tokens.first();
+				Saf.Token last_token = err.tokens.last();
+				stderr.printf("%s:%u.%u-%u.%u: %s: %s\n",
+						err.input_name,
+						first_token.start.line, first_token.start.column,
+						last_token.end.line, last_token.end.column,
+						err.is_err ? "error" : "warning",
+						err.message);
+
+				int first_index = parser.tokens.index_of(first_token);
+				int last_index = parser.tokens.index_of(last_token);
+
+				assert(first_index != -1);
+				assert(last_index != -1);
+
+				var error_node = document->new_node(ns,
+						err.is_err ? "error" : "warning");
+				error_node->set_prop("first", first_index.to_string());
+				error_node->set_prop("last", last_index.to_string());
+				error_node->set_prop("input-name", err.input_name);
+				error_node->add_child(document->new_text(err.message));
+				errors_node->add_child(error_node);
+			}
+			root_node->add_child(errors_node);
 		}
+
+		document->dump_format(stdout, true);
 
 		return 0;
 	}
