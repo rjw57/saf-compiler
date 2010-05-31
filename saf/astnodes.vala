@@ -77,14 +77,6 @@ namespace Saf.AST
 		}
 	}
 
-	public class Statement : Node
-	{
-		internal Statement(Parser p, int f, int l)
-		{
-			base(p,f,l);
-		}
-	}
-
 	public class VariableDeclaration : Node
 	{
 		private string _name = null;
@@ -111,6 +103,39 @@ namespace Saf.AST
 		{
 			base(p,f,l);
 			_name = n;
+		}
+	}
+
+	public class Statement : Node
+	{
+		internal Statement(Parser p, int f, int l)
+		{
+			base(p,f,l);
+		}
+	}
+
+	public class MakeStatement : Statement
+	{
+		private string _name = null;
+		private Expression _value = null;
+
+		public string name { get { return _name; } }
+		public Expression vaue { get { return _value; } }
+
+		internal MakeStatement(Parser p, int f, int l,
+				string n, Expression v)
+		{
+			base(p,f,l);
+			_name = n;
+			_value = v;
+		}
+	}
+
+	public class Expression : Node
+	{
+		internal Expression(Parser p, int f, int l)
+		{
+			base(p,f,l);
 		}
 	}
 }

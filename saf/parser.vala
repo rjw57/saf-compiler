@@ -117,7 +117,7 @@ namespace Saf
 
 				if(node.get_type() == typeof(AST.Gobbet)) {
 					gobbets.add((AST.Gobbet) node);
-				} else if(node.get_type() == typeof(AST.Statement)) {
+				} else if(node.get_type().is_a(typeof(AST.Statement))) {
 					statements.add((AST.Statement) node);
 				} else if(node.get_type() == typeof(AST.Error)) {
 					error_list.add((AST.Error) node);
@@ -254,7 +254,7 @@ namespace Saf
 				// if we've not reached the end of the gobbet
 				if(should_continue) {
 					var statement = parse_statement();
-					if(statement.get_type() == typeof(AST.Statement)) {
+					if(statement.get_type().is_a(typeof(AST.Statement))) {
 						gobbet_statements.add((AST.Statement) statement);
 					} else if(statement.get_type() == typeof(AST.Error)) {
 						error_list.add((AST.Error) statement);
@@ -355,16 +355,20 @@ namespace Saf
 					type_name);
 		}
 
-		// statement := { ^ ';' }* ';'
+		// statement := ( make_statement ) ';'
 		private AST.Node parse_statement()
-			throws IOChannelError, ConvertError, TokeniserError
+			throws IOChannelError, ConvertError, TokeniserError, ParserError
 		{
 			int first_token_idx = cur_token_idx;
 
-			// keep going until we get a semi-colon
-			do {
+			if(cur_token.type == Token.Type.MAKE) {
+				return parse_make_statement();
+			}
+
+			// keep going until we get a semi-colon so we skip over errors
+			while(!cur_token.is_glyph(";") && !cur_token.is_eof()) {
 				pop_token();
-			} while(!cur_token.is_glyph(";") && !cur_token.is_eof());
+			}
 
 			if(cur_token.is_eof()) {
 				return new AST.Error(this, 
@@ -376,7 +380,72 @@ namespace Saf
 
 			pop_token();
 
-			return new AST.Statement(this, first_token_idx, cur_token_idx);
+			return new AST.Error(this, first_token_idx, cur_token_idx,
+					"Failed to parse statement.");
+		}
+
+		// make_statement := MAKE identifier(var) '=' expression
+		private AST.Node parse_make_statement()
+			throws IOChannelError, ConvertError, TokeniserError, ParserError
+		{
+			int first_token_idx = cur_token_idx;
+
+			if(cur_token.type != Token.Type.MAKE) {
+				throw new ParserError.INTERNAL(
+						"parse_make_statement() called when the current token " +
+						"was not MAKE.");
+			}
+			pop_token();
+
+			if(cur_token.type != Token.Type.IDENTIFIER) {
+				return new AST.Error(this, 
+						first_token_idx, cur_token_idx,
+						"After 'make' I expect to find the name of the " +
+						"variable I should make equal to something.");
+			}
+
+			string var_name = cur_token.value.get_string();
+			pop_token();
+
+			if(!cur_token.is_glyph("=")) {
+				return new AST.Error(this, 
+						first_token_idx, cur_token_idx,
+						"After 'make' and a variable name, I expect to find " +
+						"an equals sign.");
+			}
+			pop_token();
+
+			AST.Expression expr = null;
+			AST.Node node = parse_expression();
+			if(node.get_type() == typeof(AST.Expression)) {
+				expr = (AST.Expression) node;
+			} else if(node.get_type() == typeof(AST.Error)) {
+				return (AST.Error) node;
+			} else {
+				throw new ParserError.INTERNAL(
+						"parse_expression() returned a node which was " +
+						"not either a Expression or an Error.");
+			}
+
+			return new AST.MakeStatement(this, 
+					first_token_idx, cur_token_idx,
+					var_name, expr);
+		}
+
+		private AST.Node parse_expression()
+			throws IOChannelError, ConvertError, TokeniserError
+		{
+			int first_token_idx = cur_token_idx;
+
+			if(cur_token.type != Token.Type.IDENTIFIER) {
+				return new AST.Error(this, 
+						first_token_idx, cur_token_idx,
+						"Cannot parse expression.");
+			}
+			pop_token();
+
+			return new AST.Expression(this,
+					first_token_idx, cur_token_idx);
 		}
 	}
 }

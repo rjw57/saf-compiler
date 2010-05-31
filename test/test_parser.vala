@@ -173,8 +173,8 @@ public class MainProgram {
 				stderr.printf("File error: %s\n", e.message);
 			} catch (Saf.TokeniserError e) {
 				stderr.printf("Tokeniser error: %s\n", e.message);
-			} catch {
-				stderr.printf("Other error\n");
+			} catch (GLib.Error e) {
+				stderr.printf("Other error: %s\n", e.message);
 			}
 		}
 
