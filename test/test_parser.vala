@@ -131,7 +131,21 @@ public class MainProgram {
 		var var_decl_node = new_ast_node(var_decl);
 		var_decl_node->set_prop("name", var_decl.name);
 
+		if(var_decl.named_type != null) {
+			var type_node = document->new_node(ns, "children");
+			type_node->set_prop("type", "named-type");
+			type_node->add_child(new_named_type_node(var_decl.named_type));
+			var_decl_node->add_child(type_node);
+		}
+
 		return var_decl_node;
+	}
+
+	private Xml.Node* new_named_type_node(Saf.AST.NamedType type)
+	{
+		var type_node = new_ast_node(type);
+		type_node->set_prop("name", type.name);
+		return type_node;
 	}
 
 	private Xml.Node* new_statement_node(Saf.AST.Statement statement)

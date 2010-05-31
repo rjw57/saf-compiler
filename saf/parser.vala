@@ -306,6 +306,8 @@ namespace Saf
 			string var_name = cur_token.value.get_string();
 			pop_token();
 
+			AST.NamedType named_type = null;
+
 			if(cur_token.type == Token.Type.ONLY) {
 				pop_token();
 
@@ -315,16 +317,42 @@ namespace Saf
 					pop_token();
 				}
 
-				// PARSE TYPE (FIXME)
-				if(cur_token.type != Token.Type.IDENTIFIER) {
-					stderr.printf("unexpected token: '%s'\n", cur_token.text);
+				// parse type
+				var type = parse_type();
+				if(type.get_type() == typeof(AST.NamedType)) {
+					named_type = (AST.NamedType) type;
+				} else if(type.get_type() == typeof(AST.Error)) {
+					error_list.add((AST.Error) type);
+				} else {
+					throw new ParserError.INTERNAL(
+							"parse_type() returned a node which was " +
+							"not either a NamedType or an Error.");
 				}
-				pop_token();
 			}
 
 			return new AST.VariableDeclaration(this,
 					first_token_idx, cur_token_idx,
-					var_name);
+					var_name, named_type);
+		}
+
+		/* type := identifier */
+		private AST.Node parse_type()
+			throws IOChannelError, ConvertError, TokeniserError, ParserError
+		{
+			int first_token_idx = cur_token_idx;
+			if(cur_token.type != Token.Type.IDENTIFIER) {
+				return new AST.Error(this,
+						first_token_idx, cur_token_idx,
+						"I am expecting the name of a 'type' here (e.g. " +
+						"'number' or 'text').");
+			}
+
+			string type_name = cur_token.value.get_string();
+			pop_token();
+
+			return new AST.NamedType(this,
+					first_token_idx, cur_token_idx,
+					type_name);
 		}
 
 		// statement := { ^ ';' }* ';'

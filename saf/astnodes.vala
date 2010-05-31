@@ -88,9 +88,26 @@ namespace Saf.AST
 	public class VariableDeclaration : Node
 	{
 		private string _name = null;
+		private NamedType? _type = null;
+
+		public string name { get { return _name; } }
+		public NamedType named_type { get { return _type; } }
+
+		internal VariableDeclaration(Parser p, int f, int l,
+				string n, NamedType? t)
+		{
+			base(p,f,l);
+			_name = n;
+			_type = t;
+		}
+	}
+
+	public class NamedType : Node
+	{
+		private string _name = null;
 		public string name { get { return _name; } }
 
-		internal VariableDeclaration(Parser p, int f, int l, string n)
+		internal NamedType(Parser p, int f, int l, string n)
 		{
 			base(p,f,l);
 			_name = n;
