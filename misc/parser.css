@@ -10,9 +10,11 @@ h1, h2 {
   display: none;
 }
 
+/* }}} */
+
 /* {{{ TOP LEVEL SECTIONS */
 
-#programs_section, #tokens_section {
+#programs_section, #tokens_section, #errors_section {
   padding: 0.5em;
   overflow: auto;
   background-color: white;
@@ -20,7 +22,16 @@ h1, h2 {
 
 #tokens_section {
   position: fixed;
-  left: 0; top: 0; bottom: 0;
+  left: 0; top: 0; bottom: 25%;
+  margin-right: 0.5em;
+ margin-bottom: 0.125em;
+  right: 33%;
+}
+
+#errors_section {
+  position: fixed;
+  left: 0; bottom: 0; top: 75%;
+  margin-top: 0.125em;
   margin-right: 0.5em;
   right: 33%;
 }
@@ -47,8 +58,6 @@ h1, h2 {
   margin: 0;
   padding: 0;
 }
-
-/* }}} */
 
 /* }}} */
 
@@ -203,6 +212,27 @@ h1, h2 {
 
 .token:hover {
   background-color: #ddd;
+}
+
+/* }}} */
+
+/* {{{ ERROR LIST */
+
+#errors_section ul, #errors_section li {
+  margin: 0; padding: 0;
+}
+
+#errors_section ul {
+  list-style-type: none;
+}
+
+#errors_section li {
+  padding: 0.25em 0em;
+  border-bottom: 1px solid #ddd;
+}
+
+#errors_section .error {
+  color: red;
 }
 
 /* }}} */

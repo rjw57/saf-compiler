@@ -26,6 +26,7 @@
       <h1>SAF Parser Output</h1>
       <xsl:apply-templates select="programs" />
       <xsl:apply-templates select="tokens" />
+      <xsl:apply-templates select="errors" />
     </body>
     </html>
   </xsl:template>
@@ -59,6 +60,49 @@
       </xsl:choose>
     </span>
   </xsl:template>
+ 
+  <!-- the error list -->
+  <xsl:template match="errors">
+    <div id="errors_section">
+      <h2 class="section_header">Errors</h2>
+      <ul class="errors">
+         <xsl:apply-templates />
+      </ul>
+    </div>
+  </xsl:template>
+
+  <xsl:template match="error">
+    <li class="error">
+      <xsl:call-template name="error-node" />
+    </li>
+  </xsl:template>
+
+  <xsl:template match="warning">
+    <li class="warning">
+      <xsl:call-template name="error-node" />
+    </li>
+  </xsl:template>
+
+  <xsl:template name="error-node">
+    <xsl:variable name="label" select="name()" />
+    <xsl:variable name="first"><xsl:value-of select="@first" /></xsl:variable>
+    <xsl:variable name="last"><xsl:value-of select="@last" /></xsl:variable>
+    <xsl:variable name="first_token" 
+      select="/descendant::token[position()=number($first)+1]" />
+    <xsl:variable name="last_token" 
+      select="/descendant::token[position()=number($last)+1]" />
+    <xsl:variable name="start"
+      select="$first_token/bounds/location[position()=1]" />
+    <xsl:variable name="end"
+      select="$last_token/bounds/location[position()=2]" />
+    <span class="input_name"><xsl:value-of select="@input-name"
+    /></span>:<span class="start line"><xsl:value-of select="$start/@line" 
+      /></span>.<span class="start column"><xsl:value-of select="$start/@column" 
+      /></span>-<span class="end line"><xsl:value-of select="$end/@line"
+      /></span>.<span class="end column"><xsl:value-of select="$end/@column" 
+      /></span>: <span class="label"><xsl:value-of select="$label"
+      /></span>: <span class="message"><xsl:value-of select="." /></span>
+    </xsl:template>
 
   <!-- the programs -->
   <xsl:template match="programs">
