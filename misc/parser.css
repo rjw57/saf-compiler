@@ -168,6 +168,7 @@ h1, h2 {
 #tokens_section .line {
   counter-increment: line;
   display: block;
+  padding: 0.1em 0;
 }
 
 #tokens_section .line::before {
@@ -240,6 +241,13 @@ h1, h2 {
   color: blue;
 }
 
+/* these classes are set via CSS */
+#tokens .error {
+  background-image: url(red-underline.gif);
+  background-position: bottom;
+  background-repeat: repeat-x;
+}
+
 .token:hover {
   background-color: #ddd;
 }
@@ -259,6 +267,10 @@ h1, h2 {
 #errors_section li {
   padding: 0.25em 0em;
   border-bottom: 1px solid #ddd;
+}
+
+#errors_section .tokens {
+  display: none;
 }
 
 #errors_section .error {

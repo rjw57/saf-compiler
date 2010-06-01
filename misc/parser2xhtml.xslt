@@ -21,6 +21,8 @@
     <head>
       <title>SAF Parser Output</title>
       <link rel="stylesheet" type="text/css" href="parser.css" />
+      <script type="text/javascript" src="jquery-1.4.2.min.js" />
+      <script type="text/javascript" src="parser.js" />
     </head>
     <body>
       <h1>SAF Parser Output</h1>
@@ -119,7 +121,9 @@
     <xsl:variable name="end"
       select="$last_token/bounds/location[position()=2]" />
     <span class="input_name"><xsl:value-of select="@input-name"
-    /></span>:<span class="start line"><xsl:value-of select="$start/@line" 
+      /></span>:<span class="tokens">(<span class="first"><xsl:value-of select="$first"
+      /></span>-<span class="last"><xsl:value-of select="$last"
+      /></span>):</span><span class="start line"><xsl:value-of select="$start/@line" 
       /></span>.<span class="start column"><xsl:value-of select="$start/@column" 
       /></span>-<span class="end line"><xsl:value-of select="$end/@line"
       /></span>.<span class="end column"><xsl:value-of select="$end/@column" 
