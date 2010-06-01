@@ -26,6 +26,8 @@ h1, h2 {
   margin-right: 0.5em;
   margin-bottom: 0.125em;
   right: 33%;
+  padding-left: 0;
+  padding-right: 0;
 }
 
 #errors_section {
@@ -176,12 +178,16 @@ h1, h2 {
   border-spacing: 0pt;
 }
 
+#tokens .line .contents {
+  padding-right: 1ex;
+}
+
 #tokens .line .number {
   font-size: 66%;
   text-align: right;
   font-family: sans-serif;
   color: #ccc;
-  padding-right: 1ex;
+  padding: 0ex 1ex;
 }
 
 #tokens_section .line:nth-child(even) {
