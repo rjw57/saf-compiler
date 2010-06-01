@@ -71,8 +71,27 @@
   <!-- a token -->
   <xsl:template match="token">
     <xsl:variable name="number"><xsl:number /></xsl:variable>
+    <!-- find any errors which contain this token -->
+    <xsl:variable name="error"
+      select="/descendant::error[(number(@first) &lt;= ($number - 1)) and
+                                 (number(@last) &gt;= ($number - 1))][1]" />
+    <xsl:choose>
+      <xsl:when test="count($error) != 0">
+        <span class="error">
+          <xsl:attribute name="id">token-error-<xsl:value-of select="$error/@id" /></xsl:attribute>
+          <xsl:call-template name="token-contents" />
+         </span>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:call-template name="token-contents" />
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+
+  <xsl:template name="token-contents">
+    <xsl:variable name="number"><xsl:number /></xsl:variable>
     <span class="token">
-      <xsl:attribute name="id">token_<xsl:value-of select="$number - 1" /></xsl:attribute>
+      <xsl:attribute name="id">token-<xsl:value-of select="$number - 1" /></xsl:attribute>
       <xsl:attribute name="class">token <xsl:value-of select="@type" /></xsl:attribute>
       <xsl:choose>
         <xsl:when test="@type='line_break'">
@@ -100,13 +119,17 @@
   </xsl:template>
 
   <xsl:template match="error">
-    <li class="error">
-      <xsl:call-template name="error-node" />
-    </li>
-  </xsl:template>
-
-  <xsl:template match="warning">
-    <li class="warning">
+    <li>
+      <xsl:attribute name="class">
+        <xsl:choose>
+          <xsl:when test="@is-err = 'false'">
+            warning
+          </xsl:when>
+          <xsl:otherwise>
+            error
+          </xsl:otherwise>
+        </xsl:choose>
+      </xsl:attribute>
       <xsl:call-template name="error-node" />
     </li>
   </xsl:template>

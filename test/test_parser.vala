@@ -197,6 +197,7 @@ public class MainProgram {
 		// output errors
 		if(parser.errors.size > 0) {
 			var errors_node = document->new_node(ns, "errors");
+			int id = 0;
 			foreach(var err in parser.errors)
 			{
 				Saf.Token first_token = err.tokens.first();
@@ -214,13 +215,16 @@ public class MainProgram {
 				assert(first_index != -1);
 				assert(last_index != -1);
 
-				var error_node = document->new_node(ns,
-						err.is_err ? "error" : "warning");
+				var error_node = document->new_node(ns, "error");
+				error_node->set_prop("id", id.to_string());
+				error_node->set_prop("is-err", err.is_err ? "true" : "false");
 				error_node->set_prop("first", first_index.to_string());
 				error_node->set_prop("last", last_index.to_string());
 				error_node->set_prop("input-name", err.input_name);
 				error_node->add_child(document->new_text(err.message));
 				errors_node->add_child(error_node);
+
+				++id;
 			}
 			root_node->add_child(errors_node);
 		}
