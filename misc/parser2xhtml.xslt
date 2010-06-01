@@ -150,7 +150,7 @@
       select="$first_token/bounds/location[position()=1]" />
     <xsl:variable name="end"
       select="$last_token/bounds/location[position()=2]" />
-    <span class="input_name"><xsl:value-of select="@input-name"
+    <span class="location"><span class="input_name"><xsl:value-of select="@input-name"
       /></span>:<span class="tokens">(<span class="first"><xsl:value-of select="$first"
       /></span>-<span class="last"><xsl:value-of select="$last"
       /></span>):</span><span class="start line"><xsl:value-of select="$start/@line" 
@@ -158,7 +158,7 @@
       /></span>-<span class="end line"><xsl:value-of select="$end/@line"
       /></span>.<span class="end column"><xsl:value-of select="$end/@column" 
       /></span>: <span class="label"><xsl:value-of select="$label"
-      /></span>: <span class="message"><xsl:value-of select="." /></span>
+      /></span>: </span><span class="message"><xsl:value-of select="." /></span>
     </xsl:template>
 
   <!-- the programs -->
