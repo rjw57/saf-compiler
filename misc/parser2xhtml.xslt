@@ -42,12 +42,12 @@
       select="token[position()=last()]/bounds/location[position()=2]/@line" />
     <div id="tokens_section">
       <h2 class="section_header">Tokens</h2>
-      <code id="tokens">
+      <table id="tokens">
         <xsl:call-template name="token-line">
           <xsl:with-param name="line_num" select="$first_line" />
           <xsl:with-param name="last_line_num" select="$last_line" />
         </xsl:call-template>
-      </code>
+      </table>
     </div>
   </xsl:template>
 
@@ -55,8 +55,11 @@
   <xsl:template name="token-line">
     <xsl:param name="line_num" />
     <xsl:param name="last_line_num" />
-    <span class="line"><xsl:apply-templates
-      select="token[bounds/location[position()=1]/@line=$line_num]" /></span>
+    <tr class="line">
+      <td class="number"><xsl:value-of select="$line_num" /></td>
+      <td class="contents"><code><xsl:apply-templates
+        select="token[bounds/location[position()=1]/@line=$line_num]" /></code></td>
+    </tr>
     <xsl:if test="$line_num &lt; $last_line_num"> 
       <xsl:call-template name="token-line">
         <xsl:with-param name="line_num" select="$line_num + 1" />

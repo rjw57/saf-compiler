@@ -71,7 +71,24 @@ h1, h2 {
 .ast_node {
   border: 1px solid #ccc;
   background-color: #ddd;
+}
+
+/* Funky CSS to make things web 2.0 :) */
+.ast_node,
+.ast_node > .description > .children {
   border-radius: 6px;
+  -moz-border-radius: 6px;
+  -webkit-border-radius: 6px;
+}
+
+.ast_node > .description,
+.ast_node > .description > .children > ul {
+  border-bottom-left-radius: 6px;
+  border-bottom-right-radius: 6px;
+  -moz-border-radius-bottomleft: 6px;
+  -moz-border-radius-bottomright: 6px;
+  -webkit-border-bottom-left-radius: 6px;
+  -webkit-border-bottom-right-radius: 6px;
 }
 
 .ast_node > .location {
@@ -108,8 +125,6 @@ h1, h2 {
 .ast_node > .description {
   border-top: 1px solid #ccc;
   background-color: #eee;
-  border-bottom-left-radius: 6px;
-  border-bottom-right-radius: 6px;
   padding-top: 0.1em;
   padding-bottom: 0.1em;
 }
@@ -125,7 +140,6 @@ h1, h2 {
 .ast_node > .description > .children {
   border: 1px solid #bbd;
   background-color: #cce;
-  border-radius: 6px;
   margin: 0.5em 0em;
 }
 
@@ -142,8 +156,6 @@ h1, h2 {
   display: block;
   background-color: #ddf;
   border-top: 1px solid #bbd;
-  border-bottom-left-radius: 6px;
-  border-bottom-right-radius: 6px;
   margin-top: 0.1em;
   padding-top: 0.5em;
 }
@@ -159,34 +171,21 @@ h1, h2 {
 /* {{{ SYNTAX HIGHLIGHTING OF TOKENS */
 
 #tokens_section #tokens {
-  white-space: pre;
   font-family: monospace;
-  display: table;
   width: 100%;
+  border-spacing: 0pt;
 }
 
-#tokens_section .line {
-  counter-increment: line;
-  display: block;
-  padding: 0.1em 0;
-}
-
-#tokens_section .line::before {
-  content: counter(line);
+#tokens .line .number {
   font-size: 66%;
   text-align: right;
   font-family: sans-serif;
-  color: #ddd;
-  padding-right: 0.5em;
-  padding-top: 0.2em;
-  display: block;
-  height: 1em;
-  float: left;
-  width: 2em;
+  color: #ccc;
+  padding-right: 1ex;
 }
 
 #tokens_section .line:nth-child(even) {
-  background-color: #f2f2f2;
+  background-color: #eee;
 }
 
 .token.line_break::before {

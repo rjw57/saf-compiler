@@ -19,7 +19,7 @@ function highlight_errors() {
 }
 
 $(document).ready(function() {
-  highlight_errors();
+  // highlight_errors();
 });
 
 // vim:sw=2:ts=2:et:autoindent
