@@ -24,7 +24,7 @@ h1, h2 {
   position: fixed;
   left: 0; top: 0; bottom: 25%;
   margin-right: 0.5em;
- margin-bottom: 0.125em;
+  margin-bottom: 0.125em;
   right: 33%;
 }
 
@@ -157,6 +157,36 @@ h1, h2 {
 /* }}} */
 
 /* {{{ SYNTAX HIGHLIGHTING OF TOKENS */
+
+#tokens_section #tokens {
+  white-space: pre;
+  font-family: monospace;
+  display: table;
+  width: 100%;
+}
+
+#tokens_section .line {
+  counter-increment: line;
+  display: block;
+}
+
+#tokens_section .line::before {
+  content: counter(line);
+  font-size: 66%;
+  text-align: right;
+  font-family: sans-serif;
+  color: #ddd;
+  padding-right: 0.5em;
+  padding-top: 0.2em;
+  display: block;
+  height: 1em;
+  float: left;
+  width: 2em;
+}
+
+#tokens_section .line:nth-child(even) {
+  background-color: #f2f2f2;
+}
 
 .token.line_break::before {
   content: "↵";
