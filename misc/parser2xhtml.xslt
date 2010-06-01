@@ -77,7 +77,11 @@
                                  (number(@last) &gt;= ($number - 1))][1]" />
     <xsl:choose>
       <xsl:when test="count($error) != 0">
-        <span class="error">
+        <span>
+          <xsl:attribute name="class"><xsl:choose>
+            <xsl:when test="$error/@is-err = 'false'">warning</xsl:when>
+            <xsl:otherwise>error</xsl:otherwise>
+          </xsl:choose></xsl:attribute>
           <xsl:attribute name="id">token-error-<xsl:value-of select="$error/@id" /></xsl:attribute>
           <xsl:call-template name="token-contents" />
          </span>
