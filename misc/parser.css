@@ -186,8 +186,14 @@ h1, h2 {
   padding-left: 10px !important;
 }
 
-.ast_node.tree-show > .description { 
-  display: block;
+.ast_node.tree-show > .description,
+.children.tree-show > ul { 
+  display: block !important;
+}
+
+.ast_node.tree-collapse > .description,
+.children.tree-collapse > ul {
+  display: none !important;
 }
 
 .ast_node.tree-collapse > .type,
@@ -197,14 +203,6 @@ h1, h2 {
   background-repeat: no-repeat;
   margin-left: 0.5em !important;
   padding-left: 10px !important;
-}
-
-.ast_node.tree-collapse > .description { 
-  display: none;
-}
-
-.children.tree-show > ul { 
-  display: block;
 }
 
 .children.tree-collapse > ul { 
