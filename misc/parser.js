@@ -1,25 +1,29 @@
 // JavaScript to provide interactive features for parser HTML
 
-function highlight_error(elem, is_err) {
-  var first_token = $(elem).find('.tokens .first').html();
-  var last_token = $(elem).find('.tokens .last').html();
+function setup_collapsable_nodes(node_selector, label_selector) {
+  // close all AST nodes
+  $(node_selector).addClass("tree-collapse");
 
-  var tokens = $('#token_'+first_token);
-  for(i=first_token; i<=last_token; ++i) {
-    tokens = tokens.add('#token_'+i);
-  }
-  tokens.addClass(is_err ? "error" : "warning");
-}
-
-function highlight_errors() {
-  $('#errors_section .error').each(
-    function() { highlight_error($(this), true); });
-  $('#errors_section .warning').each(
-    function() { highlight_error($(this), false); });
+  // wire up click event
+  $(node_selector + ' ' + label_selector).click(function() {
+    var node = $(this).parents(node_selector).first();
+    if(node.hasClass('tree-collapse')) {
+      node.removeClass('tree-collapse');
+      node.addClass('tree-show');
+    } else if(node.hasClass('tree-show')) {
+      node.removeClass('tree-show');
+      node.addClass('tree-collapse');
+    }
+  });
 }
 
 $(document).ready(function() {
-  // highlight_errors();
+  setup_collapsable_nodes('.ast_node', '.type');
+  setup_collapsable_nodes('.children', '.label');
+
+  // show the program nodes
+  $('.ast_node.program').removeClass('tree-collapse');
+  $('.ast_node.program').addClass('tree-show');
 });
 
 // vim:sw=2:ts=2:et:autoindent

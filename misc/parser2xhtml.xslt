@@ -22,6 +22,7 @@
       <title>SAF Parser Output</title>
       <link rel="stylesheet" type="text/css" href="parser.css" />
       <script type="text/javascript" src="jquery-1.4.2.min.js" />
+      <script type="text/javascript" src="jquery.treeview.min.js" />
       <script type="text/javascript" src="parser.js" />
     </head>
     <body>

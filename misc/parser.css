@@ -168,6 +168,49 @@ h1, h2 {
   font-style: italic;
 }
 
+/* TREE SUPPORT */
+
+.ast_node.tree-show > .type,
+.ast_node.tree-collapse > .type,
+.children.tree-show > .label,
+.children.tree-collapse > .label {
+  cursor: pointer; cursor: hand;
+}
+
+.ast_node.tree-show > .type,
+.children.tree-show > .label {
+  background-image: url(tri-down.png);
+  background-position: 0% 60%;
+  background-repeat: no-repeat;
+  margin-left: 0.5em !important;
+  padding-left: 10px !important;
+}
+
+.ast_node.tree-show > .description { 
+  display: block;
+}
+
+.ast_node.tree-collapse > .type,
+.children.tree-collapse > .label {
+  background-image: url(tri-right.png);
+  background-position: 0% 50%;
+  background-repeat: no-repeat;
+  margin-left: 0.5em !important;
+  padding-left: 10px !important;
+}
+
+.ast_node.tree-collapse > .description { 
+  display: none;
+}
+
+.children.tree-show > ul { 
+  display: block;
+}
+
+.children.tree-collapse > ul { 
+  display: none !important;
+}
+
 /* }}} */
 
 /* {{{ SYNTAX HIGHLIGHTING OF TOKENS */
