@@ -138,6 +138,42 @@ namespace Saf.AST
 			base(p,f,l);
 		}
 	}
+	
+	public class ConstantRealExpression : Expression
+	{
+		private double _value;
+		public double value { get { return _value; } }
+		
+		internal ConstantRealExpression(Parser p, int f, int l, double v)
+		{
+			base(p,f,l);
+			_value = v;
+		}
+	}
+	
+	public class ConstantIntegerExpression : Expression
+	{
+		private uint64 _value;
+		public uint64 value { get { return _value; } }
+		
+		internal ConstantIntegerExpression(Parser p, int f, int l, uint64 v)
+		{
+			base(p,f,l);
+			_value = v;
+		}
+	}
+	
+	public class VariableExpression : Expression
+	{
+		private string _name;
+		public string name { get { return _name; } }
+		
+		internal VariableExpression(Parser p, int f, int l, string vn)
+		{
+			base(p,f,l);
+			_name = vn;
+		}
+	}
 }
 
 // vim:sw=4:ts=4:cindent

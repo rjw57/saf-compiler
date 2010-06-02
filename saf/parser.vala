@@ -51,7 +51,7 @@ namespace Saf
 			// stop using the tokeniser
 			tokeniser = null;
 
-			if(program.get_type() == typeof(AST.Program)) {
+			if(program.get_type().is_a(typeof(AST.Program))) {
 				program_list.add((AST.Program) program);
 			} else {
 				return null;
@@ -115,11 +115,11 @@ namespace Saf
 			while(!cur_token.is_eof()) {
 				AST.Node node = parse_statement_or_gobbet();
 
-				if(node.get_type() == typeof(AST.Gobbet)) {
+				if(node.get_type().is_a(typeof(AST.Gobbet))) {
 					gobbets.add((AST.Gobbet) node);
 				} else if(node.get_type().is_a(typeof(AST.Statement))) {
 					statements.add((AST.Statement) node);
-				} else if(node.get_type() == typeof(AST.Error)) {
+				} else if(node.get_type().is_a(typeof(AST.Error))) {
 					error_list.add((AST.Error) node);
 				} else {
 					throw new ParserError.INTERNAL(
@@ -182,9 +182,9 @@ namespace Saf
 					pop_token(); // chomp TAKING or COMMA
 					AST.Node node = parse_var_decl();
 
-					if(node.get_type() == typeof(AST.VariableDeclaration)) {
+					if(node.get_type().is_a(typeof(AST.VariableDeclaration))) {
 						taking_decls.add((AST.VariableDeclaration) node);
-					} else if(node.get_type() == typeof(AST.Error)) {
+					} else if(node.get_type().is_a(typeof(AST.Error))) {
 						error_list.add((AST.Error) node);
 					} else {
 						throw new ParserError.INTERNAL(
@@ -201,9 +201,9 @@ namespace Saf
 				pop_token(); // chomp GIVING
 				AST.Node node = parse_var_decl();
 
-				if(node.get_type() == typeof(AST.VariableDeclaration)) {
+				if(node.get_type().is_a(typeof(AST.VariableDeclaration))) {
 					giving_decl = (AST.VariableDeclaration) node;
-				} else if(node.get_type() == typeof(AST.Error)) {
+				} else if(node.get_type().is_a(typeof(AST.Error))) {
 					error_list.add((AST.Error) node);
 				} else {
 					throw new ParserError.INTERNAL(
@@ -256,7 +256,7 @@ namespace Saf
 					var statement = parse_statement();
 					if(statement.get_type().is_a(typeof(AST.Statement))) {
 						gobbet_statements.add((AST.Statement) statement);
-					} else if(statement.get_type() == typeof(AST.Error)) {
+					} else if(statement.get_type().is_a(typeof(AST.Error))) {
 						error_list.add((AST.Error) statement);
 					} else {
 						throw new ParserError.INTERNAL(
@@ -319,9 +319,9 @@ namespace Saf
 
 				// parse type
 				var type = parse_type();
-				if(type.get_type() == typeof(AST.NamedType)) {
+				if(type.get_type().is_a(typeof(AST.NamedType))) {
 					named_type = (AST.NamedType) type;
-				} else if(type.get_type() == typeof(AST.Error)) {
+				} else if(type.get_type().is_a(typeof(AST.Error))) {
 					error_list.add((AST.Error) type);
 				} else {
 					throw new ParserError.INTERNAL(
@@ -359,20 +359,31 @@ namespace Saf
 		private AST.Node parse_statement()
 			throws IOChannelError, ConvertError, TokeniserError, ParserError
 		{
-			int first_token_idx = cur_token_idx;
+			AST.Node ret_val = null;
 
 			if(cur_token.type == Token.Type.MAKE) {
-				return parse_make_statement();
+				ret_val = parse_make_statement();
+			}
+
+			if(ret_val != null) {
+				if(cur_token.is_glyph(";")) {
+					/* ... as we expect */
+					pop_token();
+					return ret_val;
+				}
 			}
 
 			// keep going until we get a semi-colon so we skip over errors
+			int first_token_idx = cur_token_idx;
+			int statement_end_idx = cur_token_idx;
 			while(!cur_token.is_glyph(";") && !cur_token.is_eof()) {
 				pop_token();
+				statement_end_idx = cur_token_idx;
 			}
 
 			if(cur_token.is_eof()) {
 				return new AST.Error(this, 
-						cur_token_idx, cur_token_idx,
+						first_token_idx, statement_end_idx,
 						"The statement never seemed to end by the time the " +
 						"file did. Did you remember to finish the statement " +
 						"with a semi-colon (;)?");
@@ -380,8 +391,9 @@ namespace Saf
 
 			pop_token();
 
-			return new AST.Error(this, first_token_idx, cur_token_idx,
-					"Failed to parse statement.");
+			return new AST.Error(this, first_token_idx, statement_end_idx,
+					"There was stuff at the end of this statement I didn't " +
+					"understand.");
 		}
 
 		// make_statement := MAKE identifier(var) '=' expression
@@ -417,14 +429,14 @@ namespace Saf
 
 			AST.Expression expr = null;
 			AST.Node node = parse_expression();
-			if(node.get_type() == typeof(AST.Expression)) {
+			if(node.get_type().is_a(typeof(AST.Expression))) {
 				expr = (AST.Expression) node;
-			} else if(node.get_type() == typeof(AST.Error)) {
+			} else if(node.get_type().is_a(typeof(AST.Error))) {
 				return (AST.Error) node;
 			} else {
 				throw new ParserError.INTERNAL(
 						"parse_expression() returned a node which was " +
-						"not either a Expression or an Error.");
+						"neither an Expression or an Error.");
 			}
 
 			return new AST.MakeStatement(this, 
@@ -432,20 +444,54 @@ namespace Saf
 					var_name, expr);
 		}
 
+		// expr := primary_expr
 		private AST.Node parse_expression()
+			throws IOChannelError, ConvertError, TokeniserError
+		{
+			return parse_primary_expression();
+		}
+
+		// primary_expr := ( INTEGER | REAL | IDENTIFIER | '(' expr ')' )
+		private AST.Node parse_primary_expression()
 			throws IOChannelError, ConvertError, TokeniserError
 		{
 			int first_token_idx = cur_token_idx;
 
-			if(cur_token.type != Token.Type.IDENTIFIER) {
-				return new AST.Error(this, 
+			AST.Node ret_val = null;
+
+			if(cur_token.type == Token.Type.INTEGER) {
+				ret_val = new AST.ConstantIntegerExpression(this,
+						first_token_idx, cur_token_idx,
+						cur_token.value.get_uint64());
+				pop_token();
+			} else if(cur_token.type == Token.Type.REAL) {
+				ret_val = new AST.ConstantRealExpression(this,
+						first_token_idx, cur_token_idx,
+						cur_token.value.get_double());
+				pop_token();
+			} else if(cur_token.type == Token.Type.IDENTIFIER) {
+				ret_val = new AST.VariableExpression(this,
+					first_token_idx, cur_token_idx,
+					cur_token.value.get_string());
+				pop_token();
+			} else if(cur_token.is_glyph("(")) {
+				pop_token();
+				ret_val = parse_expression();
+				if(!cur_token.is_glyph(")")) {
+					ret_val = new AST.Error(this, 
+							first_token_idx, cur_token_idx,
+							"After an opening '(', I expect a matching " +
+							"closing ')'.");
+				}
+			} else {
+				ret_val = new AST.Error(this, 
 						first_token_idx, cur_token_idx,
 						"Cannot parse expression.");
 			}
-			pop_token();
 
-			return new AST.Expression(this,
-					first_token_idx, cur_token_idx);
+			assert(ret_val != null);
+
+			return ret_val;
 		}
 	}
 }
