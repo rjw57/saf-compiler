@@ -26,11 +26,11 @@ end if;
 
 if a >= 4:
   make bar = 6;
-end if
+end if;
 
 if a =/= 4:
   make bar = 6;
-end if
+end if;
 
 make A = 43;
 make B = 3.4;

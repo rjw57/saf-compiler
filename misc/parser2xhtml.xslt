@@ -197,7 +197,8 @@
             <xsl:call-template name="variabledeclaration_node" />
           </xsl:when>
           <xsl:otherwise>
-            AST node of type: <xsl:value-of select="@type" />
+            <!-- No description -->
+            <!-- AST node of type: <xsl:value-of select="@type" /> -->
           </xsl:otherwise>
         </xsl:choose>
         <xsl:for-each select="children">

@@ -151,7 +151,24 @@ public class MainProgram {
 	private Xml.Node* new_statement_node(Saf.AST.Statement statement)
 	{
 		var statement_node = new_ast_node(statement);
+
+		if(statement.get_type().is_a(typeof(Saf.AST.MakeStatement))) {
+			var ms = (Saf.AST.MakeStatement) statement;
+			statement_node->set_prop("name", ms.name);
+			var children_node = document->new_node(ns, "children");
+			children_node->set_prop("type", "expression");
+			children_node->add_child(new_expression_node(ms.value));
+			statement_node->add_child(children_node);
+		}
+
 		return statement_node;
+	}
+
+	private Xml.Node* new_expression_node(Saf.AST.Expression expression)
+	{
+		var expression_node = new_ast_node(expression);
+
+		return expression_node;
 	}
 
 	public int run(string[] args)

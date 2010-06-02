@@ -120,7 +120,7 @@ namespace Saf.AST
 		private Expression _value = null;
 
 		public string name { get { return _name; } }
-		public Expression vaue { get { return _value; } }
+		public Expression value { get { return _value; } }
 
 		internal MakeStatement(Parser p, int f, int l,
 				string n, Expression v)
