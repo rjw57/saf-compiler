@@ -174,6 +174,26 @@ namespace Saf.AST
 			_name = vn;
 		}
 	}
+	
+	public class BinaryOpExpression : Expression
+	{
+		private Expression _lhs;
+		private unichar _operator;
+		private Expression _rhs;
+
+		public Expression lhs { get { return _lhs; } }
+		public unichar operator { get { return _operator; } }
+		public Expression rhs { get { return _rhs; } }
+		
+		internal BinaryOpExpression(Parser p, int f, int l, 
+				Expression lh, unichar o, Expression rh)
+		{
+			base(p,f,l);
+			_lhs = lh;
+			_operator = o;
+			_rhs = rh;
+		}
+	}
 }
 
 // vim:sw=4:ts=4:cindent
