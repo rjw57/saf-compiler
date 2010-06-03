@@ -52,10 +52,11 @@ namespace Saf {
 			ligature_map.set(">=", "≥".get_char());
 			ligature_map.set("<=", "≤".get_char());
 			ligature_map.set("and", "∧".get_char());
-			ligature_map.set("or", "∨".get_char());
 			ligature_map.set("&&", "∧".get_char());
+			ligature_map.set("or", "∨".get_char());
 			ligature_map.set("||", "∨".get_char());
 			ligature_map.set("!", "¬".get_char());
+			ligature_map.set("not", "¬".get_char());
 
 			// form the ligature prefix table
 			foreach(string ligature in ligature_map.keys)
