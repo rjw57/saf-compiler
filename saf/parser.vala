@@ -21,6 +21,55 @@ namespace Saf
 		private Gee.List<AST.Error> error_list_ro = null;
 		private Gee.List<Token> token_list_ro = null;
 
+		private Gee.Map<unichar,int> bin_op_precedence_map =
+										new Gee.HashMap<unichar, int>();
+		private Gee.Map<unichar,bool> bin_op_is_left_assoc_map =
+										new Gee.HashMap<unichar, bool>();
+
+		private bool is_bin_op(Token token)
+		{
+			return (token.type == Token.Type.GLYPH) && 
+				(bin_op_precedence_map.has_key(token.value.get_uint()));
+		}
+
+		private int bin_op_prec(Token token)
+		{
+			if(!is_bin_op(token))
+				return 0;
+			return bin_op_precedence_map.get(token.value.get_uint());
+		}
+
+		private bool is_bin_op_left_assoc(Token token)
+		{
+			if(!is_bin_op(token))
+				return false;
+			return bin_op_is_left_assoc_map.get(token.value.get_uint());
+		}
+
+		private void add_bin_op(string op, int precedence, 
+				bool is_left_assoc = true)
+		{
+			unichar op_char = op.get_char();
+			bin_op_precedence_map.set(op_char, precedence);
+			bin_op_is_left_assoc_map.set(op_char, is_left_assoc);
+		}
+
+		public Parser() {
+			// initialse operator table
+			add_bin_op("∨", 40);
+			add_bin_op("∧", 50);
+			add_bin_op("=", 90);
+			add_bin_op("≠", 90);
+			add_bin_op("≥", 100);
+			add_bin_op(">", 100);
+			add_bin_op("≤", 100);
+			add_bin_op("<", 100);
+			add_bin_op("+", 120);
+			add_bin_op("-", 120);
+			add_bin_op("*", 130);
+			add_bin_op("/", 130);
+		}
+
 		public Gee.List<AST.Program> programs { 
 			// the magic here is to keep ownership within the class.
 			get { return (program_list_ro = program_list.read_only_view); } 
@@ -444,16 +493,86 @@ namespace Saf
 					var_name, expr);
 		}
 
-		// expr := primary_expr
+		// implement the classing shunting yard precedence parser algorithm
+		// see http://en.wikipedia.org/wiki/Operator-precedence_parser
 		private AST.Node parse_expression()
-			throws IOChannelError, ConvertError, TokeniserError
+			throws IOChannelError, ConvertError, TokeniserError, ParserError
 		{
-			return parse_primary_expression();
+			AST.Expression lhs = null;
+			AST.Node node = parse_primary_expression();
+			if(node.get_type().is_a(typeof(AST.Expression))) {
+				lhs = (AST.Expression) node;
+			} else if(node.get_type().is_a(typeof(AST.Error))) {
+				return (AST.Error) node;
+			} else {
+				throw new ParserError.INTERNAL(
+						"parse_primary_expression() returned a node which was " +
+						"neither an Expression or an Error.");
+			}
+
+			assert(lhs != null);
+			return parse_expression_1(lhs, 0);
+		}
+
+		private AST.Node parse_expression_1(AST.Expression _lhs, int min_precedence)
+			throws IOChannelError, ConvertError, TokeniserError, ParserError
+		{
+			int first_token_idx = cur_token_idx;
+			AST.Expression lhs = _lhs;
+
+			while(is_bin_op(cur_token) && 
+					(bin_op_prec(cur_token) >= min_precedence)) {
+				unichar bin_op = cur_token.value.get_uint();
+				int op_prec = bin_op_prec(cur_token);
+
+				pop_token();
+
+				AST.Expression rhs = null;
+				AST.Node node = parse_primary_expression();
+				if(node.get_type().is_a(typeof(AST.Expression))) {
+					rhs = (AST.Expression) node;
+				} else if(node.get_type().is_a(typeof(AST.Error))) {
+					return (AST.Error) node;
+				} else {
+					throw new ParserError.INTERNAL(
+							"parse_primary_expression() returned a node which was " +
+							"neither an Expression or an Error.");
+				}
+
+				assert(rhs != null);
+
+				while( ( is_bin_op(cur_token) &&
+							( bin_op_prec(cur_token) > op_prec ) ) || 
+						( is_bin_op(cur_token) && 
+						  !is_bin_op_left_assoc(cur_token) &&
+						  ( bin_op_prec(cur_token) == op_prec ) ) )
+				{
+					Token lookahead = cur_token;
+					node = parse_expression_1(rhs, bin_op_prec(lookahead));
+					if(node.get_type().is_a(typeof(AST.Expression))) {
+						rhs = (AST.Expression) node;
+					} else if(node.get_type().is_a(typeof(AST.Error))) {
+						return (AST.Error) node;
+					} else {
+						throw new ParserError.INTERNAL(
+								"parse_primary_expression() returned a node " +
+								"which was neither an Expression or an Error.");
+					}
+
+					assert(rhs != null);
+				}
+
+				lhs = new AST.BinaryOpExpression(this,
+						first_token_idx, cur_token_idx,
+						lhs, bin_op, rhs);
+			}
+
+			return lhs;
 		}
 
 		// primary_expr := ( INTEGER | REAL | IDENTIFIER | '(' expr ')' )
 		private AST.Node parse_primary_expression()
-			throws IOChannelError, ConvertError, TokeniserError
+			throws IOChannelError, ConvertError, TokeniserError, ParserError
 		{
 			int first_token_idx = cur_token_idx;
 
