@@ -20,16 +20,23 @@ make does_not_ツ_look_like_a_smiley = 4;
 
 make a = 3;
 
-if a ≥ 5:
+if ! a ≥ 5:
   make foo = 5;
 end if;
 
-if a >= 4:
+if a >= 4 || a < 5 && a > 3:
   make bar = 6;
 end if;
 
 if a =/= 4:
   make bar = 6;
+end if;
+
+if a > 3 and a <= 4:
+  make bar = 7;
+end if;
+
+if not true:
 end if;
 
 make A = 43;
