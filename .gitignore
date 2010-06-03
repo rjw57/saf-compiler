@@ -6,3 +6,9 @@ cmake_install.cmake
 CMakeCache.txt
 lib*.so
 lib*.a
+*.c
+*.h
+saf/saf.vapi
+lib*.dylib
+test/test_parser
+test/test_tokeniser
