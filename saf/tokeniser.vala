@@ -51,6 +51,11 @@ namespace Saf {
 			ligature_map.set("=/=", "≠".get_char());
 			ligature_map.set(">=", "≥".get_char());
 			ligature_map.set("<=", "≤".get_char());
+			ligature_map.set("and", "∧".get_char());
+			ligature_map.set("or", "∨".get_char());
+			ligature_map.set("&&", "∧".get_char());
+			ligature_map.set("||", "∨".get_char());
+			ligature_map.set("!", "¬".get_char());
 
 			// form the ligature prefix table
 			foreach(string ligature in ligature_map.keys)
@@ -382,10 +387,13 @@ namespace Saf {
 				var ident_token = consume_identifier();
 				assert(ident_token != null);
 
-				// see if this identifier is actually a symbol.
-				if(symbol_map.has_key(ident_token.text))
-				{
+				if(symbol_map.has_key(ident_token.text)) {
+					// see if this identifier is actually a symbol.
 					ident_token.type = symbol_map.get(ident_token.text);
+				} else if(ligature_map.has_key(ident_token.text)) {
+					// or is a ligature
+					ident_token.type = Token.Type.GLYPH;
+					ident_token.value = ligature_map.get(ident_token.text);
 				}
 
 				return ident_token;
