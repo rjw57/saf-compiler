@@ -7,7 +7,7 @@ namespace Saf
 		INTERNAL, /* an internal parser error */
 	}
 
-	public class Parser
+	public class Parser : Object
 	{
 		private Tokeniser			tokeniser = null;
 		private ArrayList<Token> 	token_list = new ArrayList<Token>();
