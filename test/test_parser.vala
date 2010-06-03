@@ -5,6 +5,14 @@ public class MainProgram {
 	private Saf.Parser parser = new Saf.Parser();
 	private Xml.Ns* ns = null;
 
+	private static string unichar_to_string(unichar c)
+	{
+		int req_len = c.to_utf8(null);
+		var str = string.nfill(req_len, '\0');
+		c.to_utf8(str);
+		return str;
+	}
+
 	private Xml.Node* new_ast_node(Saf.AST.Node ast_node)
 	{
 		int first_index = parser.tokens.index_of(ast_node.tokens.first());
@@ -167,6 +175,36 @@ public class MainProgram {
 	private Xml.Node* new_expression_node(Saf.AST.Expression expression)
 	{
 		var expression_node = new_ast_node(expression);
+
+		if(expression.get_type().is_a(typeof(Saf.AST.ConstantRealExpression))) {
+			var cast_expr = (Saf.AST.ConstantRealExpression) expression;
+			expression_node->add_child(
+					document->new_text(cast_expr.value.to_string()));
+		} else if(expression.get_type().is_a(
+					typeof(Saf.AST.ConstantIntegerExpression))) {
+			var cast_expr = (Saf.AST.ConstantIntegerExpression) expression;
+			expression_node->add_child(
+					document->new_text(cast_expr.value.to_string()));
+		} else if(expression.get_type().is_a(
+					typeof(Saf.AST.VariableExpression))) {
+			var cast_expr = (Saf.AST.VariableExpression) expression;
+			expression_node->set_prop("name", cast_expr.name);
+		} else if(expression.get_type().is_a(
+					typeof(Saf.AST.BinaryOpExpression))) {
+			var cast_expr = (Saf.AST.BinaryOpExpression) expression;
+			expression_node->set_prop("name", 
+					unichar_to_string(cast_expr.operator));
+
+			var lhs_children_node = document->new_node(ns, "children");
+			lhs_children_node->set_prop("type", "lhs");
+			lhs_children_node->add_child(new_expression_node(cast_expr.lhs));
+			expression_node->add_child(lhs_children_node);
+
+			var rhs_children_node = document->new_node(ns, "children");
+			rhs_children_node->set_prop("type", "rhs");
+			rhs_children_node->add_child(new_expression_node(cast_expr.rhs));
+			expression_node->add_child(rhs_children_node);
+		}
 
 		return expression_node;
 	}
