@@ -175,6 +175,23 @@ namespace Saf.AST
 		}
 	}
 	
+	public class UnaryOpExpression : Expression
+	{
+		private unichar _operator;
+		private Expression _rhs;
+
+		public unichar operator { get { return _operator; } }
+		public Expression rhs { get { return _rhs; } }
+		
+		internal UnaryOpExpression(Parser p, int f, int l, 
+				unichar o, Expression rh)
+		{
+			base(p,f,l);
+			_operator = o;
+			_rhs = rh;
+		}
+	}
+	
 	public class BinaryOpExpression : Expression
 	{
 		private Expression _lhs;

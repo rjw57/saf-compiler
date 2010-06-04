@@ -26,6 +26,14 @@ namespace Saf
 		private Gee.Map<unichar,bool> bin_op_is_left_assoc_map =
 										new Gee.HashMap<unichar, bool>();
 
+		private Gee.Set<unichar> un_op_set = new Gee.HashSet<unichar>();
+
+		private bool is_un_op(Token token)
+		{
+			return (token.type == Token.Type.GLYPH) && 
+				(un_op_set.contains(token.value.get_uint()));
+		}
+
 		private bool is_bin_op(Token token)
 		{
 			return (token.type == Token.Type.GLYPH) && 
@@ -68,6 +76,10 @@ namespace Saf
 			add_bin_op("-", 120);
 			add_bin_op("*", 130);
 			add_bin_op("/", 130);
+
+			un_op_set.add("¬".get_char());
+			un_op_set.add("-".get_char());
+			un_op_set.add("+".get_char());
 		}
 
 		public Gee.List<AST.Program> programs { 
@@ -593,9 +605,27 @@ namespace Saf
 					first_token_idx, cur_token_idx,
 					cur_token.value.get_string());
 				pop_token();
+			} else if(is_un_op(cur_token)) {
+				unichar op_char = cur_token.value.get_uint();
+				pop_token();
+
+				ret_val = parse_expression();
+				if(ret_val.get_type().is_a(typeof(AST.Error))) {
+					return ret_val;
+				}
+				assert(ret_val.get_type().is_a(typeof(AST.Expression)));
+
+				ret_val = new AST.UnaryOpExpression(this,
+							first_token_idx, cur_token_idx,
+							op_char, (AST.Expression) ret_val);
 			} else if(cur_token.is_glyph("(")) {
 				pop_token();
 				ret_val = parse_expression();
+				if(ret_val.get_type().is_a(typeof(AST.Error))) {
+					return ret_val;
+				}
+				assert(ret_val.get_type().is_a(typeof(AST.Expression)));
+
 				if(!cur_token.is_glyph(")")) {
 					ret_val = new AST.Error(this, 
 							first_token_idx, cur_token_idx,
