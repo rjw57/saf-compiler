@@ -170,7 +170,7 @@ namespace Saf
 			throws IOChannelError, ConvertError, TokeniserError, ParserError
 		{
 			Collection<AST.Gobbet> gobbets = new ArrayList<AST.Gobbet>();
-			Collection<AST.Statement> statements = new ArrayList<AST.Statement>();
+			Gee.List<AST.Statement> statements = new ArrayList<AST.Statement>();
 			int first_token_idx = cur_token_idx;
 
 			while(!cur_token.is_eof()) {

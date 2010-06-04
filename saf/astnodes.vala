@@ -33,15 +33,15 @@ namespace Saf.AST
 	public class Program : Node
 	{
 		private Collection<Gobbet> _gobbets = null;
-		private Collection<Statement> _statements = null;
+		private Gee.List<Statement> _statements = null;
 		private string _input_name = null;
 
 		public Collection<Gobbet> gobbets { get { return _gobbets; } }
-		public Collection<Statement> statements { get { return _statements; } }
+		public Gee.List<Statement> statements { get { return _statements; } }
 		public string input_name { get { return _input_name; } }
 
 		internal Program(Parser p, int f, int l,
-				string _n, Collection<Gobbet> g, Collection<Statement> s)
+				string _n, Collection<Gobbet> g, Gee.List<Statement> s)
 		{
 			base(p,f,l); 
 			_gobbets = g.read_only_view;
@@ -55,19 +55,19 @@ namespace Saf.AST
 		private string _name = null;
 		private Collection<VariableDeclaration> _taking_decls = null;
 		private VariableDeclaration _giving_decl = null;
-		private Collection<Statement> _statements = null;
+		private Gee.List<Statement> _statements = null;
 
 		public string name { get { return _name; } }
 		public Collection<VariableDeclaration> taking {
 			get { return _taking_decls; }
 		}
 		public VariableDeclaration? giving { get { return _giving_decl; } }
-		public Collection<Statement> statements { get { return _statements; } }
+		public Gee.List<Statement> statements { get { return _statements; } }
 
 		internal Gobbet(Parser p, int f, int l, string n, 
 				Collection<VariableDeclaration> t,
 				VariableDeclaration? g,
-				Collection<Statement> s)
+				Gee.List<Statement> s)
 		{
 			base(p,f,l);
 			_name = n;
@@ -134,13 +134,13 @@ namespace Saf.AST
 	public class IfStatement : Statement
 	{
 		private Expression _test = null;
-		private Collection<Statement> _statements = null;
+		private Gee.List<Statement> _statements = null;
 
 		public Expression test { get { return _test; } }
-		public Collection<Statement> statements { get { return _statements; } }
+		public Gee.List<Statement> statements { get { return _statements; } }
 
 		internal IfStatement(Parser p, int f, int l,
-				Expression t, Collection<Statement> s)
+				Expression t, Gee.List<Statement> s)
 		{
 			base(p,f,l);
 			_test = t;
