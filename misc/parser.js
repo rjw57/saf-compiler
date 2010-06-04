@@ -1,5 +1,20 @@
 // JavaScript to provide interactive features for parser HTML
 
+$(function(){
+	$.extend($.fn.disableTextSelect = function() {
+		return this.each(function(){
+			if($.browser.mozilla){//Firefox
+				$(this).css('MozUserSelect','none');
+			}else if($.browser.msie){//IE
+				$(this).bind('selectstart',function(){return false;});
+			}else{//Opera, etc.
+				$(this).mousedown(function(){return false;});
+			}
+		});
+	});
+});
+
+
 function setup_collapsable_nodes(node_selector, label_selector) {
   // close all AST nodes
   $(node_selector).addClass("tree-collapse");
@@ -28,6 +43,9 @@ $(document).ready(function() {
   // show the child nodes
   $('.children').removeClass('tree-collapse');
   $('.children').addClass('tree-show');
+
+	$('.ast_node .label').disableTextSelect();
+	$('.ast_node .type').disableTextSelect();
 });
 
 // vim:sw=2:ts=2:et:autoindent
