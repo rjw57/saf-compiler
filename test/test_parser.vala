@@ -180,6 +180,21 @@ public class MainProgram {
 				children_node->add_child(new_statement_node(s));
 			}
 			statement_node->add_child(children_node);
+		} else if(statement.get_type().is_a(typeof(Saf.AST.WhileStatement))) {
+			var ws = (Saf.AST.WhileStatement) statement;
+			statement_node->set_prop("name", ws.name_as_string());
+
+			var children_node = document->new_node(ns, "children");
+			children_node->set_prop("type", "test");
+			children_node->add_child(new_expression_node(ws.test));
+			statement_node->add_child(children_node);
+
+			children_node = document->new_node(ns, "children");
+			children_node->set_prop("type", "statements");
+			foreach(var s in ws.statements) {
+				children_node->add_child(new_statement_node(s));
+			}
+			statement_node->add_child(children_node);
 		}
 
 		return statement_node;
