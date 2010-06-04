@@ -687,6 +687,14 @@ namespace Saf
 						first_token_idx, cur_token_idx,
 						cur_token.value.get_double());
 				pop_token();
+			} else if(cur_token.is_glyph("⊨")) {
+				ret_val = new AST.ConstantBooleanExpression(this,
+						first_token_idx, cur_token_idx, true);
+				pop_token();
+			} else if(cur_token.is_glyph("⊭")) {
+				ret_val = new AST.ConstantBooleanExpression(this,
+						first_token_idx, cur_token_idx, false);
+				pop_token();
 			} else if(cur_token.type == Token.Type.IDENTIFIER) {
 				ret_val = new AST.VariableExpression(this,
 					first_token_idx, cur_token_idx,

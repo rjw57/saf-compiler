@@ -57,6 +57,8 @@ namespace Saf {
 			ligature_map.set("||", "∨".get_char());
 			ligature_map.set("!", "¬".get_char());
 			ligature_map.set("not", "¬".get_char());
+			ligature_map.set("true", "⊨".get_char());
+			ligature_map.set("false", "⊭".get_char());
 
 			// form the ligature prefix table
 			foreach(string ligature in ligature_map.keys)

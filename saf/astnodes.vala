@@ -180,6 +180,18 @@ namespace Saf.AST
 		}
 	}
 	
+	public class ConstantBooleanExpression : Expression
+	{
+		private bool _value;
+		public bool value { get { return _value; } }
+		
+		internal ConstantBooleanExpression(Parser p, int f, int l, bool v)
+		{
+			base(p,f,l);
+			_value = v;
+		}
+	}
+	
 	public class VariableExpression : Expression
 	{
 		private string _name;
