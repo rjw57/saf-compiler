@@ -65,107 +65,73 @@ h1, h2 {
 
 /* {{{ APPEARANCE OF AST NODES */
 
-/* reset any margins/padding and font size */
-.ast_node * { 
-  margin: 0; padding: 0; font-size: 100%;
-}
-
-.ast_node {
-  border: 1px solid #ccc;
-  background-color: #ddd;
-}
+/* clear any existing padding/margins */
+.ast_node * { margin: 0; padding: 0; }
 
 /* Funky CSS to make things web 2.0 :) */
 .ast_node,
 .ast_node > .description > .children {
+  border-bottom-left-radius: 6px;
+  border-top-left-radius: 6px;
+  -moz-border-radius-bottomleft: 6px;
+  -moz-border-radius-topleft: 6px;
+  -webkit-border-bottom-left-radius: 6px;
+  -webkit-border-top-left-radius: 6px;
+}
+
+.ast_node.program {
   border-radius: 6px;
   -moz-border-radius: 6px;
   -webkit-border-radius: 6px;
 }
 
-.ast_node > .description,
-.ast_node > .description > .children > ul {
-  border-bottom-left-radius: 6px;
-  border-bottom-right-radius: 6px;
-  -moz-border-radius-bottomleft: 6px;
-  -moz-border-radius-bottomright: 6px;
-  -webkit-border-bottom-left-radius: 6px;
-  -webkit-border-bottom-right-radius: 6px;
+.ast_node,
+.ast_node .children {
+  margin-top: 0.5ex;
+  margin-bottom: 0.25ex;
+  padding: 0.5ex 1ex;
+  padding-right: 0px;
 }
 
-.ast_node > .location {
-  display: none;
+.ast_node {
+  background-color: #ccc;
+  border: 1px solid #aaa;
+  border-right: none;
 }
 
-.ast_node ul {
-  list-style-type: none;
+.ast_node.program {
+  border-right: 1px solid #aaa;
 }
 
-.ast_node ul > li {
-  margin-bottom: 0.5em;
-}
-
-.ast_node > .description, .ast_node > .type {
-  padding: 0.1em 0.5em;
-  padding-top: 0.2em;
-}
-
-.ast_node > .type {
-  display: block;
-  font-size: 100%;
-}
-
-.ast_node > .type,
-.ast_node > .description > .children > .label {
-  font-weight: normal;
-}
-
-.ast_node > .type:first-letter {
-  text-transform: uppercase;
-}
-
-.ast_node > .description {
-  border-top: 1px solid #ccc;
-  background-color: #eee;
-  padding-top: 0.1em;
-  padding-bottom: 0.1em;
-}
-
-.ast_node > .description > .label {
-  display: none;
-}
-
-.ast_node > .description p {
-  margin: 0.5em 0em;
-}
-
-.ast_node > .description > .children {
-  border: 1px solid #bbd;
+.ast_node .children {
   background-color: #cce;
-  margin: 0.5em 0em;
+  border: 1px solid #aac;
+  border-right: none;
 }
 
-.ast_node > .description > .children > .label, 
-.ast_node > .description > .children > ul {
-  padding: 0.1em 0.5em;
+/* reset heading styles */
+.ast_node h3 {
+  font-size: 100%;
+  font-weight: bold; 
+  margin-bottom: 0.5ex;
 }
 
-.ast_node > .description > .children > .label:first-letter {
-  text-transform: uppercase;
-}
-
-.ast_node > .description > .children > ul {
-  display: block;
-  background-color: #ddf;
-  border-top: 1px solid #bbd;
-  margin-top: 0.1em;
-  padding-top: 0.5em;
-}
-
-.ast_node > .description > .children > .label {
-  padding: 0.1em 0.5em;
-  padding-top: 0.3em;
+.ast_node h4 {
+  font-size: 100%;
+  font-weight: normal; 
   font-style: italic;
+  margin-bottom: 0.5ex;
+}
+
+/* hide AST node locations and labels */
+.ast_node > .description > .label,
+.ast_node > .location {
+  display: none; 
+}
+
+.ast_node .children > ul {
+  list-style-type: none;
+  padding-left: 0.5ex;
 }
 
 /* TREE SUPPORT */
@@ -182,7 +148,6 @@ h1, h2 {
   background-image: url(tri-down.png);
   background-position: 0% 60%;
   background-repeat: no-repeat;
-  margin-left: 0.5em !important;
   padding-left: 10px !important;
 }
 
@@ -201,7 +166,6 @@ h1, h2 {
   background-image: url(tri-right.png);
   background-position: 0% 50%;
   background-repeat: no-repeat;
-  margin-left: 0.5em !important;
   padding-left: 10px !important;
 }
 
