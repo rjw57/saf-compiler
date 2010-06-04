@@ -416,7 +416,7 @@ namespace Saf
 					type_name);
 		}
 
-		// statement := ( make_statement ) ';'
+		// statement := ( make_statement | if_statement ) ';'
 		private AST.Node parse_statement()
 			throws IOChannelError, ConvertError, TokeniserError, ParserError
 		{
@@ -424,6 +424,8 @@ namespace Saf
 
 			if(cur_token.type == Token.Type.MAKE) {
 				ret_val = parse_make_statement();
+			} else if(cur_token.type == Token.Type.IF) {
+				ret_val = parse_if_statement();
 			}
 
 			if(ret_val != null) {
@@ -503,6 +505,91 @@ namespace Saf
 			return new AST.MakeStatement(this, 
 					first_token_idx, cur_token_idx,
 					var_name, expr);
+		}
+
+		// if_statement := IF expression: ( statement )* END IF
+		private AST.Node parse_if_statement()
+			throws IOChannelError, ConvertError, TokeniserError, ParserError
+		{
+			int first_token_idx = cur_token_idx;
+
+			if(cur_token.type != Token.Type.IF) {
+				throw new ParserError.INTERNAL(
+						"parse_if_statement() called when the current token " +
+						"was not IF.");
+			}
+			pop_token();
+
+			AST.Expression expr = null;
+			AST.Node node = parse_expression();
+			if(node.get_type().is_a(typeof(AST.Expression))) {
+				expr = (AST.Expression) node;
+			} else if(node.get_type().is_a(typeof(AST.Error))) {
+				return (AST.Error) node;
+			} else {
+				throw new ParserError.INTERNAL(
+						"parse_expression() returned a node which was " +
+						"neither an Expression or an Error.");
+			}
+
+			if(!cur_token.is_glyph(":")) {
+				return new AST.Error(this,
+						cur_token_idx, cur_token_idx,
+						"I Expected a ':' here after the if statement's " +
+						"test.");
+			}
+			pop_token();
+
+			var if_statements = new ArrayList<AST.Statement>();
+
+			// keep going until we get an 'end if;'
+			bool should_continue = true;
+			do {
+				if(cur_token.type == Token.Type.END) {
+					int end_token_idx = cur_token_idx;
+					pop_token();
+					if(cur_token.type == Token.Type.IF) {
+						should_continue = false;
+					} else {
+						// this shouldn't happen. In case it does, however, try
+						// to be friendly.
+						error_list.add(new AST.Error(this, 
+									end_token_idx, cur_token_idx,
+									"INTERNAL: Inside parse_if_statement() I " +
+									"found an 'end' without a matching 'if'. This " +
+									"shouldn't happen and is a bug.", false));
+						push_token();
+					}
+				}
+
+				// if we've not reached the end of the if
+				if(should_continue) {
+					var statement = parse_statement();
+					if(statement.get_type().is_a(typeof(AST.Statement))) {
+						if_statements.add((AST.Statement) statement);
+					} else if(statement.get_type().is_a(typeof(AST.Error))) {
+						error_list.add((AST.Error) statement);
+					} else {
+						throw new ParserError.INTERNAL(
+								"parse_statement() returned a node which was " +
+								"not either a Statement or an Error.");
+					}
+				}
+			} while(should_continue && !cur_token.is_eof());
+
+			if(cur_token.is_eof()) {
+				return new AST.Error(this, 
+						first_token_idx, cur_token_idx,
+						"This if statement never seemed to end by the time the file " +
+						"was finished. Did you forget to finish the if " +
+						"with 'end if;'?");
+			}
+
+			pop_token();
+
+			return new AST.IfStatement(this,
+						first_token_idx, cur_token_idx,
+						expr, if_statements);
 		}
 
 		// implement the classing shunting yard precedence parser algorithm

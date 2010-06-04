@@ -131,6 +131,23 @@ namespace Saf.AST
 		}
 	}
 
+	public class IfStatement : Statement
+	{
+		private Expression _test = null;
+		private Collection<Statement> _statements = null;
+
+		public Expression test { get { return _test; } }
+		public Collection<Statement> statements { get { return _statements; } }
+
+		internal IfStatement(Parser p, int f, int l,
+				Expression t, Collection<Statement> s)
+		{
+			base(p,f,l);
+			_test = t;
+			_statements = s;
+		}
+	}
+
 	public class Expression : Node
 	{
 		internal Expression(Parser p, int f, int l)
