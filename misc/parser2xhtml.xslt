@@ -197,6 +197,15 @@
           <xsl:when test="@type='variabledeclaration'">
             <xsl:call-template name="variabledeclaration_node" />
           </xsl:when>
+          <xsl:when test="@type='constantrealexpression'">
+            <xsl:call-template name="constantexpression_node" />
+          </xsl:when>
+          <xsl:when test="@type='constantintegerexpression'">
+            <xsl:call-template name="constantexpression_node" />
+          </xsl:when>
+          <xsl:when test="@type='constantbooleanexpression'">
+            <xsl:call-template name="constantexpression_node" />
+          </xsl:when>
           <xsl:otherwise>
             <!-- No description -->
             <!-- AST node of type: <xsl:value-of select="@type" /> -->
@@ -248,6 +257,11 @@
   <!-- A variable declaration node -->
   <xsl:template name="variabledeclaration_node">
     <p>Variable called: <span class="variable_declaration_name"><xsl:value-of select="@name" /></span></p>
+  </xsl:template>
+
+  <!-- A constant node -->
+  <xsl:template name="constantexpression_node">
+    <p>Value: <span class="constant_value"><xsl:value-of select="." /></span></p>
   </xsl:template>
 
 </xsl:stylesheet>

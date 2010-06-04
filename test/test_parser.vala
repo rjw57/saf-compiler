@@ -214,6 +214,12 @@ public class MainProgram {
 			expression_node->add_child(
 					document->new_text(cast_expr.value.to_string()));
 		} else if(expression.get_type().is_a(
+					typeof(Saf.AST.ConstantBooleanExpression))) {
+			var cast_expr = (Saf.AST.ConstantBooleanExpression) expression;
+			expression_node->add_child(
+					document->new_text(
+						cast_expr.value ? "true" : "false"));
+		} else if(expression.get_type().is_a(
 					typeof(Saf.AST.VariableExpression))) {
 			var cast_expr = (Saf.AST.VariableExpression) expression;
 			expression_node->set_prop("name", cast_expr.name);
