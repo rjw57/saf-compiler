@@ -6,10 +6,18 @@ gobbet square taking A giving B:
 gobbet power taking number only a number, exponent only a number giving result only a number:
   make result = number;
   make times_count = 1;
-  while times_count < exponent, called power loop;
+  while times_count < exponent, called power loop:
     make result = result * number;
     make times_count = times_count + 1;
     end while power loop;
+#  while times_count < exponent:
+#    end while;
+#  while times_count < exponent, called foo bar:
+#    end while foo buzz;
+#  while times_count < exponent:
+#    end while foo buzz;
+#  while times_count < exponent, called foo bar:
+#    end while;
   end gobbet;
 
 print "The \"square\" of 4 is " + implement square with A = 4;
