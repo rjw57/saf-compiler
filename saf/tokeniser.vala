@@ -406,6 +406,11 @@ namespace Saf {
 					Token.Type.GLYPH, current_char_str);
 			token.value = current_char;
 
+			// check to see if this char is itself a ligature
+			if(ligature_map.has_key(token.text)) {
+				token.value = ligature_map.get(token.text);
+			}
+
 			// this is actually a line break.
 			if(current_char.isspace() && is_line_break(current_char)) {
 				token.type = Token.Type.LINE_BREAK;
