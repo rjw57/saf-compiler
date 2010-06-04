@@ -435,7 +435,7 @@ namespace Saf
 					type_name);
 		}
 
-		// statement := ( make_statement | if_statement ) ';'
+		// statement := ( make_statement | if_statement | while_statement ) ';'
 		private AST.Node parse_statement()
 			throws IOChannelError, ConvertError, TokeniserError, ParserError
 		{
@@ -445,6 +445,8 @@ namespace Saf
 				ret_val = parse_make_statement();
 			} else if(cur_token.type == Token.Type.IF) {
 				ret_val = parse_if_statement();
+			} else if(cur_token.type == Token.Type.WHILE) {
+				ret_val = parse_while_statement();
 			}
 
 			if(ret_val != null) {
@@ -568,6 +570,117 @@ namespace Saf
 			return new AST.IfStatement(this,
 						first_token_idx, cur_token_idx,
 						expr, if_statements);
+		}
+
+		// return true iff list_a and list_b have the same number of elements
+		// and corresponding elements are equal
+		private static bool string_lists_are_identical(
+				Gee.List<string> list_a,
+				Gee.List<string> list_b)
+		{
+			if(list_a.size != list_b.size)
+				return false;
+
+			if(list_a.size == 0)
+				return true; // trivial special case
+
+			var list_a_it = list_a.list_iterator();
+			var list_b_it = list_b.list_iterator();
+
+			list_a_it.first();
+			list_b_it.first();
+
+			do {
+				if(list_a_it.get() != list_b_it.get())
+					return false;
+			} while((list_a_it.next()) && (list_b_it.next()));
+
+			return true;
+		}
+
+		// while_statement := WHILE expression ( ',' CALLED identifier+ )? ':'
+		//                    statement* END WHILE identifier+
+		private AST.Node parse_while_statement()
+			throws IOChannelError, ConvertError, TokeniserError, ParserError
+		{
+			int first_token_idx = cur_token_idx;
+
+			if(cur_token.type != Token.Type.WHILE) {
+				throw new ParserError.INTERNAL(
+						"parse_while_statement() called when the current token " +
+						"was not WHILE.");
+			}
+			pop_token();
+
+			AST.Expression expr = null;
+			AST.Node node = parse_expression();
+			if(node.get_type().is_a(typeof(AST.Expression))) {
+				expr = (AST.Expression) node;
+			} else if(node.get_type().is_a(typeof(AST.Error))) {
+				return (AST.Error) node;
+			} else {
+				throw new ParserError.INTERNAL(
+						"parse_expression() returned a node which was " +
+						"neither an Expression or an Error.");
+			}
+
+			var loop_name_1 = new ArrayList<string>();
+			int loop_name_1_first_idx = cur_token_idx;
+			int loop_name_1_last_idx = cur_token_idx;
+			if(cur_token.is_glyph(",")) {
+				pop_token();
+
+				if(cur_token.type != Token.Type.CALLED) {
+					return new AST.Error(this,
+							cur_token_idx, cur_token_idx,
+							"I expected 'called' here.");
+				}
+				pop_token();
+
+				loop_name_1_first_idx = cur_token_idx;
+				while(cur_token.type == Token.Type.IDENTIFIER) {
+					loop_name_1.add(cur_token.value.get_string());
+					loop_name_1_last_idx = cur_token_idx;
+					pop_token();
+				}
+			}
+
+			if(!cur_token.is_glyph(":")) {
+				return new AST.Error(this,
+						cur_token_idx, cur_token_idx,
+						"I Expected a ':' here after the while statement's " +
+						"test.");
+			}
+			pop_token();
+
+			var while_statements = new ArrayList<AST.Statement>();
+
+			AST.Error? err = parse_statement_block(Token.Type.WHILE,
+					while_statements);
+			if(err != null) { return err; }
+
+			var loop_name_2 = new ArrayList<string>();
+			int loop_name_2_first_idx = cur_token_idx;
+			int loop_name_2_last_idx = cur_token_idx;
+			while(cur_token.type == Token.Type.IDENTIFIER) {
+				loop_name_2.add(cur_token.value.get_string());
+				loop_name_2_last_idx = cur_token_idx;
+				pop_token();
+			}
+
+			if(!string_lists_are_identical(loop_name_1, loop_name_2)) 
+			{
+				error_list.add(new AST.Error(this,
+						loop_name_1_first_idx, loop_name_1_last_idx,
+						"The while loop names do not match."));
+				return new AST.Error(this,
+						loop_name_2_first_idx, loop_name_2_last_idx,
+						"The while loop names do not match.");
+			}
+
+			return new AST.WhileStatement(this,
+						first_token_idx, cur_token_idx,
+						expr, while_statements, loop_name_1);
 		}
 
 		// implement the classing shunting yard precedence parser algorithm

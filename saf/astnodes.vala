@@ -148,6 +148,27 @@ namespace Saf.AST
 		}
 	}
 
+	public class WhileStatement : Statement
+	{
+		private Expression _test = null;
+		private Gee.List<Statement> _statements = null;
+		private Gee.List<string> _name = null;
+
+		public Expression test { get { return _test; } }
+		public Gee.List<Statement> statements { get { return _statements; } }
+		public Gee.List<string> name { get { return _name; } }
+
+		internal WhileStatement(Parser p, int f, int l,
+				Expression t, Gee.List<Statement> s,
+				Gee.List<string> n)
+		{
+			base(p,f,l);
+			_test = t;
+			_statements = s;
+			_name = n;
+		}
+	}
+
 	public class Expression : Node
 	{
 		internal Expression(Parser p, int f, int l)
