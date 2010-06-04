@@ -158,6 +158,19 @@ namespace Saf.AST
 		public Gee.List<Statement> statements { get { return _statements; } }
 		public Gee.List<string> name { get { return _name; } }
 
+		public string name_as_string()
+		{
+			string rv = "";
+			int i = 0;
+			// FSR, string.joinv doesn't play ball here.
+			foreach(var s in _name) {
+				rv += s; 
+				++i;
+				if(i != _name.size) { rv += " "; }
+			}
+			return rv;
+		}
+
 		internal WhileStatement(Parser p, int f, int l,
 				Expression t, Gee.List<Statement> s,
 				Gee.List<string> n)
