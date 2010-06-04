@@ -143,6 +143,16 @@ h1, h2 {
   cursor: pointer; cursor: hand;
 }
 
+.ast_node.tree-show > .type:hover,
+.ast_node.tree-collapse > .type:hover {
+  color: #888;
+}
+
+.children.tree-show > .label:hover,
+.children.tree-collapse > .label:hover {
+  color: #88a;
+}
+
 .ast_node.tree-show > .type,
 .children.tree-show > .label {
   background-image: url(tri-down.png);
