@@ -167,6 +167,19 @@ public class MainProgram {
 			children_node->set_prop("type", "expression");
 			children_node->add_child(new_expression_node(ms.value));
 			statement_node->add_child(children_node);
+		} else if(statement.get_type().is_a(typeof(Saf.AST.IfStatement))) {
+			var ifs = (Saf.AST.IfStatement) statement;
+			var children_node = document->new_node(ns, "children");
+			children_node->set_prop("type", "test");
+			children_node->add_child(new_expression_node(ifs.test));
+			statement_node->add_child(children_node);
+
+			children_node = document->new_node(ns, "children");
+			children_node->set_prop("type", "statements");
+			foreach(var s in ifs.statements) {
+				children_node->add_child(new_statement_node(s));
+			}
+			statement_node->add_child(children_node);
 		}
 
 		return statement_node;
@@ -199,6 +212,16 @@ public class MainProgram {
 			lhs_children_node->set_prop("type", "lhs");
 			lhs_children_node->add_child(new_expression_node(cast_expr.lhs));
 			expression_node->add_child(lhs_children_node);
+
+			var rhs_children_node = document->new_node(ns, "children");
+			rhs_children_node->set_prop("type", "rhs");
+			rhs_children_node->add_child(new_expression_node(cast_expr.rhs));
+			expression_node->add_child(rhs_children_node);
+		} else if(expression.get_type().is_a(
+					typeof(Saf.AST.UnaryOpExpression))) {
+			var cast_expr = (Saf.AST.UnaryOpExpression) expression;
+			expression_node->set_prop("name", 
+					unichar_to_string(cast_expr.operator));
 
 			var rhs_children_node = document->new_node(ns, "children");
 			rhs_children_node->set_prop("type", "rhs");
