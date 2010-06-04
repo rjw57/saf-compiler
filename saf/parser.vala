@@ -205,6 +205,65 @@ namespace Saf
 			}
 		}
 
+		// parse zero or more statements until END and term_token_type is
+		// encountered. Append the parsed statements to statement_list. Any
+		// errors which are encountered are added to the error list. Return
+		// a non-null AST.Error if there is a fatal error
+		private AST.Error? parse_statement_block(Token.Type term_token_type,
+				Gee.List<AST.Statement> statement_list)
+			throws IOChannelError, ConvertError, TokeniserError, ParserError
+		{
+			int first_token_idx = cur_token_idx;
+
+			// keep going until we get an 'end <term>'
+			bool should_continue = true;
+			do {
+				if(cur_token.type == Token.Type.END) {
+					int end_token_idx = cur_token_idx;
+					pop_token();
+					if(cur_token.type == term_token_type) {
+						should_continue = false;
+					} else {
+						// this shouldn't happen. In case it does, however, try
+						// to be friendly.
+						error_list.add(new AST.Error(this, 
+									end_token_idx, cur_token_idx,
+									"INTERNAL: Inside parse_statement_block() " +
+									"I found an 'end' without a matching " +
+									"termination token. This " +
+									"shouldn't happen and is a bug.", false));
+						push_token();
+					}
+				}
+
+				// if we've not reached the end of the block
+				if(should_continue) {
+					var statement = parse_statement();
+					if(statement.get_type().is_a(typeof(AST.Statement))) {
+						statement_list.add((AST.Statement) statement);
+					} else if(statement.get_type().is_a(typeof(AST.Error))) {
+						error_list.add((AST.Error) statement);
+					} else {
+						throw new ParserError.INTERNAL(
+								"parse_statement() returned a node which was " +
+								"not either a Statement or an Error.");
+					}
+				}
+			} while(should_continue && !cur_token.is_eof());
+
+			if(cur_token.is_eof()) {
+				return new AST.Error(this, 
+						first_token_idx, cur_token_idx,
+						"This block never seemed to end by the time the file " +
+						"was finished. Did you forget to finish the block " +
+						"with the right 'end' line?");
+			}
+
+			pop_token(); // pop termination token
+
+			return null;
+		}
+
 		// gobbet := GOBBET identifier(name) { TAKING var_decl { ',' var_decl }* }? { GIVING var_decl }? ':' { statement }* END GOBBET ';' := ...
 		private AST.Node parse_gobbet()
 			throws IOChannelError, ConvertError, TokeniserError, ParserError
@@ -292,52 +351,12 @@ namespace Saf
 
 			var gobbet_statements = new ArrayList<AST.Statement>();
 
-			// keep going until we get an 'end gobbet;'
-			bool should_continue = true;
-			do {
-				if(cur_token.type == Token.Type.END) {
-					int end_token_idx = cur_token_idx;
-					pop_token();
-					if(cur_token.type == Token.Type.GOBBET) {
-						should_continue = false;
-					} else {
-						// this shouldn't happen. In case it does, however, try
-						// to be friendly.
-						error_list.add(new AST.Error(this, 
-									end_token_idx, cur_token_idx,
-									"INTERNAL: Inside parse_gobbet() I found an " +
-									"'end' without a matching 'gobbet'. This " +
-									"shouldn't happen and is a bug.", false));
-						push_token();
-					}
-				}
-
-				// if we've not reached the end of the gobbet
-				if(should_continue) {
-					var statement = parse_statement();
-					if(statement.get_type().is_a(typeof(AST.Statement))) {
-						gobbet_statements.add((AST.Statement) statement);
-					} else if(statement.get_type().is_a(typeof(AST.Error))) {
-						error_list.add((AST.Error) statement);
-					} else {
-						throw new ParserError.INTERNAL(
-								"parse_statement() returned a node which was " +
-								"not either a Statement or an Error.");
-					}
-				}
-			} while(should_continue && !cur_token.is_eof());
-
-			if(cur_token.is_eof()) {
-				return new AST.Error(this, 
-						first_token_idx, cur_token_idx,
-						"This gobbet never seemed to end by the time the file " +
-						"was finished. Did you forget to finish the gobbet " +
-						"with 'end gobbet;'?");
-			}
+			AST.Error? err = parse_statement_block(Token.Type.GOBBET,
+					gobbet_statements);
+			if(err != null) { return err; }
 
 			// we should've terminated on an 'end gobbet', look for the remaining
 			// semi-colon.
-			pop_token();
 			if(!cur_token.is_glyph(";")) {
 				return new AST.Error(this, 
 						cur_token_idx, cur_token_idx,
@@ -542,50 +561,9 @@ namespace Saf
 
 			var if_statements = new ArrayList<AST.Statement>();
 
-			// keep going until we get an 'end if;'
-			bool should_continue = true;
-			do {
-				if(cur_token.type == Token.Type.END) {
-					int end_token_idx = cur_token_idx;
-					pop_token();
-					if(cur_token.type == Token.Type.IF) {
-						should_continue = false;
-					} else {
-						// this shouldn't happen. In case it does, however, try
-						// to be friendly.
-						error_list.add(new AST.Error(this, 
-									end_token_idx, cur_token_idx,
-									"INTERNAL: Inside parse_if_statement() I " +
-									"found an 'end' without a matching 'if'. This " +
-									"shouldn't happen and is a bug.", false));
-						push_token();
-					}
-				}
-
-				// if we've not reached the end of the if
-				if(should_continue) {
-					var statement = parse_statement();
-					if(statement.get_type().is_a(typeof(AST.Statement))) {
-						if_statements.add((AST.Statement) statement);
-					} else if(statement.get_type().is_a(typeof(AST.Error))) {
-						error_list.add((AST.Error) statement);
-					} else {
-						throw new ParserError.INTERNAL(
-								"parse_statement() returned a node which was " +
-								"not either a Statement or an Error.");
-					}
-				}
-			} while(should_continue && !cur_token.is_eof());
-
-			if(cur_token.is_eof()) {
-				return new AST.Error(this, 
-						first_token_idx, cur_token_idx,
-						"This if statement never seemed to end by the time the file " +
-						"was finished. Did you forget to finish the if " +
-						"with 'end if;'?");
-			}
-
-			pop_token();
+			AST.Error? err = parse_statement_block(Token.Type.IF,
+					if_statements);
+			if(err != null) { return err; }
 
 			return new AST.IfStatement(this,
 						first_token_idx, cur_token_idx,
