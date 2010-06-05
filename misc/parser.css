@@ -163,6 +163,10 @@ li:first-child .ast_node.program {
   border-top: none;
 }
 
+#tokens_section .tokens td {
+  white-space: pre;
+}
+
 #tokens_section .tokens {
   font-family: monospace;
   width: 100%;
