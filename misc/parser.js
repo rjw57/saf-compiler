@@ -52,6 +52,15 @@ $(document).ready(function() {
 	$('.ast_node .label').disableTextSelect();
 	$('.ast_node .type').disableTextSelect();
 	$('.tokens caption').disableTextSelect();
+
+  // convert layout to splitter layout
+  $('body').append('<div id="split_main"><div id="split_v" /></div>');
+  $('#tokens_section').detach().appendTo('#split_v');
+  $('#errors_section').detach().appendTo('#split_v');
+  $('#programs_section').detach().appendTo('#split_main');
+  $('#split_v').splitter({ type: 'h', sizeBottom: true, outline: false });
+  $('#split_main').splitter({
+    anchorToWindow: true, sizeRight: true, outline: false });
 });
 
 // vim:sw=2:ts=2:et:autoindent

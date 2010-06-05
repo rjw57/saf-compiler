@@ -15,36 +15,57 @@ h1, h2 {
 /* {{{ TOP LEVEL SECTIONS */
 
 #programs_section, #tokens_section, #errors_section {
-  padding: 0.5em;
+  padding: 0; margin: 0;
   overflow: auto;
   background-color: white;
 }
 
 #tokens_section {
-  position: fixed;
-  left: 0; top: 0; bottom: 25%;
-  margin-right: 10px;
-  border-bottom: 1px solid #bbb;
-  border-right: 1px solid #bbb;
-  right: 33%;
-  padding: 0;
+  position: absolute;
+  left: 0; top: 0; 
+  bottom: 25%;
+  right: 34%;
+  margin-bottom: 5px;
 }
 
 #errors_section {
-  position: fixed;
-  left: 0; bottom: 0; top: 75%;
-  margin-right: 10px;
-  right: 33%;
-  border-right: 1px solid #bbb;
+  position: absolute;
+  left: 0; bottom: 0; 
+  top: 75%;
+  right: 34%;
 }
 
 #programs_section {
-  position: fixed;
-  right: 0; top: 0; bottom: 0;
+  position: absolute;
+  right: 0; top: 0;
+  bottom: 0;
   left: 66%;
-  background-color: #777;
+  margin-left: 5px;
   background-color: #ddd;
-  padding: 0;
+}
+
+/* When jQuery splitters ar used, we have a few things to do */
+
+.vsplitbar:hover, .hsplitbar:hover {
+  background-color: #777;
+}
+
+.vsplitbar {
+	width: 5px;
+}
+
+.hsplitbar {
+	height: 5px;
+}
+
+#split_main {
+  overflow: hidden;
+}
+
+#split_main #tokens_section,
+#split_main #errors_section,
+#split_main #programs_section {
+  margin: 0;
 }
 
 #programs {
@@ -274,11 +295,16 @@ li:first-child .ast_node.program {
 
 #errors_section ul {
   list-style-type: none;
+  padding: 0.25em 0.5em;
 }
 
 #errors_section li {
+  border-top: 1px solid #ddd;
   padding: 0.25em 0em;
-  border-bottom: 1px solid #ddd;
+}
+
+#errors_section li:first-child {
+  border-top: none;
 }
 
 #errors_section .tokens {
