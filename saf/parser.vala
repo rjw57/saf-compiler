@@ -103,9 +103,6 @@ namespace Saf
 			// stash a copy of the tokeniser in our private member
 			tokeniser = _tokeniser;
 
-			// prime the pump...
-			pop_token();
-
 			// start parsing
 			var program = parse_program();
 
@@ -171,7 +168,12 @@ namespace Saf
 		{
 			Collection<AST.Gobbet> gobbets = new ArrayList<AST.Gobbet>();
 			Gee.List<AST.Statement> statements = new ArrayList<AST.Statement>();
-			int first_token_idx = cur_token_idx;
+
+			// prime the pump...
+			// we assign first token_idx this way around to allow for 
+			// programs starting with whitespace/comments
+			int first_token_idx = cur_token_idx + 1;
+			pop_token();
 
 			while(!cur_token.is_eof()) {
 				AST.Node node = parse_statement_or_gobbet();

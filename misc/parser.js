@@ -35,10 +35,15 @@ function setup_collapsable_nodes(node_selector, label_selector) {
 $(document).ready(function() {
   setup_collapsable_nodes('.ast_node', '.type');
   setup_collapsable_nodes('.children', '.label');
+  setup_collapsable_nodes('.tokens', 'caption');
 
   // show the program nodes
   $('.ast_node.program').removeClass('tree-collapse');
   $('.ast_node.program').addClass('tree-show');
+
+  // show the source nodes
+  $('.tokens').removeClass('tree-collapse');
+  $('.tokens').addClass('tree-show');
 
   // show the child nodes
   $('.children').removeClass('tree-collapse');
@@ -46,6 +51,7 @@ $(document).ready(function() {
 
 	$('.ast_node .label').disableTextSelect();
 	$('.ast_node .type').disableTextSelect();
+	$('.tokens caption').disableTextSelect();
 });
 
 // vim:sw=2:ts=2:et:autoindent

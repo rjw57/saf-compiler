@@ -23,19 +23,19 @@ h1, h2 {
 #tokens_section {
   position: fixed;
   left: 0; top: 0; bottom: 25%;
-  margin-right: 0.5em;
-  margin-bottom: 0.125em;
+  margin-right: 10px;
+  border-bottom: 1px solid #bbb;
+  border-right: 1px solid #bbb;
   right: 33%;
-  padding-left: 0;
-  padding-right: 0;
+  padding: 0;
 }
 
 #errors_section {
   position: fixed;
   left: 0; bottom: 0; top: 75%;
-  margin-top: 0.125em;
-  margin-right: 0.5em;
+  margin-right: 10px;
   right: 33%;
+  border-right: 1px solid #bbb;
 }
 
 #programs_section {
@@ -144,63 +144,32 @@ li:first-child .ast_node.program {
   padding-left: 0.5ex;
 }
 
-/* TREE SUPPORT */
-
-.ast_node.tree-show > .type,
-.ast_node.tree-collapse > .type,
-.children.tree-show > .label,
-.children.tree-collapse > .label {
-  cursor: pointer; cursor: hand;
-}
-
-.ast_node.tree-show > .type:hover,
-.ast_node.tree-collapse > .type:hover {
-  color: #888;
-}
-
-.children.tree-show > .label:hover,
-.children.tree-collapse > .label:hover {
-  color: #88a;
-}
-
-.ast_node.tree-show > .type,
-.children.tree-show > .label {
-  background-image: url(tri-down.png);
-  background-position: 0% 60%;
-  background-repeat: no-repeat;
-  padding-left: 10px !important;
-}
-
-.ast_node.tree-show > .description,
-.children.tree-show > ul { 
-  display: block !important;
-}
-
-.ast_node.tree-collapse > .description,
-.children.tree-collapse > ul {
-  display: none !important;
-}
-
-.ast_node.tree-collapse > .type,
-.children.tree-collapse > .label {
-  background-image: url(tri-right.png);
-  background-position: 0% 50%;
-  background-repeat: no-repeat;
-  padding-left: 10px !important;
-}
-
-.children.tree-collapse > ul { 
-  display: none !important;
-}
-
 /* }}} */
 
 /* {{{ SYNTAX HIGHLIGHTING OF TOKENS */
+
+#tokens_section .tokens caption {
+  font-family: sans-serif;
+  text-align: left;
+  font-size: 80%;
+  font-weight: bold;
+  margin: 0px;
+  background-color: #eee;
+  padding: 0.5em 0.5em;
+  border-top: 1px solid #ccc;
+}
+
+#tokens_section .tokens:first-child caption {
+  border-top: none;
+}
 
 #tokens_section .tokens {
   font-family: monospace;
   width: 100%;
   border-spacing: 0pt;
+  margin-bottom: 0.5em;
+  border-bottom: 1px solid #ccc;
+  border-top: 1px solid #ccc;
 }
 
 .tokens .line .contents {
@@ -314,6 +283,67 @@ li:first-child .ast_node.program {
 
 #errors_section .error {
   color: red;
+}
+
+/* }}} */
+
+/* {{{ TREE SUPPORT */
+
+.ast_node.tree-show > .type,
+.ast_node.tree-collapse > .type,
+.tokens.tree-show .label,
+.tokens.tree-collapse .label,
+.children.tree-show > .label,
+.children.tree-collapse > .label {
+  cursor: pointer; cursor: hand;
+}
+
+.ast_node.tree-show > .type:hover,
+.ast_node.tree-collapse > .type:hover {
+  color: #888;
+}
+
+.children.tree-show > .label:hover,
+.children.tree-collapse > .label:hover {
+  color: #88a;
+}
+
+.tokens.tree-show .label,
+.ast_node.tree-show > .type,
+.children.tree-show > .label {
+  background-image: url(tri-down.png);
+  background-position: 0% 60%;
+  background-repeat: no-repeat;
+  padding-left: 10px !important;
+}
+
+.tokens.tree-show tr,
+.ast_node.tree-show > .description,
+.children.tree-show > ul { 
+  display: block !important;
+}
+
+.tokens.tree-collapse { 
+  border-top: none !important;
+}
+
+.tokens.tree-collapse tr,
+.ast_node.tree-collapse > .description,
+.children.tree-collapse > ul {
+  display: none !important;
+}
+
+.tokens.tree-collapse .label,
+.ast_node.tree-collapse > .type,
+.children.tree-collapse > .label {
+  background-image: url(tri-right.png);
+  background-position: 0% 50%;
+  background-repeat: no-repeat;
+  padding-left: 10px !important;
+}
+
+.children.tree-collapse > ul { 
+  display: none !important;
 }
 
 /* }}} */

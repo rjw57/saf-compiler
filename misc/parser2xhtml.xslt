@@ -40,10 +40,11 @@
     <!-- find the first and last lines... -->
     <div id="tokens_section">
       <h2 class="section_header">Tokens</h2>
-      <xsl:for-each select="/descendant::node[@type='program']">
-        <h3><xsl:value-of select="@name" /></h3>
-        <xsl:call-template name="program-tokens" />
-      </xsl:for-each>
+      <div id="tokens">
+        <xsl:for-each select="/descendant::node[@type='program']">
+          <xsl:call-template name="program-tokens" />
+        </xsl:for-each>
+      </div>
     </div>
   </xsl:template>
 
@@ -59,6 +60,7 @@
       select="/descendant::tokens/token[position()=$last_token+1]/bounds/location[position()=2]/@line" />
 
     <table class="tokens">
+      <caption><span class="label"><xsl:value-of select="@name" /></span></caption>
       <xsl:call-template name="token-line">
         <xsl:with-param name="line_num" select="$first_line" />
         <xsl:with-param name="last_line_num" select="$last_line" />
