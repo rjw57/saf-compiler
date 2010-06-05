@@ -207,15 +207,6 @@
       <div class="description">
         <h3 class="label">Description</h3>
         <xsl:choose>
-          <xsl:when test="@type='program'">
-            <xsl:call-template name="program_node" />
-          </xsl:when>
-          <xsl:when test="@type='gobbet'">
-            <xsl:call-template name="gobbet_node" />
-          </xsl:when>
-          <xsl:when test="@type='variabledeclaration'">
-            <xsl:call-template name="variabledeclaration_node" />
-          </xsl:when>
           <xsl:when test="@type='constantrealexpression'">
             <xsl:call-template name="constantexpression_node" />
           </xsl:when>
@@ -261,21 +252,6 @@
         </xsl:for-each>
       </ul>
     </div>
-  </xsl:template>
-
-  <!-- A program node -->
-  <xsl:template name="program_node">
-    <p>Program loaded from: <span class="input_name"><xsl:value-of select="@name" /></span></p>
-  </xsl:template>
-
-  <!-- A gobbet node -->
-  <xsl:template name="gobbet_node">
-    <p>A gobbet called: <span class="gobbet_name"><xsl:value-of select="@name" /></span></p>
-  </xsl:template>
-
-  <!-- A variable declaration node -->
-  <xsl:template name="variabledeclaration_node">
-    <p>Variable called: <span class="variable_declaration_name"><xsl:value-of select="@name" /></span></p>
   </xsl:template>
 
   <!-- A constant node -->
