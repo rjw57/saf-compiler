@@ -40,6 +40,9 @@ vala_precompile(_saf_vala_c_sources
 	token.vala
 	tokeniser.vala
 	parser.vala
+OPTIONS
+	--library=saf-1.0
+	--gir=saf-1.0.gir
 CUSTOM_VAPIS
 	LLVM.vapi
 GENERATE_VAPI
