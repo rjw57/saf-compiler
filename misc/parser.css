@@ -197,17 +197,17 @@ li:first-child .ast_node.program {
 
 /* {{{ SYNTAX HIGHLIGHTING OF TOKENS */
 
-#tokens_section #tokens {
+#tokens_section .tokens {
   font-family: monospace;
   width: 100%;
   border-spacing: 0pt;
 }
 
-#tokens .line .contents {
+.tokens .line .contents {
   padding-right: 1ex;
 }
 
-#tokens .line .number {
+.tokens .line .number {
   font-size: 66%;
   text-align: right;
   font-family: sans-serif;
@@ -279,13 +279,13 @@ li:first-child .ast_node.program {
   background-color: #ddd;
 }
 
-#tokens .error {
+.tokens .error {
   background-image: url(red-underline.gif);
   background-position: bottom left;
   background-repeat: repeat-x;
 }
 
-#tokens .warning {
+.tokens .warning {
   background-image: url(red-underline.gif);
   background-position: bottom left;
   background-repeat: repeat-x;

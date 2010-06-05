@@ -27,7 +27,7 @@ public class MainProgram {
 		var xml_node = document->new_node(ns, "node");
 		xml_node->set_prop("type", node_type);
 
-		var tokens_node = document->new_node(ns, "tokens");
+		var tokens_node = document->new_node(ns, "token-range");
 		tokens_node->set_prop("first", first_index.to_string());
 		tokens_node->set_prop("last", last_index.to_string());
 		xml_node->add_child(tokens_node);

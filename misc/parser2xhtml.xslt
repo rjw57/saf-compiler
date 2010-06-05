@@ -36,35 +36,52 @@
  
   <!-- the token list -->
   <xsl:template match="tokens">
+
     <!-- find the first and last lines... -->
-    <xsl:variable name="first_line"
-      select="token[position()=1]/bounds/location[position()=1]/@line" />
-    <xsl:variable name="last_line"
-      select="token[position()=last()]/bounds/location[position()=2]/@line" />
     <div id="tokens_section">
       <h2 class="section_header">Tokens</h2>
-      <table id="tokens">
-        <xsl:call-template name="token-line">
-          <xsl:with-param name="line_num" select="$first_line" />
-          <xsl:with-param name="last_line_num" select="$last_line" />
-        </xsl:call-template>
-      </table>
+      <xsl:for-each select="/descendant::node[@type='program']">
+        <h3><xsl:value-of select="@name" /></h3>
+        <xsl:call-template name="program-tokens" />
+      </xsl:for-each>
     </div>
+  </xsl:template>
+
+  <xsl:template name="program-tokens">
+    <xsl:variable name="first_token" select="token-range/@first" />
+    <xsl:variable name="last_token" select="token-range/@last" />
+    <xsl:variable name="tokens"
+      select="/descendant::tokens/token[
+        position() &gt;= $first_token+1 and position() &lt;= $last_token+1]" />
+    <xsl:variable name="first_line"
+      select="/descendant::tokens/token[position()=$first_token+1]/bounds/location[position()=1]/@line" />
+    <xsl:variable name="last_line"
+      select="/descendant::tokens/token[position()=$last_token+1]/bounds/location[position()=2]/@line" />
+
+    <table class="tokens">
+      <xsl:call-template name="token-line">
+        <xsl:with-param name="line_num" select="$first_line" />
+        <xsl:with-param name="last_line_num" select="$last_line" />
+        <xsl:with-param name="tokens" select="$tokens" />
+      </xsl:call-template>
+    </table>
   </xsl:template>
 
   <!-- recursively output lines of tokens -->
   <xsl:template name="token-line">
     <xsl:param name="line_num" />
     <xsl:param name="last_line_num" />
+    <xsl:param name="tokens" />
     <tr class="line">
       <td class="number"><xsl:value-of select="$line_num" /></td>
       <td class="contents"><code><xsl:apply-templates
-        select="token[bounds/location[position()=1]/@line=$line_num]" /></code></td>
+        select="$tokens[bounds/location[position()=1]/@line=$line_num]" /></code></td>
     </tr>
     <xsl:if test="$line_num &lt; $last_line_num"> 
       <xsl:call-template name="token-line">
         <xsl:with-param name="line_num" select="$line_num + 1" />
         <xsl:with-param name="last_line_num" select="$last_line_num" />
+        <xsl:with-param name="tokens" select="$tokens" />
       </xsl:call-template>
     </xsl:if>
   </xsl:template>
@@ -220,11 +237,11 @@
         <ul>
           <li>
             <span class="label">First token index: </span>
-            <span class="first"><xsl:value-of select="tokens/@first" /></span>
+            <span class="first"><xsl:value-of select="token-range/@first" /></span>
           </li>
           <li>
             <span class="label">Last token index: </span>
-            <span class="last"><xsl:value-of select="tokens/@last" /></span>
+            <span class="last"><xsl:value-of select="token-range/@last" /></span>
           </li>
         </ul>
       </div>
