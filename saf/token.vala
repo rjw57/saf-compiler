@@ -1,15 +1,17 @@
 namespace Saf {
 	public class Token : Object
 	{
-		[Compact]
-		public struct Location 
+		public class Location 
 		{
-			uint line;   // Starting from 1.
-			uint column; // Starting from 1.
+			uint _line;   // Starting from 1.
+			uint _column; // Starting from 1.
 
-			public Location(uint l = 1, uint c = 0)
+			public uint line { get { return _line; } }
+			public uint column { get { return _column; } }
+
+			internal Location(uint l = 1, uint c = 0)
 			{
-				line = l; column = c;
+				_line = l; _column = c;
 			}
 		}
 

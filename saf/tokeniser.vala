@@ -13,7 +13,7 @@ namespace Saf {
 		private uint			consumed_chars = 0;
 		private unichar 		current_char = 0;
 		private string 			current_char_str = "";
-		private Token.Location 	current_location = Token.Location();
+		private Token.Location 	current_location = new Token.Location();
 		private bool			is_at_eof = false;
 		private Map<string, Token.Type>
 								symbol_map = new HashMap<string, Token.Type>();
@@ -107,12 +107,11 @@ namespace Saf {
 			}
 
 			// increment the column count.
-			++current_location.column;
+			current_location = new Token.Location(current_location.line, current_location.column + 1);
 
 			if(last_char_was_break) {
 				last_char_was_break = false;
-				current_location.column = 1;
-				++current_location.line;
+				current_location = new Token.Location(current_location.line + 1, 1);
 			}
 
 			// if the next character is a line break, increment line number and
