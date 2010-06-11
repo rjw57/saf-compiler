@@ -291,6 +291,20 @@ public class MainProgram {
 				named_children_node->add_child(entry_node);
 			}
 			expression_node->add_child(named_children_node);
+		} else if(expression.get_type().is_a(
+					typeof(Saf.AST.TypeCastExpression))) {
+			var cast_expr = (Saf.AST.TypeCastExpression) expression;
+			expression_node->set_prop("name", cast_expr.cast_type.name);
+				
+			var type_children_node = document->new_node(ns, "children");
+			type_children_node->set_prop("type", "named-type");
+			type_children_node->add_child(new_named_type_node(cast_expr.cast_type));
+			expression_node->add_child(type_children_node);
+				
+			var expression_children_node = document->new_node(ns, "children");
+			expression_children_node->set_prop("type", "expression");
+			expression_children_node->add_child(new_expression_node(cast_expr.expression));
+			expression_node->add_child(expression_children_node);
 		}
 
 		return expression_node;
