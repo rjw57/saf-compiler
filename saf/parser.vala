@@ -444,7 +444,8 @@ namespace Saf
 					type_name);
 		}
 
-		// statement := ( make_statement | if_statement | while_statement | blessed_statement ) ';'
+		// statement := ( make_statement | if_statement | while_statement | 
+		//			      blessed_statement | implement_statement ) ';'
 		private AST.Node parse_statement()
 			throws IOChannelError, ConvertError, TokeniserError, ParserError
 		{
@@ -459,6 +460,8 @@ namespace Saf
 			} else if((cur_token.type == Token.Type.IDENTIFIER) &&
 					blessed_gobbets.contains(cur_token.value.get_string())) {
 				ret_val = parse_blessed_statement();
+			} else if(cur_token.type == Token.Type.IMPLEMENT) {
+				ret_val = parse_implement_statement();
 			}
 
 			if(ret_val != null) {
@@ -743,6 +746,41 @@ namespace Saf
 
 			return new AST.ImplementStatement(this,
 					first_token_idx, cur_token_idx, ie);
+		}
+
+		// implement_statement := implement_expression ';'
+		private AST.Node parse_implement_statement()
+			throws IOChannelError, ConvertError, TokeniserError, ParserError
+		{
+			int first_token_idx = cur_token_idx;
+
+			if(cur_token.type != Token.Type.IMPLEMENT) {
+				throw new ParserError.INTERNAL(
+						"parse_implement_statement() called when the current token " +
+						"was not a implement token.");
+			}
+
+			AST.ImplementExpression expr = null;
+			AST.Node node = parse_implement_expression();
+			if(node.get_type().is_a(typeof(AST.ImplementExpression))) {
+				expr = (AST.ImplementExpression) node;
+			} else if(node.get_type().is_a(typeof(AST.Error))) {
+				return (AST.Error) node;
+			} else {
+				throw new ParserError.INTERNAL(
+						"parse_implement_expression() returned a node which was " +
+						"neither an ImplementExpression or an Error.");
+			}
+			
+			if(!cur_token.is_glyph(";")) {
+				return new AST.Error(this, 
+						cur_token_idx, cur_token_idx, 
+						"I expected to find a semi-colon (;) here at the end of " +
+						"the " + expr.gobbet + " implement statement.");
+			}
+
+			return new AST.ImplementStatement(this,
+					first_token_idx, cur_token_idx, expr);
 		}
 
 		// implement the classing shunting yard precedence parser algorithm
