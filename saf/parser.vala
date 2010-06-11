@@ -460,6 +460,10 @@ namespace Saf
 				}
 			}
 
+			if(ret_val.get_type().is_a(typeof(AST.Error))) {
+				error_list.add((AST.Error) ret_val);
+			}
+
 			// keep going until we get a semi-colon so we skip over errors
 			int first_token_idx = cur_token_idx;
 			int statement_end_idx = cur_token_idx;
