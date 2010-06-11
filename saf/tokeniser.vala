@@ -5,11 +5,45 @@ namespace Saf {
 	{
 		EOF,
 		INVALID_ESCAPE,
+		INPUT_ERROR,
+	}
+
+	public interface CharacterSource : GLib.Object
+	{
+		public abstract unichar get_next_char() throws TokeniserError;
+	}
+
+	public class IOChannelCharacterSource : GLib.Object, CharacterSource
+	{
+		private IOChannel		io_channel = null;
+
+		public IOChannelCharacterSource(IOChannel _io_channel)
+		{
+			io_channel = _io_channel;
+		}
+
+		public unichar get_next_char() throws TokeniserError
+		{
+			unichar out_char = '\0';
+
+			try {
+				if(io_channel.read_unichar(out out_char) == IOStatus.EOF)
+				{
+					throw new TokeniserError.EOF("End of file reached.");
+				}
+			} catch(ConvertError e) {
+				throw new TokeniserError.INPUT_ERROR("convert error: " + e.message);
+			} catch(IOChannelError e) {
+				throw new TokeniserError.INPUT_ERROR("io channel error: " + e.message);
+			}
+
+			return out_char;
+		}
 	}
 
 	public class Tokeniser : Object
 	{
-		private IOChannel		io_channel = null;
+		private CharacterSource	source = null;
 		private uint			consumed_chars = 0;
 		private unichar 		current_char = 0;
 		private string 			current_char_str = "";
@@ -30,9 +64,9 @@ namespace Saf {
 
 		public string input_name { get { return _input_name; } }
 
-		public Tokeniser(IOChannel _io_channel, string _name = "")
+		public Tokeniser(CharacterSource _source, string _name = "")
 		{
-			io_channel = _io_channel;
+			source = _source;
 			_input_name = _name;
 
 			symbol_map.set("called", Token.Type.CALLED);
@@ -98,13 +132,10 @@ namespace Saf {
 			return c.isalnum() || (c == "_".get_char());
 		}
 
-		private unichar get_next_char() throws ConvertError, IOChannelError, TokeniserError
+		private unichar get_next_char() throws TokeniserError
 		{
 			// read the next character from the source.
-			if(io_channel.read_unichar(out current_char) == IOStatus.EOF)
-			{
-				throw new TokeniserError.EOF("End of file reached.");
-			}
+			current_char = source.get_next_char();
 
 			// increment the column count.
 			++current_location.column;
@@ -130,7 +161,7 @@ namespace Saf {
 			return current_char;
 		}
 
-		private Token? consume_white_space() throws ConvertError, IOChannelError, TokeniserError
+		private Token? consume_white_space() throws TokeniserError
 		{
 			if(!current_char.isspace())
 				return null;
@@ -156,7 +187,7 @@ namespace Saf {
 			return token;
 		}
 
-		private Token? consume_identifier() throws ConvertError, IOChannelError, TokeniserError
+		private Token? consume_identifier() throws TokeniserError
 		{
 			if(!is_identifier_start(current_char))
 				return null;
@@ -185,7 +216,7 @@ namespace Saf {
 			return token;
 		}
 
-		private Token? consume_comment() throws ConvertError, IOChannelError, TokeniserError
+		private Token? consume_comment() throws TokeniserError
 		{
 			if(!is_single_line_comment_start(current_char))
 				return null;
@@ -211,7 +242,7 @@ namespace Saf {
 			return token;
 		}
 
-		private Token? consume_number() throws ConvertError, IOChannelError, TokeniserError
+		private Token? consume_number() throws TokeniserError
 		{
 			if(!current_char.isdigit())
 				return null;
@@ -269,7 +300,7 @@ namespace Saf {
 		}
 
 		private void consume_escape_sequence(ref Token token, ref string string_val) 
-			throws ConvertError, IOChannelError, TokeniserError
+			throws TokeniserError
 		{
 			unichar quote_char = "\"".get_char();
 			unichar escape_char = "\\".get_char();
@@ -285,7 +316,7 @@ namespace Saf {
 			}
 		}
 
-		private Token? consume_string() throws ConvertError, IOChannelError, TokeniserError
+		private Token? consume_string() throws TokeniserError
 		{
 			unichar quote_char = "\"".get_char();
 			unichar escape_char = "\\".get_char();
@@ -332,7 +363,7 @@ namespace Saf {
 
 		// Net a 'raw' (non-ligatured) token from the stream. Normally one
 		// would use 'pop_raw_token()' in preference to this.
-		private Token get_next_raw_token() throws ConvertError, IOChannelError, TokeniserError
+		private Token get_next_raw_token() throws TokeniserError
 		{
 			// If necessary, 'prime' the tokeniser by getting the first
 			// character from the stream.
@@ -435,7 +466,7 @@ namespace Saf {
 		// Pop the next token from the stack or call get_next_raw_token() if
 		// there are none to pop.
 		private Token pop_next_raw_token() 
-			throws ConvertError, IOChannelError, TokeniserError
+			throws TokeniserError
 		{
 			// are there any on the token stack to pop first?
 			if(token_stack.size > 0)
@@ -450,7 +481,7 @@ namespace Saf {
 		// of lookahead, you might find it useful to use the
 		// {pop,push}_next_token() methods.
 		public Token pop_token() 
-			throws ConvertError, IOChannelError, TokeniserError
+			throws TokeniserError
 		{
 			// are there any on the token stack to pop first?
 			if(token_stack.size > 0)
@@ -477,7 +508,7 @@ namespace Saf {
 		// number we generally have though, it is better than forming a
 		// prefix-tree structure.
 		private Token get_next_token() 
-			throws ConvertError, IOChannelError, TokeniserError
+			throws TokeniserError
 		{
 			// get the next raw token from the stack
 			Token token = pop_next_raw_token();
