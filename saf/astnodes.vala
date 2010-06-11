@@ -225,7 +225,19 @@ namespace Saf.AST
 			_value = v;
 		}
 	}
-	
+		
+	public class ConstantStringExpression : Expression
+	{
+		private string _value;
+		public string value { get { return _value; } }
+		
+		internal ConstantStringExpression(Parser p, int f, int l, string v)
+		{
+			base(p,f,l);
+			_value = v;
+		}
+	}
+
 	public class VariableExpression : Expression
 	{
 		private string _name;

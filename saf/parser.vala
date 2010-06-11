@@ -767,7 +767,8 @@ namespace Saf
 			return lhs;
 		}
 
-		// primary_expr := ( INTEGER | REAL | IDENTIFIER | '(' expr ')' )
+		// primary_expr := INTEGER | REAL | STRING | TRUE | FALSE | 
+		//				   unary_op expr | identifier | '(' expr ')' 
 		private AST.Node parse_primary_expression()
 			throws IOChannelError, ConvertError, TokeniserError, ParserError
 		{
@@ -784,6 +785,11 @@ namespace Saf
 				ret_val = new AST.ConstantRealExpression(this,
 						first_token_idx, cur_token_idx,
 						cur_token.value.get_double());
+				pop_token();
+			} else if(cur_token.type == Token.Type.STRING) {
+				ret_val = new AST.ConstantStringExpression(this,
+						first_token_idx, cur_token_idx,
+						cur_token.value.get_string());
 				pop_token();
 			} else if(cur_token.is_glyph("⊨")) {
 				ret_val = new AST.ConstantBooleanExpression(this,
