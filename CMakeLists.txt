@@ -21,6 +21,9 @@ list(APPEND CMAKE_MODULE_PATH
 # Compile the SAF language
 add_subdirectory(saf)
 
+# Compile the SAF editor
+add_subdirectory(editor)
+
 # Compile the test programs
 add_subdirectory(test)
 
