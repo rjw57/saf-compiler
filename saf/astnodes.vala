@@ -334,6 +334,23 @@ namespace Saf.AST
 			}
 		}
 	}
+	
+	public class TypeCastExpression : Expression
+	{
+		private NamedType _type;
+		private Expression _expr;
+
+		public NamedType cast_type { get { return _type; } }
+		public Expression expression { get { return _expr; } }
+		
+		internal TypeCastExpression(Parser p, int f, int l,
+				NamedType t, Expression e)
+		{
+			base(p,f,l);
+			_type = t;
+			_expr = e;
+		}
+	}
 }
 
 // vim:sw=4:ts=4:cindent

@@ -860,8 +860,9 @@ namespace Saf
 			return lhs;
 		}
 
-		// primary_expr := INTEGER | REAL | STRING | TRUE | FALSE | 
-		//				   unary_op expr | identifier | '(' expr ')' | implement_expr 
+		// primary_expr := ( INTEGER | REAL | STRING | TRUE | FALSE | 
+		//				     unary_op expr | identifier | '(' expr ')' | implement_expr )
+		//                 ( ONLY 'a'? type )?
 		private AST.Node parse_primary_expression()
 			throws IOChannelError, ConvertError, TokeniserError, ParserError
 		{
@@ -938,6 +939,38 @@ namespace Saf
 			}
 
 			assert(ret_val != null);
+
+			// check for casts...
+			if(ret_val.get_type().is_a(typeof(AST.Expression))) {
+				if(cur_token.type == Token.Type.ONLY) {
+					// starting to cast...
+					pop_token();
+
+					// skip optional 'a'
+					if((cur_token.type == Token.Type.IDENTIFIER) &&
+							(cur_token.value.get_string() == "a")) 
+					{
+						pop_token();
+					}
+
+					// parse type
+					AST.NamedType named_type = null;
+					var type = parse_type();
+					if(type.get_type().is_a(typeof(AST.NamedType))) {
+						named_type = (AST.NamedType) type;
+					} else if(type.get_type().is_a(typeof(AST.Error))) {
+						return (AST.Error) type;
+					} else {
+						throw new ParserError.INTERNAL(
+								"parse_type() returned a node which was " +
+								"not either a NamedType or an Error.");
+					}
+
+					ret_val = new AST.TypeCastExpression(this,
+							first_token_idx, cur_token_idx,
+							named_type, (AST.Expression) ret_val);
+				}
+			}
 
 			return ret_val;
 		}

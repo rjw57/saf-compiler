@@ -36,6 +36,8 @@ if a > 3 and a <= 4:
 end if;
 
 make str_test = "this is a string " + "immediate";
+make num_test_1 = ( "123" + "456" ) only a number;
+make num_test_2 = "123" only a number + "456" only a number;
 
 if not true:
 end if;
