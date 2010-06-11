@@ -17,7 +17,8 @@ public static class MainProgram {
 
 			try {
 				var channel = new IOChannel.file(args[i], "r");
-				var tokeniser = new Saf.Tokeniser(channel);
+				var tokeniser = new Saf.Tokeniser(
+						new Saf.IOChannelCharacterSource(channel), args[i]);
 
 				var file_node = document.new_node(null, "file");
 				var file_name_node = document.new_node(null, "file_name");
@@ -121,8 +122,6 @@ public static class MainProgram {
 				stderr.printf("File error: %s\n", e.message);
 			} catch (Saf.TokeniserError e) {
 				stderr.printf("Tokeniser error: %s\n", e.message);
-			} catch {
-				stderr.printf("Other error\n");
 			}
 		}
 

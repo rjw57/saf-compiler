@@ -323,7 +323,8 @@ public class MainProgram {
 		{
 			try {
 				var channel = new IOChannel.file(args[i], "r");
-				var tokeniser = new Saf.Tokeniser(channel, args[i]);
+				var tokeniser = new Saf.Tokeniser(
+						new Saf.IOChannelCharacterSource(channel), args[i]);
 				parser.parse_from(tokeniser);
 			} catch (GLib.FileError e) {
 				stderr.printf("File error: %s\n", e.message);

@@ -104,7 +104,7 @@ namespace Saf
 		}
 
 		public AST.Program? parse_from(Tokeniser _tokeniser) 
-			throws IOChannelError, ConvertError, TokeniserError, ParserError
+			throws TokeniserError, ParserError
 		{
 			// stash a copy of the tokeniser in our private member
 			tokeniser = _tokeniser;
@@ -124,6 +124,14 @@ namespace Saf
 			return (AST.Program) program;
 		}
 
+		public void reset()
+		{
+			token_list = new ArrayList<Token>();
+			error_list = new ArrayList<AST.Error>();
+			program_list = new ArrayList<AST.Program>();
+			cur_token = null;
+		}
+
 		internal Gee.List<Token> token_slice(int first, int last)
 		{
 			Gee.List<Token> slice = token_list.slice(first, last+1);
@@ -141,7 +149,7 @@ namespace Saf
 		// directions.
 
 		private Token pop_token()
-			throws IOChannelError, ConvertError, TokeniserError
+			throws TokeniserError
 		{
 			do {
 				// get the next token and add to list
@@ -153,7 +161,7 @@ namespace Saf
 		}
 
 		private void push_token()
-			throws IOChannelError, ConvertError, TokeniserError, ParserError
+			throws TokeniserError, ParserError
 		{
 			if(token_list.size == 0)
 				return;
@@ -170,7 +178,7 @@ namespace Saf
 
 		// program := { ( statement | gobbet ) }* EOF
 		private AST.Program parse_program()
-			throws IOChannelError, ConvertError, TokeniserError, ParserError
+			throws TokeniserError, ParserError
 		{
 			Collection<AST.Gobbet> gobbets = new ArrayList<AST.Gobbet>();
 			Gee.List<AST.Statement> statements = new ArrayList<AST.Statement>();
@@ -204,7 +212,7 @@ namespace Saf
 
 		// gobbet := GOBBET ..., statement := ...
 		private AST.Node parse_statement_or_gobbet()
-			throws IOChannelError, ConvertError, TokeniserError, ParserError
+			throws TokeniserError, ParserError
 		{
 			if(cur_token.type == Token.Type.GOBBET) {
 				return parse_gobbet();
@@ -219,7 +227,7 @@ namespace Saf
 		// a non-null AST.Error if there is a fatal error
 		private AST.Error? parse_statement_block(Token.Type term_token_type,
 				Gee.List<AST.Statement> statement_list)
-			throws IOChannelError, ConvertError, TokeniserError, ParserError
+			throws TokeniserError, ParserError
 		{
 			int first_token_idx = cur_token_idx;
 
@@ -275,7 +283,7 @@ namespace Saf
 		// gobbet := GOBBET identifier(name) { TAKING var_decl { ',' var_decl }* }? 
 		//           { GIVING var_decl }? ':' { statement }* END GOBBET ';' 
 		private AST.Node parse_gobbet()
-			throws IOChannelError, ConvertError, TokeniserError, ParserError
+			throws TokeniserError, ParserError
 		{
 			int first_token_idx = cur_token_idx;
 			if(cur_token.type != Token.Type.GOBBET)
@@ -382,7 +390,7 @@ namespace Saf
 
 		// var_decl := identifier(var_name) { ONLY 'a'? type }?
 		private AST.Node parse_var_decl()
-			throws IOChannelError, ConvertError, TokeniserError, ParserError
+			throws TokeniserError, ParserError
 		{
 			int first_token_idx = cur_token_idx;
 			if(cur_token.type != Token.Type.IDENTIFIER) {
@@ -426,7 +434,7 @@ namespace Saf
 
 		// type := identifier 
 		private AST.Node parse_type()
-			throws IOChannelError, ConvertError, TokeniserError, ParserError
+			throws TokeniserError, ParserError
 		{
 			int first_token_idx = cur_token_idx;
 			if(cur_token.type != Token.Type.IDENTIFIER) {
@@ -447,7 +455,7 @@ namespace Saf
 		// statement := ( make_statement | if_statement | while_statement | 
 		//			      blessed_statement | implement_statement ) ';'
 		private AST.Node parse_statement()
-			throws IOChannelError, ConvertError, TokeniserError, ParserError
+			throws TokeniserError, ParserError
 		{
 			AST.Node ret_val = null;
 
@@ -501,7 +509,7 @@ namespace Saf
 
 		// make_statement := MAKE identifier(var) '=' expression
 		private AST.Node parse_make_statement()
-			throws IOChannelError, ConvertError, TokeniserError, ParserError
+			throws TokeniserError, ParserError
 		{
 			int first_token_idx = cur_token_idx;
 
@@ -549,7 +557,7 @@ namespace Saf
 
 		// if_statement := IF expression: ( statement )* END IF
 		private AST.Node parse_if_statement()
-			throws IOChannelError, ConvertError, TokeniserError, ParserError
+			throws TokeniserError, ParserError
 		{
 			int first_token_idx = cur_token_idx;
 
@@ -620,7 +628,7 @@ namespace Saf
 		// while_statement := WHILE expression ( ',' CALLED identifier+ )? ':'
 		//                    statement* END WHILE identifier+
 		private AST.Node parse_while_statement()
-			throws IOChannelError, ConvertError, TokeniserError, ParserError
+			throws TokeniserError, ParserError
 		{
 			int first_token_idx = cur_token_idx;
 
@@ -704,7 +712,7 @@ namespace Saf
 
 		// blessed_statement := blessed_identifer expression ';'
 		private AST.Node parse_blessed_statement()
-			throws IOChannelError, ConvertError, TokeniserError, ParserError
+			throws TokeniserError, ParserError
 		{
 			int first_token_idx = cur_token_idx;
 
@@ -750,7 +758,7 @@ namespace Saf
 
 		// implement_statement := implement_expression ';'
 		private AST.Node parse_implement_statement()
-			throws IOChannelError, ConvertError, TokeniserError, ParserError
+			throws TokeniserError, ParserError
 		{
 			int first_token_idx = cur_token_idx;
 
@@ -786,7 +794,7 @@ namespace Saf
 		// implement the classing shunting yard precedence parser algorithm
 		// see http://en.wikipedia.org/wiki/Operator-precedence_parser
 		private AST.Node parse_expression()
-			throws IOChannelError, ConvertError, TokeniserError, ParserError
+			throws TokeniserError, ParserError
 		{
 			AST.Expression lhs = null;
 			AST.Node node = parse_primary_expression();
@@ -805,7 +813,7 @@ namespace Saf
 		}
 
 		private AST.Node parse_expression_1(AST.Expression _lhs, int min_precedence)
-			throws IOChannelError, ConvertError, TokeniserError, ParserError
+			throws TokeniserError, ParserError
 		{
 			int first_token_idx = cur_token_idx;
 			AST.Expression lhs = _lhs;
@@ -864,7 +872,7 @@ namespace Saf
 		//				     unary_op expr | identifier | '(' expr ')' | implement_expr )
 		//                 ( ONLY 'a'? type )?
 		private AST.Node parse_primary_expression()
-			throws IOChannelError, ConvertError, TokeniserError, ParserError
+			throws TokeniserError, ParserError
 		{
 			int first_token_idx = cur_token_idx;
 
@@ -978,7 +986,7 @@ namespace Saf
 		// implement_expr := IMPLEMENT identifier ( WITH ( argument_list ) )?
 		// argument_list := ( identifier '=' expression ',' )* identifier '=' expression
 		private AST.Node parse_implement_expression()
-			throws IOChannelError, ConvertError, TokeniserError, ParserError
+			throws TokeniserError, ParserError
 		{
 			int first_token_idx = cur_token_idx;
 
