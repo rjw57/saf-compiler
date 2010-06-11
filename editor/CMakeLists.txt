@@ -50,6 +50,8 @@ link_libraries(saf)
 if(GTKSOURCEVIEW_FOUND AND GTK_FOUND)
 	vala_precompile(_saf_editor_c_sources
 		editor_main.vala
+		errors.vala
+		view.vala
 	CUSTOM_VAPIS
 		../saf/saf.vapi
 	PACKAGES
