@@ -33,6 +33,8 @@ if a > 3 and a <= 4:
   make bar = 7;
 end if;
 
+make str_test = "this is a string " + "immediate";
+
 if not true:
 end if;
 

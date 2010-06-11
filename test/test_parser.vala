@@ -220,6 +220,12 @@ public class MainProgram {
 					document->new_text(
 						cast_expr.value ? "true" : "false"));
 		} else if(expression.get_type().is_a(
+					typeof(Saf.AST.ConstantStringExpression))) {
+			var cast_expr = (Saf.AST.ConstantStringExpression) expression;
+			expression_node->add_child(
+					document->new_cdata_block(cast_expr.value, 
+						(int) cast_expr.value.size()));
+		} else if(expression.get_type().is_a(
 					typeof(Saf.AST.VariableExpression))) {
 			var cast_expr = (Saf.AST.VariableExpression) expression;
 			expression_node->set_prop("name", cast_expr.name);

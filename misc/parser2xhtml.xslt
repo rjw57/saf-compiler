@@ -216,6 +216,9 @@
           <xsl:when test="@type='constantbooleanexpression'">
             <xsl:call-template name="constantexpression_node" />
           </xsl:when>
+          <xsl:when test="@type='constantstringexpression'">
+            <xsl:call-template name="constantstringexpression_node" />
+          </xsl:when>
           <xsl:otherwise>
             <!-- No description -->
             <!-- AST node of type: <xsl:value-of select="@type" /> -->
@@ -257,6 +260,11 @@
   <!-- A constant node -->
   <xsl:template name="constantexpression_node">
     <p>Value: <span class="constant_value"><xsl:value-of select="." /></span></p>
+  </xsl:template>
+
+  <!-- A constant string node -->
+  <xsl:template name="constantstringexpression_node">
+    <p>Value: "<span class="constant_value"><code><xsl:value-of select="." /></code></span>"</p>
   </xsl:template>
 
 </xsl:stylesheet>
