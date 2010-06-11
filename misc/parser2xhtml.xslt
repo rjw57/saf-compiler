@@ -29,7 +29,7 @@
       <h1>SAF Parser Output</h1>
       <xsl:apply-templates select="programs" />
       <xsl:apply-templates select="tokens" />
-      <xsl:apply-templates select="errors" />
+      <xsl:call-template name="error_section" />
     </body>
     </html>
   </xsl:template>
@@ -133,11 +133,11 @@
   </xsl:template>
  
   <!-- the error list -->
-  <xsl:template match="errors">
+  <xsl:template name="error_section">
     <div id="errors_section">
       <h2 class="section_header">Errors</h2>
       <ul class="errors">
-         <xsl:apply-templates />
+         <xsl:apply-templates select="errors/error" />
       </ul>
     </div>
   </xsl:template>
