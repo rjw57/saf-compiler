@@ -823,7 +823,7 @@ namespace Saf
 		}
 
 		// primary_expr := INTEGER | REAL | STRING | TRUE | FALSE | 
-		//				   unary_op expr | identifier | '(' expr ')' 
+		//				   unary_op expr | identifier | '(' expr ')' | implement_expr 
 		private AST.Node parse_primary_expression()
 			throws IOChannelError, ConvertError, TokeniserError, ParserError
 		{
@@ -886,6 +886,12 @@ namespace Saf
 							"After an opening '(', I expect a matching " +
 							"closing ')'.");
 				}
+			} else if(cur_token.type == Token.Type.IMPLEMENT) {
+				ret_val = parse_implement_expression();
+				if(ret_val.get_type().is_a(typeof(AST.Error))) {
+					return ret_val;
+				}
+				assert(ret_val.get_type().is_a(typeof(AST.Expression)));
 			} else {
 				ret_val = new AST.Error(this, 
 						first_token_idx, cur_token_idx,
@@ -895,6 +901,80 @@ namespace Saf
 			assert(ret_val != null);
 
 			return ret_val;
+		}
+
+		// implement_expr := IMPLEMENT identifier ( WITH ( argument_list ) )?
+		// argument_list := ( identifier '=' expression ',' )* identifier '=' expression
+		private AST.Node parse_implement_expression()
+			throws IOChannelError, ConvertError, TokeniserError, ParserError
+		{
+			int first_token_idx = cur_token_idx;
+
+			if(cur_token.type != Token.Type.IMPLEMENT) {
+				throw new ParserError.INTERNAL(
+						"parse_implement_expression() called when the current token " +
+						"was not 'implement'.");
+			}
+			pop_token();
+
+			if(cur_token.type != Token.Type.IDENTIFIER) {
+				return new AST.Error(this, 
+						first_token_idx, cur_token_idx,
+						"After 'implement', I expect to find the name of a gobbet.");
+			}
+			string gobbet_name = cur_token.value.get_string();
+			pop_token();
+
+			var arg_map = new Gee.HashMap<string, AST.Expression>();
+			if(cur_token.type == Token.Type.WITH) {
+				// we need to parse the with clause
+
+				// parse all the arguments
+				do {
+					pop_token(); // pop the 'WITH' or comma
+
+					if(cur_token.type != Token.Type.IDENTIFIER) {
+						return new AST.Error(this, 
+								cur_token_idx, cur_token_idx,
+								"I'm expecting the name of some variable which the gobbet " +
+								"'" + gobbet_name + "' takes here.");
+					}
+					string arg_name = cur_token.value.get_string();
+					pop_token();
+
+					if(arg_map.has_key(arg_name)) {
+						return new AST.Error(this, 
+								cur_token_idx, cur_token_idx,
+								"The value that gobbet '" + gobbet_name + "' takes called " +
+								"'" + arg_name + "' has already been given.");
+					}
+
+					if(!cur_token.is_glyph("=")) {
+						return new AST.Error(this, 
+								cur_token_idx, cur_token_idx,
+								"I'm expecting an equals sign (=) here.");
+					}
+					pop_token();
+
+					AST.Expression expr = null;
+					AST.Node node = parse_expression();
+					if(node.get_type().is_a(typeof(AST.Expression))) {
+						expr = (AST.Expression) node;
+					} else if(node.get_type().is_a(typeof(AST.Error))) {
+						return (AST.Error) node;
+					} else {
+						throw new ParserError.INTERNAL(
+								"parse_expression() returned a node which was " +
+								"neither an Expression or an Error.");
+					}
+
+					arg_map.set(arg_name, expr);
+				} while(cur_token.is_glyph(","));
+			}
+
+			return new AST.ImplementExpression(this, 
+					first_token_idx, cur_token_idx,
+					gobbet_name, arg_map);
 		}
 	}
 }
