@@ -195,6 +195,16 @@ public class MainProgram {
 				children_node->add_child(new_statement_node(s));
 			}
 			statement_node->add_child(children_node);
+		} else if(statement.get_type().is_a(typeof(Saf.AST.ImplementStatement))) {
+			var imps = (Saf.AST.ImplementStatement) statement;
+			statement_node->set_prop("name", imps.expression.gobbet);
+
+			var children_node = document->new_node(ns, "children");
+			children_node->set_prop("type", "implementexpression");
+
+			children_node->add_child(new_expression_node(imps.expression));
+
+			statement_node->add_child(children_node);
 		}
 
 		return statement_node;
@@ -254,6 +264,33 @@ public class MainProgram {
 			rhs_children_node->set_prop("type", "rhs");
 			rhs_children_node->add_child(new_expression_node(cast_expr.rhs));
 			expression_node->add_child(rhs_children_node);
+		} else if(expression.get_type().is_a(
+					typeof(Saf.AST.ImplementExpression))) {
+			var cast_expr = (Saf.AST.ImplementExpression) expression;
+			expression_node->set_prop("name", cast_expr.gobbet);
+			
+			var positional_children_node = document->new_node(ns, "children");
+			positional_children_node->set_prop("type", "positional");
+			foreach(var arg in cast_expr.positional_arguments) {
+				positional_children_node->add_child(new_expression_node(arg));
+			}
+			expression_node->add_child(positional_children_node);
+			
+			var named_children_node = document->new_node(ns, "children");
+			named_children_node->set_prop("type", "named");
+			foreach(var arg_entry in cast_expr.named_arguments.entries) {
+				var entry_node = document->new_node(ns, "node");
+				entry_node->set_prop("name", arg_entry.key);
+				entry_node->set_prop("type", "argument");
+				
+				var expr_child = document->new_node(ns, "children");
+				expr_child->set_prop("type", "expression");
+				expr_child->add_child(new_expression_node(arg_entry.value));
+				entry_node->add_child(expr_child);
+
+				named_children_node->add_child(entry_node);
+			}
+			expression_node->add_child(named_children_node);
 		}
 
 		return expression_node;
