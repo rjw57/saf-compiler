@@ -924,6 +924,7 @@ namespace Saf
 							"After an opening '(', I expect a matching " +
 							"closing ')'.");
 				}
+				pop_token();
 			} else if(cur_token.type == Token.Type.IMPLEMENT) {
 				ret_val = parse_implement_expression();
 				if(ret_val.get_type().is_a(typeof(AST.Error))) {
