@@ -266,7 +266,8 @@ namespace Saf
 			return null;
 		}
 
-		// gobbet := GOBBET identifier(name) { TAKING var_decl { ',' var_decl }* }? { GIVING var_decl }? ':' { statement }* END GOBBET ';' := ...
+		// gobbet := GOBBET identifier(name) { TAKING var_decl { ',' var_decl }* }? 
+		//           { GIVING var_decl }? ':' { statement }* END GOBBET ';' 
 		private AST.Node parse_gobbet()
 			throws IOChannelError, ConvertError, TokeniserError, ParserError
 		{
@@ -417,7 +418,7 @@ namespace Saf
 					var_name, named_type);
 		}
 
-		/* type := identifier */
+		// type := identifier 
 		private AST.Node parse_type()
 			throws IOChannelError, ConvertError, TokeniserError, ParserError
 		{
