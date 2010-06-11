@@ -453,15 +453,15 @@ namespace Saf
 			}
 
 			if(ret_val != null) {
+				if(ret_val.get_type().is_a(typeof(AST.Error))) {
+					error_list.add((AST.Error) ret_val);
+				}
+
 				if(cur_token.is_glyph(";")) {
 					/* ... as we expect */
 					pop_token();
 					return ret_val;
 				}
-			}
-
-			if(ret_val.get_type().is_a(typeof(AST.Error))) {
-				error_list.add((AST.Error) ret_val);
 			}
 
 			// keep going until we get a semi-colon so we skip over errors
