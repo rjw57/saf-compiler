@@ -10,12 +10,15 @@ gobbet power taking number only a number, exponent only a number giving result o
 
 print "The \"square\" of 4 is " + implement square with A = 4;
 print "The \"square\" of 5 is " + implement square with A = 5;
-print "Raising 3 to the power of 4 is " + implement power with number = 3, exponent = 4;
+print "Raising 3 to the power of 4 is " + implement power with 
+  number = "3" only number, exponent = 4;
 
 make does_not_ツ_look_like_a_smiley = 4;
 
 make a = 3 * 4 + 5;
 make b = 5 + 3 * 4 + 6;
+
+implement power with number = 3 + a, exponent = 5 + "7" only a number + 6;
 
 if ! a ≥ 5:
   make foo = 5;
@@ -32,6 +35,10 @@ end if;
 if a > 3 and a <= 4:
   make bar = 7;
 end if;
+
+make str_test = "this is a string " + "immediate";
+make num_test_1 = ( "123" + "456" ) only a number;
+make num_test_2 = "123" only a number + "456" only a number;
 
 if not true:
 end if;

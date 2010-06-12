@@ -181,6 +181,21 @@ namespace Saf.AST
 			_name = n;
 		}
 	}
+		
+	public class ImplementStatement : Statement
+	{
+		private ImplementExpression _expr;
+
+		public ImplementExpression expression { get { return _expr; } }
+		
+		internal ImplementStatement(Parser p, int f, int l,
+				ImplementExpression ie)
+		{
+			base(p,f,l);
+			_expr = ie;
+		}
+
+	}
 
 	public class Expression : Node
 	{
@@ -225,7 +240,19 @@ namespace Saf.AST
 			_value = v;
 		}
 	}
-	
+		
+	public class ConstantStringExpression : Expression
+	{
+		private string _value;
+		public string value { get { return _value; } }
+		
+		internal ConstantStringExpression(Parser p, int f, int l, string v)
+		{
+			base(p,f,l);
+			_value = v;
+		}
+	}
+
 	public class VariableExpression : Expression
 	{
 		private string _name;
@@ -272,6 +299,56 @@ namespace Saf.AST
 			_lhs = lh;
 			_operator = o;
 			_rhs = rh;
+		}
+	}
+	
+	public class ImplementExpression : Expression
+	{
+		private string _gobbet;
+		private Gee.Map<string, Expression> _named_arguments;
+		private Gee.List<Expression> _positional_arguments;
+
+		public string gobbet { get { return _gobbet; } }
+		public Gee.Map<string, Expression> named_arguments
+			{ get { return _named_arguments; } }
+		public Gee.List<Expression> positional_arguments
+			{ get { return _positional_arguments; } }
+
+		internal ImplementExpression(Parser p, int f, int l, 
+				string g, Gee.Map<string, Expression>? na,
+				Gee.List<Expression>? pa = null)
+		{
+			base(p,f,l);
+			_gobbet = g;
+
+			if(na == null) {
+				_named_arguments = new Gee.HashMap<string, Expression>();
+			} else {
+				_named_arguments = na;
+			}
+
+			if(pa == null) {
+				_positional_arguments = new Gee.ArrayList<Expression>();
+			} else {
+				_positional_arguments = pa;
+			}
+		}
+	}
+	
+	public class TypeCastExpression : Expression
+	{
+		private NamedType _type;
+		private Expression _expr;
+
+		public NamedType cast_type { get { return _type; } }
+		public Expression expression { get { return _expr; } }
+		
+		internal TypeCastExpression(Parser p, int f, int l,
+				NamedType t, Expression e)
+		{
+			base(p,f,l);
+			_type = t;
+			_expr = e;
 		}
 	}
 }

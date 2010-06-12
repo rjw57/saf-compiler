@@ -28,6 +28,9 @@ namespace Saf
 
 		private Gee.Set<unichar> un_op_set = new Gee.HashSet<unichar>();
 
+		// a set of 'blessed' gobbets.
+		private Gee.Set<string> blessed_gobbets = new Gee.HashSet<string>();
+
 		private bool is_un_op(Token token)
 		{
 			return (token.type == Token.Type.GLYPH) && 
@@ -80,6 +83,9 @@ namespace Saf
 			un_op_set.add("¬".get_char());
 			un_op_set.add("-".get_char());
 			un_op_set.add("+".get_char());
+
+			blessed_gobbets.add("print");
+			blessed_gobbets.add("input");
 		}
 
 		public Gee.List<AST.Program> programs { 
@@ -98,7 +104,7 @@ namespace Saf
 		}
 
 		public AST.Program? parse_from(Tokeniser _tokeniser) 
-			throws IOChannelError, ConvertError, TokeniserError, ParserError
+			throws TokeniserError, ParserError
 		{
 			// stash a copy of the tokeniser in our private member
 			tokeniser = _tokeniser;
@@ -118,6 +124,14 @@ namespace Saf
 			return (AST.Program) program;
 		}
 
+		public void reset()
+		{
+			token_list = new ArrayList<Token>();
+			error_list = new ArrayList<AST.Error>();
+			program_list = new ArrayList<AST.Program>();
+			cur_token = null;
+		}
+
 		internal Gee.List<Token> token_slice(int first, int last)
 		{
 			Gee.List<Token> slice = token_list.slice(first, last+1);
@@ -135,7 +149,7 @@ namespace Saf
 		// directions.
 
 		private Token pop_token()
-			throws IOChannelError, ConvertError, TokeniserError
+			throws TokeniserError
 		{
 			do {
 				// get the next token and add to list
@@ -147,7 +161,7 @@ namespace Saf
 		}
 
 		private void push_token()
-			throws IOChannelError, ConvertError, TokeniserError, ParserError
+			throws TokeniserError, ParserError
 		{
 			if(token_list.size == 0)
 				return;
@@ -164,7 +178,7 @@ namespace Saf
 
 		// program := { ( statement | gobbet ) }* EOF
 		private AST.Program parse_program()
-			throws IOChannelError, ConvertError, TokeniserError, ParserError
+			throws TokeniserError, ParserError
 		{
 			Collection<AST.Gobbet> gobbets = new ArrayList<AST.Gobbet>();
 			Gee.List<AST.Statement> statements = new ArrayList<AST.Statement>();
@@ -198,7 +212,7 @@ namespace Saf
 
 		// gobbet := GOBBET ..., statement := ...
 		private AST.Node parse_statement_or_gobbet()
-			throws IOChannelError, ConvertError, TokeniserError, ParserError
+			throws TokeniserError, ParserError
 		{
 			if(cur_token.type == Token.Type.GOBBET) {
 				return parse_gobbet();
@@ -213,7 +227,7 @@ namespace Saf
 		// a non-null AST.Error if there is a fatal error
 		private AST.Error? parse_statement_block(Token.Type term_token_type,
 				Gee.List<AST.Statement> statement_list)
-			throws IOChannelError, ConvertError, TokeniserError, ParserError
+			throws TokeniserError, ParserError
 		{
 			int first_token_idx = cur_token_idx;
 
@@ -266,9 +280,10 @@ namespace Saf
 			return null;
 		}
 
-		// gobbet := GOBBET identifier(name) { TAKING var_decl { ',' var_decl }* }? { GIVING var_decl }? ':' { statement }* END GOBBET ';' := ...
+		// gobbet := GOBBET identifier(name) { TAKING var_decl { ',' var_decl }* }? 
+		//           { GIVING var_decl }? ':' { statement }* END GOBBET ';' 
 		private AST.Node parse_gobbet()
-			throws IOChannelError, ConvertError, TokeniserError, ParserError
+			throws TokeniserError, ParserError
 		{
 			int first_token_idx = cur_token_idx;
 			if(cur_token.type != Token.Type.GOBBET)
@@ -375,7 +390,7 @@ namespace Saf
 
 		// var_decl := identifier(var_name) { ONLY 'a'? type }?
 		private AST.Node parse_var_decl()
-			throws IOChannelError, ConvertError, TokeniserError, ParserError
+			throws TokeniserError, ParserError
 		{
 			int first_token_idx = cur_token_idx;
 			if(cur_token.type != Token.Type.IDENTIFIER) {
@@ -417,9 +432,9 @@ namespace Saf
 					var_name, named_type);
 		}
 
-		/* type := identifier */
+		// type := identifier 
 		private AST.Node parse_type()
-			throws IOChannelError, ConvertError, TokeniserError, ParserError
+			throws TokeniserError, ParserError
 		{
 			int first_token_idx = cur_token_idx;
 			if(cur_token.type != Token.Type.IDENTIFIER) {
@@ -437,9 +452,10 @@ namespace Saf
 					type_name);
 		}
 
-		// statement := ( make_statement | if_statement | while_statement ) ';'
+		// statement := ( make_statement | if_statement | while_statement | 
+		//			      blessed_statement | implement_statement ) ';'
 		private AST.Node parse_statement()
-			throws IOChannelError, ConvertError, TokeniserError, ParserError
+			throws TokeniserError, ParserError
 		{
 			AST.Node ret_val = null;
 
@@ -449,9 +465,18 @@ namespace Saf
 				ret_val = parse_if_statement();
 			} else if(cur_token.type == Token.Type.WHILE) {
 				ret_val = parse_while_statement();
+			} else if((cur_token.type == Token.Type.IDENTIFIER) &&
+					blessed_gobbets.contains(cur_token.value.get_string())) {
+				ret_val = parse_blessed_statement();
+			} else if(cur_token.type == Token.Type.IMPLEMENT) {
+				ret_val = parse_implement_statement();
 			}
 
 			if(ret_val != null) {
+				if(ret_val.get_type().is_a(typeof(AST.Error))) {
+					error_list.add((AST.Error) ret_val);
+				}
+
 				if(cur_token.is_glyph(";")) {
 					/* ... as we expect */
 					pop_token();
@@ -484,7 +509,7 @@ namespace Saf
 
 		// make_statement := MAKE identifier(var) '=' expression
 		private AST.Node parse_make_statement()
-			throws IOChannelError, ConvertError, TokeniserError, ParserError
+			throws TokeniserError, ParserError
 		{
 			int first_token_idx = cur_token_idx;
 
@@ -532,7 +557,7 @@ namespace Saf
 
 		// if_statement := IF expression: ( statement )* END IF
 		private AST.Node parse_if_statement()
-			throws IOChannelError, ConvertError, TokeniserError, ParserError
+			throws TokeniserError, ParserError
 		{
 			int first_token_idx = cur_token_idx;
 
@@ -603,7 +628,7 @@ namespace Saf
 		// while_statement := WHILE expression ( ',' CALLED identifier+ )? ':'
 		//                    statement* END WHILE identifier+
 		private AST.Node parse_while_statement()
-			throws IOChannelError, ConvertError, TokeniserError, ParserError
+			throws TokeniserError, ParserError
 		{
 			int first_token_idx = cur_token_idx;
 
@@ -685,10 +710,91 @@ namespace Saf
 						expr, while_statements, loop_name_1);
 		}
 
+		// blessed_statement := blessed_identifer expression ';'
+		private AST.Node parse_blessed_statement()
+			throws TokeniserError, ParserError
+		{
+			int first_token_idx = cur_token_idx;
+
+			if((cur_token.type != Token.Type.IDENTIFIER) &&
+					!blessed_gobbets.contains(cur_token.value.get_string())) {
+				throw new ParserError.INTERNAL(
+						"parse_blessed_statement() called when the current token " +
+						"was not a blessed function.");
+			}
+			
+			string gobbet_name = cur_token.value.get_string();
+			pop_token();
+
+			AST.Expression expr = null;
+			AST.Node node = parse_expression();
+			if(node.get_type().is_a(typeof(AST.Expression))) {
+				expr = (AST.Expression) node;
+			} else if(node.get_type().is_a(typeof(AST.Error))) {
+				return (AST.Error) node;
+			} else {
+				throw new ParserError.INTERNAL(
+						"parse_expression() returned a node which was " +
+						"neither an Expression or an Error.");
+			}
+			
+			if(!cur_token.is_glyph(";")) {
+				return new AST.Error(this, 
+						cur_token_idx, cur_token_idx, 
+						"I expected to find a semi-colon (;) here at the end of " +
+						"the " + gobbet_name + " statement.");
+			}
+
+			var arg_list = new Gee.ArrayList<AST.Expression>();
+			arg_list.add(expr);
+
+			var ie = new AST.ImplementExpression(this, 
+					first_token_idx, cur_token_idx,
+					gobbet_name, null, arg_list);
+
+			return new AST.ImplementStatement(this,
+					first_token_idx, cur_token_idx, ie);
+		}
+
+		// implement_statement := implement_expression ';'
+		private AST.Node parse_implement_statement()
+			throws TokeniserError, ParserError
+		{
+			int first_token_idx = cur_token_idx;
+
+			if(cur_token.type != Token.Type.IMPLEMENT) {
+				throw new ParserError.INTERNAL(
+						"parse_implement_statement() called when the current token " +
+						"was not a implement token.");
+			}
+
+			AST.ImplementExpression expr = null;
+			AST.Node node = parse_implement_expression();
+			if(node.get_type().is_a(typeof(AST.ImplementExpression))) {
+				expr = (AST.ImplementExpression) node;
+			} else if(node.get_type().is_a(typeof(AST.Error))) {
+				return (AST.Error) node;
+			} else {
+				throw new ParserError.INTERNAL(
+						"parse_implement_expression() returned a node which was " +
+						"neither an ImplementExpression or an Error.");
+			}
+			
+			if(!cur_token.is_glyph(";")) {
+				return new AST.Error(this, 
+						cur_token_idx, cur_token_idx, 
+						"I expected to find a semi-colon (;) here at the end of " +
+						"the " + expr.gobbet + " implement statement.");
+			}
+
+			return new AST.ImplementStatement(this,
+					first_token_idx, cur_token_idx, expr);
+		}
+
 		// implement the classing shunting yard precedence parser algorithm
 		// see http://en.wikipedia.org/wiki/Operator-precedence_parser
 		private AST.Node parse_expression()
-			throws IOChannelError, ConvertError, TokeniserError, ParserError
+			throws TokeniserError, ParserError
 		{
 			AST.Expression lhs = null;
 			AST.Node node = parse_primary_expression();
@@ -707,7 +813,7 @@ namespace Saf
 		}
 
 		private AST.Node parse_expression_1(AST.Expression _lhs, int min_precedence)
-			throws IOChannelError, ConvertError, TokeniserError, ParserError
+			throws TokeniserError, ParserError
 		{
 			int first_token_idx = cur_token_idx;
 			AST.Expression lhs = _lhs;
@@ -762,9 +868,11 @@ namespace Saf
 			return lhs;
 		}
 
-		// primary_expr := ( INTEGER | REAL | IDENTIFIER | '(' expr ')' )
+		// primary_expr := ( INTEGER | REAL | STRING | TRUE | FALSE | 
+		//				     unary_op expr | identifier | '(' expr ')' | implement_expr )
+		//                 ( ONLY 'a'? type )?
 		private AST.Node parse_primary_expression()
-			throws IOChannelError, ConvertError, TokeniserError, ParserError
+			throws TokeniserError, ParserError
 		{
 			int first_token_idx = cur_token_idx;
 
@@ -779,6 +887,11 @@ namespace Saf
 				ret_val = new AST.ConstantRealExpression(this,
 						first_token_idx, cur_token_idx,
 						cur_token.value.get_double());
+				pop_token();
+			} else if(cur_token.type == Token.Type.STRING) {
+				ret_val = new AST.ConstantStringExpression(this,
+						first_token_idx, cur_token_idx,
+						cur_token.value.get_string());
 				pop_token();
 			} else if(cur_token.is_glyph("⊨")) {
 				ret_val = new AST.ConstantBooleanExpression(this,
@@ -820,6 +933,13 @@ namespace Saf
 							"After an opening '(', I expect a matching " +
 							"closing ')'.");
 				}
+				pop_token();
+			} else if(cur_token.type == Token.Type.IMPLEMENT) {
+				ret_val = parse_implement_expression();
+				if(ret_val.get_type().is_a(typeof(AST.Error))) {
+					return ret_val;
+				}
+				assert(ret_val.get_type().is_a(typeof(AST.Expression)));
 			} else {
 				ret_val = new AST.Error(this, 
 						first_token_idx, cur_token_idx,
@@ -828,7 +948,113 @@ namespace Saf
 
 			assert(ret_val != null);
 
+			// check for casts...
+			if(ret_val.get_type().is_a(typeof(AST.Expression))) {
+				if(cur_token.type == Token.Type.ONLY) {
+					// starting to cast...
+					pop_token();
+
+					// skip optional 'a'
+					if((cur_token.type == Token.Type.IDENTIFIER) &&
+							(cur_token.value.get_string() == "a")) 
+					{
+						pop_token();
+					}
+
+					// parse type
+					AST.NamedType named_type = null;
+					var type = parse_type();
+					if(type.get_type().is_a(typeof(AST.NamedType))) {
+						named_type = (AST.NamedType) type;
+					} else if(type.get_type().is_a(typeof(AST.Error))) {
+						return (AST.Error) type;
+					} else {
+						throw new ParserError.INTERNAL(
+								"parse_type() returned a node which was " +
+								"not either a NamedType or an Error.");
+					}
+
+					ret_val = new AST.TypeCastExpression(this,
+							first_token_idx, cur_token_idx,
+							named_type, (AST.Expression) ret_val);
+				}
+			}
+
 			return ret_val;
+		}
+
+		// implement_expr := IMPLEMENT identifier ( WITH ( argument_list ) )?
+		// argument_list := ( identifier '=' expression ',' )* identifier '=' expression
+		private AST.Node parse_implement_expression()
+			throws TokeniserError, ParserError
+		{
+			int first_token_idx = cur_token_idx;
+
+			if(cur_token.type != Token.Type.IMPLEMENT) {
+				throw new ParserError.INTERNAL(
+						"parse_implement_expression() called when the current token " +
+						"was not 'implement'.");
+			}
+			pop_token();
+
+			if(cur_token.type != Token.Type.IDENTIFIER) {
+				return new AST.Error(this, 
+						first_token_idx, cur_token_idx,
+						"After 'implement', I expect to find the name of a gobbet.");
+			}
+			string gobbet_name = cur_token.value.get_string();
+			pop_token();
+
+			var arg_map = new Gee.HashMap<string, AST.Expression>();
+			if(cur_token.type == Token.Type.WITH) {
+				// we need to parse the with clause
+
+				// parse all the arguments
+				do {
+					pop_token(); // pop the 'WITH' or comma
+
+					if(cur_token.type != Token.Type.IDENTIFIER) {
+						return new AST.Error(this, 
+								cur_token_idx, cur_token_idx,
+								"I'm expecting the name of some variable which the gobbet " +
+								"'" + gobbet_name + "' takes here.");
+					}
+					string arg_name = cur_token.value.get_string();
+					pop_token();
+
+					if(arg_map.has_key(arg_name)) {
+						return new AST.Error(this, 
+								cur_token_idx, cur_token_idx,
+								"The value that gobbet '" + gobbet_name + "' takes called " +
+								"'" + arg_name + "' has already been given.");
+					}
+
+					if(!cur_token.is_glyph("=")) {
+						return new AST.Error(this, 
+								cur_token_idx, cur_token_idx,
+								"I'm expecting an equals sign (=) here.");
+					}
+					pop_token();
+
+					AST.Expression expr = null;
+					AST.Node node = parse_expression();
+					if(node.get_type().is_a(typeof(AST.Expression))) {
+						expr = (AST.Expression) node;
+					} else if(node.get_type().is_a(typeof(AST.Error))) {
+						return (AST.Error) node;
+					} else {
+						throw new ParserError.INTERNAL(
+								"parse_expression() returned a node which was " +
+								"neither an Expression or an Error.");
+					}
+
+					arg_map.set(arg_name, expr);
+				} while(cur_token.is_glyph(","));
+			}
+
+			return new AST.ImplementExpression(this, 
+					first_token_idx, cur_token_idx,
+					gobbet_name, arg_map);
 		}
 	}
 }
