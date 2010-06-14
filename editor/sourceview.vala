@@ -2,34 +2,11 @@ using Gtk;
 using Pango;
 
 namespace Saf {
-	class EditorBuffer : SourceBuffer {
-		public EditorBuffer() 
-		{
-			set_language(SourceLanguageManager.get_default().
-					get_language("saf"));
-
-			var err_tag = new TextTag("saf:error");
-			err_tag.underline = Underline.ERROR;
-			tag_table.add(err_tag);
-		}
-
-		public void load_file(string filename) throws GLib.FileError
-		{
-			string file_contents = "";
-			GLib.FileUtils.get_contents(filename, out file_contents);
-
-			begin_not_undoable_action();
-			text = file_contents;
-			end_not_undoable_action();
-		}
-	}
-
-	class EditorView : SourceView {
-		public EditorView(EditorBuffer buf) {
+	class SourceView : Gtk.SourceView {
+		public SourceView(SourceBuffer buf) {
 			buffer = buf;
 
 			show_line_marks = true;
-			show_line_numbers = true;
 			highlight_current_line = true;
 			tab_width = 2;
 
@@ -46,6 +23,11 @@ namespace Saf {
 		{
 			assert(w == this);
 
+			// make sure we have a Saf.SourceBuffer as our buffer
+			if(buffer.get_type() != typeof(Saf.SourceBuffer))
+				return false;
+			var sb = (Saf.SourceBuffer) buffer;
+
 			int bx, by;
 			window_to_buffer_coords(TextWindowType.WIDGET, x, y, out bx, out by);
 
@@ -56,9 +38,6 @@ namespace Saf {
 
 			var err_tag = buffer.tag_table.lookup("saf:error");
 			bool has_err_tag = loc.has_tag(err_tag);
-
-			//message("hello: %s, %i, %i", has_err_tag ? "Y" : "N",
-			//		loc.get_line(), loc.get_line_offset());
 
 			return has_err_tag;
 		}

@@ -12,7 +12,7 @@ int main(string[] args)
 	path += "editor/";
 	lang_manager.set_search_path(path);
 
-	var source_buffer = new Saf.EditorBuffer();
+	var source_buffer = new Saf.SourceBuffer();
 
 	if(args.length > 1) {
 		try {
@@ -25,17 +25,13 @@ int main(string[] args)
 	//source_buffer.style_scheme = 
 	//	SourceStyleSchemeManager.get_default().get_scheme("cobalt");
 
-	var p = new Saf.SourceBufferMonitor();
-	p.buffer = source_buffer;
-
     var window = new Window (WindowType.TOPLEVEL);
     window.title = "Simple SAF Editor";
     window.set_default_size (640, 480);
     window.position = WindowPosition.CENTER;
     window.destroy.connect (Gtk.main_quit);
 
-	var source_view = new Saf.EditorView(source_buffer);
-	source_view.buffer = source_buffer;
+	var source_view = new Saf.SourceView(source_buffer);
 
 	var scroll_view = new Gtk.ScrolledWindow(null, null);
 	scroll_view.add(source_view);
