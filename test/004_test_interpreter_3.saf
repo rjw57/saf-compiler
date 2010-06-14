@@ -1,0 +1,9 @@
+make a = true or false;
+make b = false or false;
+make c = true or true;
+make d = false or true;
+make e = true and false;
+make f = false and false;
+make g = true and true;
+make h = false and true;
+

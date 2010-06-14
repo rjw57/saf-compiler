@@ -100,6 +100,9 @@ namespace Saf
 			} else if(expr.get_type().is_a(typeof(AST.UnaryOpExpression))) {
 				var ce = (AST.UnaryOpExpression) expr;
 				v = evaluate_unary_op_expr(ce);
+			} else if(expr.get_type().is_a(typeof(AST.BinaryOpExpression))) {
+				var ce = (AST.BinaryOpExpression) expr;
+				v = evaluate_binary_op_expr(ce);
 			} else {
 				throw new InterpreterError.INTERNAL("Unknown expression type: %s",
 						expr.get_type().name());
@@ -184,6 +187,65 @@ namespace Saf
 			}
 
 			Value rv = ! (v.get_boolean());
+
+			return rv;
+		}
+
+		private Value? evaluate_binary_op_expr(AST.BinaryOpExpression expr)
+			throws InterpreterError
+		{
+			Value v = 0;
+
+			switch(expr.operator) {
+				case '∨':
+				case '∧':
+					v = and_or(expr.operator,
+							evaluate_expression(expr.lhs), evaluate_expression(expr.rhs));
+					break;
+
+				case '=':
+				case '≠':
+				case '>':
+				case '≥':
+				case '<':
+				case '≤':
+				case '+':
+				case '-':
+				case '*':
+				case '/':
+					stderr.printf("FIXME: Skipped binary operator: %s\n", 
+							unichar_to_string(expr.operator));
+					break;
+
+				default:
+					throw new InterpreterError.INTERNAL("Unknown operator: %s",
+							unichar_to_string(expr.operator));
+			}
+
+			return v;
+		}
+
+		private static Value? and_or(unichar op, Value lhs, Value rhs)
+			throws InterpreterError
+		{
+			if((lhs.type() != typeof(bool)) || (rhs.type() != typeof(bool)))
+			{
+				throw new InterpreterError.TYPE_ERROR("Cannot apply '∨' (or) operator to " +
+						"values of type %s and %s", lhs.type().name(), rhs.type().name());
+			}
+
+			Value rv = 0;
+			switch(op) {
+				case '∨':
+					rv = (lhs.get_boolean()) || (rhs.get_boolean());
+					break;
+				case '∧':
+					rv = (lhs.get_boolean()) && (rhs.get_boolean());
+					break;
+				default:
+					assert(false); // should not be reached.
+					break;
+			}
 
 			return rv;
 		}
