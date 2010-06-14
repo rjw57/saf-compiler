@@ -167,7 +167,7 @@ namespace Saf
 					(vt != typeof(int64)) &&
 					(vt != typeof(bool)) )
 			{
-				throw new InterpreterError.TYPE_ERROR("Cannot apply '-' operator to " +
+				throw new InterpreterError.TYPE_ERROR("Cannot apply '+' operator to " +
 						"values of type %s", v.type().name());
 			}
 
