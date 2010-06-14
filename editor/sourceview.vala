@@ -28,18 +28,21 @@ namespace Saf {
 				return false;
 			var sb = (Saf.SourceBuffer) buffer;
 
+			// see if there is an error tag in the text under our pointer
 			int bx, by;
 			window_to_buffer_coords(TextWindowType.WIDGET, x, y, out bx, out by);
 
 			TextIter loc;
 			get_iter_at_location(out loc, bx, by);
+			bool has_err_tag = loc.has_tag(sb.error_tag) || loc.ends_tag(sb.error_tag);
 
-			tooltip.set_markup("hello <i>people</i> <b>out there</b>");
+			if(!has_err_tag)
+				return false;
 
-			var err_tag = buffer.tag_table.lookup("saf:error");
-			bool has_err_tag = loc.has_tag(err_tag);
+			var errors = sb.get_errors_at_iter(loc);
+			tooltip.set_markup(errors.first().message);
 
-			return has_err_tag;
+			return true;
 		}
 	}
 }

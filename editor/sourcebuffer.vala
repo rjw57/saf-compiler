@@ -5,14 +5,16 @@ namespace Saf {
 	class SourceBuffer : Gtk.SourceBuffer {
 		private SourceBufferMonitor monitor = null;
 
+		private TextTag _error_tag = new TextTag("saf:error");
+		public TextTag error_tag { get { return _error_tag; } }
+
 		public SourceBuffer() 
 		{
 			set_language(SourceLanguageManager.get_default().
 					get_language("saf"));
 
-			var err_tag = new TextTag("saf:error");
-			err_tag.underline = Underline.ERROR;
-			tag_table.add(err_tag);
+			_error_tag.underline = Underline.ERROR;
+			tag_table.add(_error_tag);
 
 			monitor = new SourceBufferMonitor(this);
 			monitor.parser_updated += parser_updated_handler;
@@ -26,6 +28,29 @@ namespace Saf {
 			begin_not_undoable_action();
 			text = file_contents;
 			end_not_undoable_action();
+		}
+
+		public Gee.List<AST.Error> get_errors_at_iter(TextIter it)
+		{
+			var list = new Gee.ArrayList<AST.Error>();
+
+			foreach(var err in monitor.parser.errors) {
+				var first = err.tokens.first();
+				var last = err.tokens.last();
+
+				TextIter fi, li;
+				get_iter_at_line_offset(out fi, 
+						(int)first.start.line-1, (int)first.start.column-1);
+				get_iter_at_line_offset(out li, 
+						(int)last.end.line-1, (int)last.end.column-1);
+				li.forward_char(); // since in_range is not inclusive
+
+				if(it.in_range(fi, li)) {
+					list.add(err);
+				}
+			}
+
+			return list;
 		}
 
 		internal void parser_updated_handler(SourceBufferMonitor m)
