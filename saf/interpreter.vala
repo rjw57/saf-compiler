@@ -135,6 +135,40 @@ namespace Saf
 			return v;
 		}
 
+		private Value? evaluate_binary_op_expr(AST.BinaryOpExpression expr)
+			throws InterpreterError
+		{
+			Value v = 0;
+
+			switch(expr.operator) {
+				case '∨':
+				case '∧':
+					v = and_or(expr.operator,
+							evaluate_expression(expr.lhs), evaluate_expression(expr.rhs));
+					break;
+
+				case '=':
+				case '≠':
+				case '>':
+				case '≥':
+				case '<':
+				case '≤':
+				case '+':
+				case '-':
+				case '*':
+				case '/':
+					stderr.printf("FIXME: Skipped binary operator: %s\n", 
+							unichar_to_string(expr.operator));
+					break;
+
+				default:
+					throw new InterpreterError.INTERNAL("Unknown operator: %s",
+							unichar_to_string(expr.operator));
+			}
+
+			return v;
+		}
+
 		// Actual operators
 
 		private static Value? negate(Value v)
@@ -189,40 +223,6 @@ namespace Saf
 			Value rv = ! (v.get_boolean());
 
 			return rv;
-		}
-
-		private Value? evaluate_binary_op_expr(AST.BinaryOpExpression expr)
-			throws InterpreterError
-		{
-			Value v = 0;
-
-			switch(expr.operator) {
-				case '∨':
-				case '∧':
-					v = and_or(expr.operator,
-							evaluate_expression(expr.lhs), evaluate_expression(expr.rhs));
-					break;
-
-				case '=':
-				case '≠':
-				case '>':
-				case '≥':
-				case '<':
-				case '≤':
-				case '+':
-				case '-':
-				case '*':
-				case '/':
-					stderr.printf("FIXME: Skipped binary operator: %s\n", 
-							unichar_to_string(expr.operator));
-					break;
-
-				default:
-					throw new InterpreterError.INTERNAL("Unknown operator: %s",
-							unichar_to_string(expr.operator));
-			}
-
-			return v;
 		}
 
 		private static Value? and_or(unichar op, Value lhs, Value rhs)
