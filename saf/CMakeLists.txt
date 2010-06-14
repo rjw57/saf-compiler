@@ -37,6 +37,7 @@ include_directories(${GEE_INCLUDE_DIRS})
 
 vala_precompile(_saf_vala_c_sources
 	astnodes.vala
+	interpreter.vala
 	token.vala
 	tokeniser.vala
 	parser.vala
