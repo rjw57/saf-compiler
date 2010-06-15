@@ -18,8 +18,7 @@ namespace Saf
 	public class Interpreter : GLib.Object
 	{
 		private AST.Program _program = null;
-		private Deque<Map<string, Value?>> _scope_stack = 
-			new LinkedList<Map<string, Value?>>();
+		private Deque<Map<string, Value?>> _scope_stack = null;
 
 		public AST.Program program 
 		{ 
@@ -33,8 +32,16 @@ namespace Saf
 			if(program == null)
 				return;
 
-			clear_scopes();
-			run_statements(program.statements);
+			_scope_stack = new LinkedList<Map<string, Value?>>();
+			
+			new_scope();
+			try { 
+				run_statements(program.statements);
+			} finally {
+				pop_scope();
+			}
+
+			_scope_stack = null;
 		}
 
 		// EXECUTION ENGINE
@@ -219,32 +226,41 @@ namespace Saf
 		private Value? evaluate_implement_expr(AST.ImplementExpression expr)
 			throws InterpreterError
 		{
-			AST.Gobbet? gobbet = program.gobbet_map.get(expr.gobbet);
-			if(gobbet == null) {
-				throw new InterpreterError.UNKNOWN_GOBBET("Unknown gobbet: %s",
-						expr.gobbet);
-			}
-
 			Value? rv = null;
 
+			// evaluate positional args
+			Gee.List<Value?> pos_vals = new Gee.ArrayList<Value?>();
+			foreach(var arg in expr.positional_arguments) {
+				pos_vals.add(evaluate_expression(arg));
+			}
+
+			// evaluate named args
+			var named_args = new Gee.HashMap<string, Value?>();
+			foreach(var arg in expr.named_arguments.entries) {
+				named_args.set(arg.key, evaluate_expression(arg.value));
+			}
+
 			// a new gobbet scope
-			// FIXME: This needs a whole new stack!
+			var old_scope = _scope_stack;
+			_scope_stack = new LinkedList<Map<string, Value?>>();
 			new_scope();
+
 			try {
-				// evaluate positional args
-				Gee.List<Value?> pos_vals = new Gee.ArrayList<Value?>();
-				foreach(var arg in expr.positional_arguments) {
-					pos_vals.add(evaluate_expression(arg));
+				// find the gobbet we're dealing with
+				AST.Gobbet? gobbet = program.gobbet_map.get(expr.gobbet);
+				if(gobbet == null) {
+					throw new InterpreterError.UNKNOWN_GOBBET("Unknown gobbet: %s",
+							expr.gobbet);
 				}
 
-				// evaluate named args
-				foreach(var arg in expr.named_arguments.entries) {
+				// set named args
+				foreach(var arg in named_args.entries) {
 					if(!gobbet.taking_map.has_key(arg.key)) {
 						throw new InterpreterError.UNKNOWN_GOBBET_ARGUMENT(
 								"Gobbet %s does not take a variable called %s."
 								.printf(gobbet.name, arg.key));
 					}
-					set_variable(arg.key, evaluate_expression(arg.value));
+					set_variable(arg.key, arg.value);
 				}
 
 				// run statements
@@ -258,11 +274,12 @@ namespace Saf
 					if(rv == null) {
 						throw new InterpreterError.MISSING_GIVING(
 								"The gobbet's giving value '%s' was not set."
-									.printf(gobbet.giving.name));
+								.printf(gobbet.giving.name));
 					}
 				}
 			} finally {
 				pop_scope();
+				_scope_stack = old_scope;
 			}
 
 			return rv;
@@ -683,12 +700,6 @@ namespace Saf
 		}
 
 		// NESTED SCOPE SUPPORT
-
-		private void clear_scopes()
-		{
-			_scope_stack.clear();
-			new_scope();
-		}
 
 		private void new_scope()
 		{
