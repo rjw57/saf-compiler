@@ -27,7 +27,8 @@ print "Raising 3 to the power of 4 is " + implement power with number = 3, expon
 make does_not_ツ_look_like_a_smiley = 4;
 
 make a = 3 * 4 + 5;
-make b = 5 + 3 * 4 + 6;
+make b = 5 + 3 * 4.0 + 6;
+make c = 4 + "5";
 
 if ! a ≥ 5:
   make foo = 5;

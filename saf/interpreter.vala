@@ -153,12 +153,16 @@ namespace Saf
 				case '≥':
 				case '<':
 				case '≤':
+					stderr.printf("FIXME: Skipped binary operator: %s\n", 
+							unichar_to_string(expr.operator));
+					break;
+					
 				case '+':
 				case '-':
 				case '*':
 				case '/':
-					stderr.printf("FIXME: Skipped binary operator: %s\n", 
-							unichar_to_string(expr.operator));
+					v = arithmetic(expr.operator,
+							evaluate_expression(expr.lhs), evaluate_expression(expr.rhs));
 					break;
 
 				default:
@@ -230,8 +234,9 @@ namespace Saf
 		{
 			if((lhs.type() != typeof(bool)) || (rhs.type() != typeof(bool)))
 			{
-				throw new InterpreterError.TYPE_ERROR("Cannot apply '∨' (or) operator to " +
-						"values of type %s and %s", lhs.type().name(), rhs.type().name());
+				throw new InterpreterError.TYPE_ERROR("Cannot apply '%s' operator to " +
+						"values of type %s and %s", unichar_to_string(op),
+						lhs.type().name(), rhs.type().name());
 			}
 
 			Value rv = 0;
@@ -248,6 +253,199 @@ namespace Saf
 			}
 
 			return rv;
+		}
+
+		private static Value? arithmetic(unichar op, Value lhs, Value rhs)
+			throws InterpreterError
+		{
+			Value rv = 0;
+
+			Value p_lhs, p_rhs;
+			if(!promote_types(lhs, rhs, out p_lhs, out p_rhs))
+			{
+				throw new InterpreterError.TYPE_ERROR("Cannot apply '%s' operator to " +
+						"values of type %s and %s", unichar_to_string(op),
+						lhs.type().name(), rhs.type().name());
+			}
+
+			// check promotion worked
+			assert(p_lhs.type() == p_rhs.type());
+
+			// implement operator
+			if(p_lhs.type().is_a(typeof(int64))) {
+				int64 l = p_lhs.get_int64();
+				int64 r = p_rhs.get_int64();
+				switch(op) {
+					case '+':
+						rv = l + r;
+						break;
+					case '-':
+						rv = l - r;
+						break;
+					case '*':
+						rv = l * r;
+						break;
+					case '/':
+						rv = l / r;
+						break;
+					default:
+						throw new InterpreterError.INTERNAL("Unexpected operator '%s'.",
+								unichar_to_string(op));
+				}
+			} else if(p_lhs.type().is_a(typeof(double))) {
+				double l = p_lhs.get_double();
+				double r = p_rhs.get_double();
+				switch(op) {
+					case '+':
+						rv = l + r;
+						break;
+					case '-':
+						rv = l - r;
+						break;
+					case '*':
+						rv = l * r;
+						break;
+					case '/':
+						rv = l / r;
+						break;
+					default:
+						throw new InterpreterError.INTERNAL("Unexpected operator '%s'.",
+								unichar_to_string(op));
+				}
+			} else if(p_lhs.type().is_a(typeof(string))) {
+				string l = p_lhs.get_string();
+				string r = p_rhs.get_string();
+				switch(op) {
+					case '+':
+						rv = l + r;
+						break;
+					case '-':
+					case '*':
+					case '/':
+						throw new InterpreterError.TYPE_ERROR("Invalid operator '%s' for strings.",
+								unichar_to_string(op));
+					default:
+						throw new InterpreterError.INTERNAL("Unexpected operator '%s'.",
+								unichar_to_string(op));
+				}
+			} else {
+				throw new InterpreterError.INTERNAL("Type promotion returned invalid type: %s",
+						p_lhs.type().name());
+			}
+
+			return rv;
+		}
+
+		// IMPLICIT TYPE PROMOTION RULES
+		private static bool promote_types(Value lhs, Value rhs,
+				out Value p_lhs, out Value p_rhs)
+			throws InterpreterError
+		{
+			// by default, do no promotion
+			p_lhs = lhs; p_rhs = rhs;
+
+			// if the types are boolean, don't promote
+			if(lhs.type().is_a(typeof(bool)) && rhs.type().is_a(typeof(bool)))
+				return true;
+
+			// if either type is string, promote to string
+			if(lhs.type().is_a(typeof(string)) || rhs.type().is_a(typeof(string)))
+			{
+				p_lhs = cast_to_string(lhs);
+				p_rhs = cast_to_string(rhs);
+				return true;
+			}
+
+			// if either type is double, promote to double
+			if(lhs.type().is_a(typeof(double)) || rhs.type().is_a(typeof(double)))
+			{
+				p_lhs = cast_to_double(lhs);
+				p_rhs = cast_to_double(rhs);
+				return true;
+			}
+
+			// if either type is integral, promote to integer
+			if(is_integral_type(lhs.type()) || is_integral_type(rhs.type()))
+			{
+				p_lhs = cast_to_int64(lhs);
+				p_rhs = cast_to_int64(rhs);
+				return true;
+			}
+
+			// if we get this far, the types are incompatible
+			return false;
+		}
+
+		// TYPE CONVERSION
+
+		private static bool is_integral_type(Type t)
+		{
+			return t.is_a(typeof(int64)) || t.is_a(typeof(uint64)) || t.is_a(typeof(int));
+		}
+
+		private static string cast_to_string(Value v)
+			throws InterpreterError
+		{
+			Type vt = v.type();
+			if(vt.is_a(typeof(string))) {
+				return v.get_string();
+			} else if(vt.is_a(typeof(uint64))) {
+				return v.get_uint64().to_string();
+			} else if(vt.is_a(typeof(int64))) {
+				return v.get_int64().to_string();
+			} else if(vt.is_a(typeof(int))) {
+				return v.get_int().to_string();
+			} else if(vt.is_a(typeof(double))) {
+				return v.get_double().to_string();
+			} else if(vt.is_a(typeof(bool))) {
+				return v.get_boolean() ? "TRUE" : "FALSE";
+			}
+
+			// if we get this far, we don't know what type this is
+			throw new InterpreterError.TYPE_ERROR("Cannot convert type %s to a string.",
+					vt.name());
+		}
+
+		private static double cast_to_double(Value v)
+			throws InterpreterError
+		{
+			Type vt = v.type();
+			if(vt.is_a(typeof(string))) {
+				return v.get_string().to_double();
+			} else if(vt.is_a(typeof(uint64))) {
+				return (double) v.get_uint64();
+			} else if(vt.is_a(typeof(int64))) {
+				return (double) v.get_int64();
+			} else if(vt.is_a(typeof(int))) {
+				return (double) v.get_int();
+			} else if(vt.is_a(typeof(double))) {
+				return v.get_double();
+			}
+
+			// if we get this far, we don't know what type this is
+			throw new InterpreterError.TYPE_ERROR("Cannot convert type %s to a double.",
+					vt.name());
+		}
+
+		private static int64 cast_to_int64(Value v)
+			throws InterpreterError
+		{
+			Type vt = v.type();
+			if(vt.is_a(typeof(string))) {
+				return v.get_string().to_int64();
+			} else if(vt.is_a(typeof(uint64))) {
+				return (int64) v.get_uint64();
+			} else if(vt.is_a(typeof(int64))) {
+				return v.get_int64();
+			} else if(vt.is_a(typeof(int))) {
+				return (int64) v.get_int();
+			} else if(vt.is_a(typeof(double))) {
+				return (int64) v.get_double();
+			}
+
+			// if we get this far, we don't know what type this is
+			throw new InterpreterError.TYPE_ERROR("Cannot convert type %s to a int64.",
+					vt.name());
 		}
 
 		// NESTED SCOPE SUPPORT
