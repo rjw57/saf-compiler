@@ -51,7 +51,7 @@ if a =/= 4:
   make bar = 6;
 end if;
 
-if a > 3 and a <= 4:
+if a > 3 and a <= 17:
   make bar = 7;
 otherwise:
   make bar = 2;
