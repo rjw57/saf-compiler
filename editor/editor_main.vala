@@ -1,9 +1,23 @@
 using Gtk;
 using Pango;
 
-class Main {
+class Main : GLib.Object, Saf.BuiltinProvider {
 	private Saf.SourceBuffer source_buffer = null;
 	private Saf.Interpreter interpreter = new Saf.Interpreter();
+	private Gtk.Window window = null;
+
+	// SAF builtins
+	public void print(string str)
+	{
+		var msg = new MessageDialog(window, DialogFlags.MODAL, 
+				MessageType.INFO, ButtonsType.OK, "%s", str);
+		msg.run(); msg.close();
+	}
+
+	public string input(string? prompt)
+	{
+		return stdin.read_line();
+	}
 
 	internal void run_handler()
 	{
@@ -21,6 +35,8 @@ class Main {
 	public int run(string[] args) 
 	{
 		Gtk.init(ref args);
+
+		interpreter.builtin_provider = this;
 
 		var lang_manager = SourceLanguageManager.get_default();
 
@@ -41,7 +57,7 @@ class Main {
 			}
 		}
 
-		var window = new Window (WindowType.TOPLEVEL);
+		window = new Window (WindowType.TOPLEVEL);
 		window.title = "Simple SAF Editor";
 		window.set_default_size (640, 480);
 		window.position = WindowPosition.CENTER;
