@@ -666,11 +666,17 @@ namespace Saf
 
 		private void dump_scope()
 		{
-			Map<string, Value?> scope = _scope_stack.peek_head();
-			foreach(var entry in scope.entries)
+			stdout.printf("[\n");
+			foreach(var scope in _scope_stack) 
 			{
-				stdout.printf("%s: %s\n", entry.key, entry.value.strdup_contents());
+				stdout.printf(" > ");
+				foreach(var entry in scope.entries)
+				{
+					stdout.printf("%s: %s ", entry.key, entry.value.strdup_contents());
+				}
+				stdout.printf("<\n");
 			}
+			stdout.printf("]\n");
 		}
 
 		// UTILITY METHODS
