@@ -77,6 +77,7 @@ namespace Saf {
 			symbol_map.set("implement", Token.Type.IMPLEMENT);
 			symbol_map.set("make", Token.Type.MAKE);
 			symbol_map.set("only", Token.Type.ONLY);
+			symbol_map.set("otherwise", Token.Type.OTHERWISE);
 			symbol_map.set("taking", Token.Type.TAKING);
 			symbol_map.set("with", Token.Type.WITH);
 			symbol_map.set("while", Token.Type.WHILE);

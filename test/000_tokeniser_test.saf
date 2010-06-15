@@ -27,11 +27,21 @@ print "Raising 3 to the power of 4 is " + implement power with number = 3, expon
 make does_not_ツ_look_like_a_smiley = 4;
 
 make a = 3 * 4 + 5;
-make b = 5 + 3 * 4 + 6;
+make b = 5 + 3 * 4.0 + 6;
+make c = 4 + "5";
+make D = "4" = "6";
+make E = "4" =/= "6";
+make F = "hello" = "hello";
+make G = 4 = 4;
+make H = 5 =/= 6;
+make I = 5 > 7;
+make J = not 4 <= 3;
 
 if ! a ≥ 5:
   make foo = 5;
 end if;
+
+make bar = 0;
 
 if a >= 4 || a < 5 && a > 3:
   make bar = 6;
@@ -41,8 +51,10 @@ if a =/= 4:
   make bar = 6;
 end if;
 
-if a > 3 and a <= 4:
+if a > 3 and a <= 17:
   make bar = 7;
+otherwise:
+  make bar = 2;
 end if;
 
 if not true:

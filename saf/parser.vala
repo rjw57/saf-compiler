@@ -180,7 +180,7 @@ namespace Saf
 		private AST.Program parse_program()
 			throws TokeniserError, ParserError
 		{
-			Collection<AST.Gobbet> gobbets = new ArrayList<AST.Gobbet>();
+			Gee.Map<string, AST.Gobbet> gobbets = new HashMap<string, AST.Gobbet>();
 			Gee.List<AST.Statement> statements = new ArrayList<AST.Statement>();
 
 			// prime the pump...
@@ -193,7 +193,13 @@ namespace Saf
 				AST.Node node = parse_statement_or_gobbet();
 
 				if(node.get_type().is_a(typeof(AST.Gobbet))) {
-					gobbets.add((AST.Gobbet) node);
+					string name = ((AST.Gobbet)node).name;
+					if(gobbets.has_key(name)) {
+						error_list.add(new AST.Error(this, first_token_idx, cur_token_idx,
+									"We already have a gobbet named '%s'.".printf(name)));
+					} else {
+						gobbets.set(name, (AST.Gobbet) node);
+					}
 				} else if(node.get_type().is_a(typeof(AST.Statement))) {
 					statements.add((AST.Statement) node);
 				} else if(node.get_type().is_a(typeof(AST.Error))) {
@@ -224,9 +230,11 @@ namespace Saf
 		// parse zero or more statements until END and term_token_type is
 		// encountered. Append the parsed statements to statement_list. Any
 		// errors which are encountered are added to the error list. Return
-		// a non-null AST.Error if there is a fatal error
+		// a non-null AST.Error if there is a fatal error,
+		// HACK: If 'allow_otherwise' is true, we can also terminate on 'OTHERWISE' ':'.
 		private AST.Error? parse_statement_block(Token.Type term_token_type,
-				Gee.List<AST.Statement> statement_list)
+				Gee.List<AST.Statement> statement_list, 
+				bool allow_otherwise = false)
 			throws TokeniserError, ParserError
 		{
 			int first_token_idx = cur_token_idx;
@@ -234,10 +242,13 @@ namespace Saf
 			// keep going until we get an 'end <term>'
 			bool should_continue = true;
 			do {
-				if(cur_token.type == Token.Type.END) {
+				if((cur_token.type == Token.Type.END) ||
+						(allow_otherwise && (cur_token.type == Token.Type.OTHERWISE))) {
 					int end_token_idx = cur_token_idx;
+					bool was_otherwise = cur_token.type == Token.Type.OTHERWISE;
 					pop_token();
-					if(cur_token.type == term_token_type) {
+					if((!was_otherwise && (cur_token.type == term_token_type)) || 
+							(was_otherwise && cur_token.is_glyph(":"))) {
 						should_continue = false;
 					} else {
 						// this shouldn't happen. In case it does, however, try
@@ -275,8 +286,6 @@ namespace Saf
 						"with the right 'end' line?");
 			}
 
-			pop_token(); // pop termination token
-
 			return null;
 		}
 
@@ -303,8 +312,7 @@ namespace Saf
 
 			pop_token();
 
-			Collection<AST.VariableDeclaration> taking_decls = 
-				new ArrayList<AST.VariableDeclaration>();
+			var taking_decls = new Gee.HashMap<string, AST.VariableDeclaration>();
 
 			// do we have a 'TAKING' clause?
 			if(cur_token.type == Token.Type.TAKING) {
@@ -320,7 +328,14 @@ namespace Saf
 					AST.Node node = parse_var_decl();
 
 					if(node.get_type().is_a(typeof(AST.VariableDeclaration))) {
-						taking_decls.add((AST.VariableDeclaration) node);
+						var var_decl = (AST.VariableDeclaration) node;
+						if(taking_decls.has_key(var_decl.name)) {
+							return new AST.Error(this,
+									var_decl.first_token_index, var_decl.last_token_index,
+									("A 'taking' variable called '%s' has already been " +
+									"specified.").printf(var_decl.name));
+						}
+						taking_decls.set(var_decl.name, var_decl);
 					} else if(node.get_type().is_a(typeof(AST.Error))) {
 						error_list.add((AST.Error) node);
 					} else {
@@ -371,6 +386,7 @@ namespace Saf
 			AST.Error? err = parse_statement_block(Token.Type.GOBBET,
 					gobbet_statements);
 			if(err != null) { return err; }
+			pop_token();
 
 			// we should've terminated on an 'end gobbet', look for the remaining
 			// semi-colon.
@@ -555,7 +571,8 @@ namespace Saf
 					var_name, expr);
 		}
 
-		// if_statement := IF expression: ( statement )* END IF
+		// if_statement := IF expression ':' ( statement )* 
+		//					( OTHERWISE ':' ( statement )* )? END IF
 		private AST.Node parse_if_statement()
 			throws TokeniserError, ParserError
 		{
@@ -588,15 +605,26 @@ namespace Saf
 			}
 			pop_token();
 
-			var if_statements = new ArrayList<AST.Statement>();
+			var then_statements = new ArrayList<AST.Statement>();
+			var otherwise_statements = new ArrayList<AST.Statement>();
 
 			AST.Error? err = parse_statement_block(Token.Type.IF,
-					if_statements);
+					then_statements, true);
 			if(err != null) { return err; }
+
+			if(cur_token.is_glyph(":")) {
+				// there was an otherwise block
+				pop_token();
+				err = parse_statement_block(Token.Type.IF,
+						otherwise_statements);
+				if(err != null) { return err; }
+			}
+
+			pop_token();
 
 			return new AST.IfStatement(this,
 						first_token_idx, cur_token_idx,
-						expr, if_statements);
+						expr, then_statements, otherwise_statements);
 		}
 
 		// return true iff list_a and list_b have the same number of elements
@@ -684,6 +712,7 @@ namespace Saf
 
 			AST.Error? err = parse_statement_block(Token.Type.WHILE,
 					while_statements);
+			pop_token();
 			if(err != null) { return err; }
 
 			var loop_name_2 = new ArrayList<string>();
@@ -710,7 +739,7 @@ namespace Saf
 						expr, while_statements, loop_name_1);
 		}
 
-		// blessed_statement := blessed_identifer expression ';'
+		// blessed_statement := blessed_identifer expression? ';'
 		private AST.Node parse_blessed_statement()
 			throws TokeniserError, ParserError
 		{
@@ -727,15 +756,17 @@ namespace Saf
 			pop_token();
 
 			AST.Expression expr = null;
-			AST.Node node = parse_expression();
-			if(node.get_type().is_a(typeof(AST.Expression))) {
-				expr = (AST.Expression) node;
-			} else if(node.get_type().is_a(typeof(AST.Error))) {
-				return (AST.Error) node;
-			} else {
-				throw new ParserError.INTERNAL(
-						"parse_expression() returned a node which was " +
-						"neither an Expression or an Error.");
+			if(!cur_token.is_glyph(";")) {
+				AST.Node node = parse_expression();
+				if(node.get_type().is_a(typeof(AST.Expression))) {
+					expr = (AST.Expression) node;
+				} else if(node.get_type().is_a(typeof(AST.Error))) {
+					return (AST.Error) node;
+				} else {
+					throw new ParserError.INTERNAL(
+							"parse_expression() returned a node which was " +
+							"neither an Expression or an Error.");
+				}
 			}
 			
 			if(!cur_token.is_glyph(";")) {
@@ -746,7 +777,9 @@ namespace Saf
 			}
 
 			var arg_list = new Gee.ArrayList<AST.Expression>();
-			arg_list.add(expr);
+			if(expr != null) {
+				arg_list.add(expr);
+			}
 
 			var ie = new AST.ImplementExpression(this, 
 					first_token_idx, cur_token_idx,

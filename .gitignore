@@ -12,3 +12,5 @@ saf/saf.vapi
 lib*.dylib
 test/test_parser
 test/test_tokeniser
+editor/saf_editor
+test/test_interpreter

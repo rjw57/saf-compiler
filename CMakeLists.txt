@@ -16,10 +16,14 @@ message(STATUS "Build type is ${CMAKE_BUILD_TYPE}.")
 list(APPEND CMAKE_MODULE_PATH
 	${CMAKE_SOURCE_DIR}/cmake/llvm
 	${CMAKE_SOURCE_DIR}/cmake/vala
+	${CMAKE_SOURCE_DIR}/cmake/local
 )
 
 # Compile the SAF language
 add_subdirectory(saf)
+
+# Compile the SAF editor
+add_subdirectory(editor)
 
 # Compile the test programs
 add_subdirectory(test)

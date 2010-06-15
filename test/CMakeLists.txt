@@ -63,4 +63,15 @@ PACKAGES
 add_executable(test_parser ${_test_parser_vala_c_sources})
 target_link_libraries(test_parser)
 
+vala_precompile(_test_interpreter_vala_c_sources
+	test_interpreter.vala
+CUSTOM_VAPIS
+	../saf/saf.vapi
+PACKAGES
+	gee-1.0
+)
+
+add_executable(test_interpreter ${_test_interpreter_vala_c_sources})
+target_link_libraries(test_interpreter)
+
 # vim:sw=4:ts=4:autoindent

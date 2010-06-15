@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<language id="saf" _name="SAF" version="2.0" _section="Sources">
+	<metadata>
+		<property name="mimetypes">text/x-saf</property>
+		<property name="globs">*.saf</property>
+	</metadata>
+	<styles>
+		<style id="comment" _name="Comment" map-to="def:comment" />
+		<style id="constant" _name="Constant" map-to="def:constant" />
+		<style id="escaped-character" _name="Escaped character" map-to="def:special-char" />
+		<style id="identifier" _name="Identifier" map-to="def:identifier" />
+		<style id="keyword" _name="Keyword" map-to="def:keyword" />
+		<style id="operator" _name="Operator" map-to="def:special-char" />
+		<style id="string" _name="String" map-to="def:string" />
+	</styles>
+	<definitions>
+		<context id="saf">
+			<include>
+				<context id="comment" style-ref="comment">
+					<start>#</start>
+					<end>$</end>
+				</context>
+				<context id="keywords" style-ref="keyword">
+					<keyword>called</keyword>
+					<keyword>end</keyword>
+					<keyword>giving</keyword>
+					<keyword>gobbet</keyword>
+					<keyword>if</keyword>
+					<keyword>implement</keyword>
+					<keyword>make</keyword>
+					<keyword>only</keyword>
+					<keyword>taking</keyword>
+					<keyword>with</keyword>
+					<keyword>while</keyword>
+				</context>
+				<context id="ligature-operators" style-ref="operator">
+					<keyword>and</keyword>
+					<keyword>or</keyword>
+					<keyword>not</keyword>
+				</context>
+				<context id="ligature-constants" style-ref="constant">
+					<keyword>true</keyword>
+					<keyword>false</keyword>
+				</context>
+				<context id="operators" style-ref="operator">
+					<match>\+|-|\/|\*|&amp;&amp;|!|=/=|=|&gt;=|&lt;=|\|\||&gt;|&lt;|∧|∨|¬|≥|≤|≠</match>
+				</context>
+				<context id="constant-real" style-ref="constant">
+					<match>\p{N}+\.\p{N}*</match>
+				</context>
+				<context id="constant-integer" style-ref="constant">
+					<match>\p{N}+</match>
+				</context>
+				<context id="identifier" style-ref="identifier">
+					<match>[\p{L}_][\p{L}\p{N}_]*</match>
+				</context>
+				<context id="string" style-ref="string">
+					<start>"</start>
+					<end>"</end>
+					<include>
+						<context id="escape" style-ref="escaped-character">
+							<match>\\.</match>
+						</context>
+					</include>
+				</context>
+			</include>
+		</context>
+	</definitions>
+</language>
+<!-- vim:ts=2:sw=2:autoindent
+  -->

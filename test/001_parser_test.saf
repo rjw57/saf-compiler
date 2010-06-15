@@ -32,6 +32,8 @@ if a =/= 4:
   make bar = 6;
 end if;
 
+make this = an error;
+
 if a > 3 and a <= 4:
   make bar = 7;
 end if;
