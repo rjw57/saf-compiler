@@ -60,7 +60,17 @@ namespace Saf
 				set_variable(cs.name, expr_val);
 			} else if(statement.get_type().is_a(typeof(AST.IfStatement))) {
 				var cs = (AST.IfStatement) statement;
-				stderr.printf("FIXME: Skipped statement type: %s\n", cs.get_type().name());
+				Value cond = evaluate_expression(cs.test);
+				if(!cond.type().is_a(typeof(bool))) {
+					throw new InterpreterError.TYPE_ERROR("Expected if statement test to have " +
+							"boolean type");
+				}
+
+				if(cond.get_boolean()) {
+					run_statements(cs.then_statements);
+				} else {
+					run_statements(cs.otherwise_statements);
+				}
 			} else if(statement.get_type().is_a(typeof(AST.WhileStatement))) {
 				var cs = (AST.WhileStatement) statement;
 				stderr.printf("FIXME: Skipped statement type: %s\n", cs.get_type().name());

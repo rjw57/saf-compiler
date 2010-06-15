@@ -41,6 +41,8 @@ if ! a ≥ 5:
   make foo = 5;
 end if;
 
+make bar = 0;
+
 if a >= 4 || a < 5 && a > 3:
   make bar = 6;
 end if;
