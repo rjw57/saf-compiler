@@ -621,6 +621,22 @@ namespace Saf
 
 		private void set_variable(string name, Value? val)
 		{
+			// if there exists a variable in this scope, set it
+			if(_scope_stack.peek_head().has_key(name)) {
+				_scope_stack.peek_head().set(name, val);
+				return;
+			}
+
+			// if there exists a variable in a higher scope, set it
+			foreach(var scope in _scope_stack)
+			{
+				if(scope.has_key(name)) {
+					scope.set(name, val);
+					return;
+				}
+			}
+
+			// finally, if there is nothing else, create a new variable.
 			_scope_stack.peek_head().set(name, val);
 		}
 
