@@ -1,0 +1,4 @@
+make a = 1;
+while a < 2000:
+  make a = a * 2;
+end while;

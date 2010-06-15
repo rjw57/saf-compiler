@@ -1,0 +1,15 @@
+make a = 1;
+make b = 2.0;
+make c = true;
+make d = a;
+make this_is_a_long_name = c;
+make str_val = "This is a string constant";
+make str_copy = str_val;
+
+# Uncomment to cause an error
+# make invalid = foo;
+
+make a = -a;
+make e = +d;
+make f = not c;
+make g = not false;

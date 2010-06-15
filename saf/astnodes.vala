@@ -5,10 +5,16 @@ namespace Saf.AST
 	public class Node : Object
 	{
 		private Gee.List<Token> _tokens = null;
+		private int _first_idx = 0;
+		private int _last_idx = 0;
+
 		public Gee.List<Token> tokens { get { return _tokens; } }
+		public int first_token_index { get { return _first_idx; } }
+		public int last_token_index { get { return _last_idx; } }
 
 		internal Node(Parser _p, int _f, int _l) {
 			_tokens = _p.token_slice(_f, _l); 
+			_first_idx = _f; _last_idx = _l;
 		}
 	}
 
@@ -32,19 +38,20 @@ namespace Saf.AST
 
 	public class Program : Node
 	{
-		private Collection<Gobbet> _gobbets = null;
+		private Gee.Map<string, Gobbet> _gobbets = new Gee.HashMap<string, Gobbet>();
 		private Gee.List<Statement> _statements = null;
 		private string _input_name = null;
 
-		public Collection<Gobbet> gobbets { get { return _gobbets; } }
+		public Gee.Map<string, Gobbet> gobbet_map { get { return _gobbets; } }
+		public Collection<Gobbet> gobbets { owned get { return _gobbets.values; } }
 		public Gee.List<Statement> statements { get { return _statements; } }
 		public string input_name { get { return _input_name; } }
 
 		internal Program(Parser p, int f, int l,
-				string _n, Collection<Gobbet> g, Gee.List<Statement> s)
+				string _n, Gee.Map<string, Gobbet> g, Gee.List<Statement> s)
 		{
 			base(p,f,l); 
-			_gobbets = g.read_only_view;
+			_gobbets = g;
 			_statements = s.read_only_view;
 			_input_name = _n;
 		}
@@ -53,19 +60,22 @@ namespace Saf.AST
 	public class Gobbet : Node
 	{
 		private string _name = null;
-		private Collection<VariableDeclaration> _taking_decls = null;
+		private Map<string, VariableDeclaration> _taking_decls = null;
 		private VariableDeclaration _giving_decl = null;
 		private Gee.List<Statement> _statements = null;
 
 		public string name { get { return _name; } }
 		public Collection<VariableDeclaration> taking {
-			get { return _taking_decls; }
+			owned get { return _taking_decls.values; }
+		}
+		public Map<string, VariableDeclaration> taking_map { 
+			get { return _taking_decls; } 
 		}
 		public VariableDeclaration? giving { get { return _giving_decl; } }
 		public Gee.List<Statement> statements { get { return _statements; } }
 
 		internal Gobbet(Parser p, int f, int l, string n, 
-				Collection<VariableDeclaration> t,
+				Map<string, VariableDeclaration> t,
 				VariableDeclaration? g,
 				Gee.List<Statement> s)
 		{
