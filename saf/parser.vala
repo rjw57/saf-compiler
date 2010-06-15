@@ -180,7 +180,7 @@ namespace Saf
 		private AST.Program parse_program()
 			throws TokeniserError, ParserError
 		{
-			Collection<AST.Gobbet> gobbets = new ArrayList<AST.Gobbet>();
+			Gee.Map<string, AST.Gobbet> gobbets = new HashMap<string, AST.Gobbet>();
 			Gee.List<AST.Statement> statements = new ArrayList<AST.Statement>();
 
 			// prime the pump...
@@ -193,7 +193,13 @@ namespace Saf
 				AST.Node node = parse_statement_or_gobbet();
 
 				if(node.get_type().is_a(typeof(AST.Gobbet))) {
-					gobbets.add((AST.Gobbet) node);
+					string name = ((AST.Gobbet)node).name;
+					if(gobbets.has_key(name)) {
+						error_list.add(new AST.Error(this, first_token_idx, cur_token_idx,
+									"We already have a gobbet named '%s'.".printf(name)));
+					} else {
+						gobbets.set(name, (AST.Gobbet) node);
+					}
 				} else if(node.get_type().is_a(typeof(AST.Statement))) {
 					statements.add((AST.Statement) node);
 				} else if(node.get_type().is_a(typeof(AST.Error))) {

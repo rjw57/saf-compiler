@@ -42,12 +42,10 @@ namespace Saf.AST
 		public string input_name { get { return _input_name; } }
 
 		internal Program(Parser p, int f, int l,
-				string _n, Collection<Gobbet> g, Gee.List<Statement> s)
+				string _n, Gee.Map<string, Gobbet> g, Gee.List<Statement> s)
 		{
 			base(p,f,l); 
-			foreach(var gobbet in g) {
-				_gobbets.set(gobbet.name, gobbet);
-			}
+			_gobbets = g;
 			_statements = s.read_only_view;
 			_input_name = _n;
 		}
