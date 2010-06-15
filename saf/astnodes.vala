@@ -5,10 +5,16 @@ namespace Saf.AST
 	public class Node : Object
 	{
 		private Gee.List<Token> _tokens = null;
+		private int _first_idx = 0;
+		private int _last_idx = 0;
+
 		public Gee.List<Token> tokens { get { return _tokens; } }
+		public int first_token_index { get { return _first_idx; } }
+		public int last_token_index { get { return _last_idx; } }
 
 		internal Node(Parser _p, int _f, int _l) {
 			_tokens = _p.token_slice(_f, _l); 
+			_first_idx = _f; _last_idx = _l;
 		}
 	}
 
@@ -54,19 +60,22 @@ namespace Saf.AST
 	public class Gobbet : Node
 	{
 		private string _name = null;
-		private Collection<VariableDeclaration> _taking_decls = null;
+		private Map<string, VariableDeclaration> _taking_decls = null;
 		private VariableDeclaration _giving_decl = null;
 		private Gee.List<Statement> _statements = null;
 
 		public string name { get { return _name; } }
 		public Collection<VariableDeclaration> taking {
-			get { return _taking_decls; }
+			owned get { return _taking_decls.values; }
+		}
+		public Map<string, VariableDeclaration> taking_map { 
+			get { return _taking_decls; } 
 		}
 		public VariableDeclaration? giving { get { return _giving_decl; } }
 		public Gee.List<Statement> statements { get { return _statements; } }
 
 		internal Gobbet(Parser p, int f, int l, string n, 
-				Collection<VariableDeclaration> t,
+				Map<string, VariableDeclaration> t,
 				VariableDeclaration? g,
 				Gee.List<Statement> s)
 		{

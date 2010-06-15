@@ -312,8 +312,7 @@ namespace Saf
 
 			pop_token();
 
-			Collection<AST.VariableDeclaration> taking_decls = 
-				new ArrayList<AST.VariableDeclaration>();
+			var taking_decls = new Gee.HashMap<string, AST.VariableDeclaration>();
 
 			// do we have a 'TAKING' clause?
 			if(cur_token.type == Token.Type.TAKING) {
@@ -329,7 +328,14 @@ namespace Saf
 					AST.Node node = parse_var_decl();
 
 					if(node.get_type().is_a(typeof(AST.VariableDeclaration))) {
-						taking_decls.add((AST.VariableDeclaration) node);
+						var var_decl = (AST.VariableDeclaration) node;
+						if(taking_decls.has_key(var_decl.name)) {
+							return new AST.Error(this,
+									var_decl.first_token_index, var_decl.last_token_index,
+									("A 'taking' variable called '%s' has already been " +
+									"specified.").printf(var_decl.name));
+						}
+						taking_decls.set(var_decl.name, var_decl);
 					} else if(node.get_type().is_a(typeof(AST.Error))) {
 						error_list.add((AST.Error) node);
 					} else {
