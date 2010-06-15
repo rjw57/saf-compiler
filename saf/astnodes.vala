@@ -134,17 +134,23 @@ namespace Saf.AST
 	public class IfStatement : Statement
 	{
 		private Expression _test = null;
-		private Gee.List<Statement> _statements = null;
+		private Gee.List<Statement> _then_statements = null;
+		private Gee.List<Statement> _otherwise_statements = null;
 
 		public Expression test { get { return _test; } }
-		public Gee.List<Statement> statements { get { return _statements; } }
+		public Gee.List<Statement> then_statements { get { return _then_statements; } }
+		public Gee.List<Statement> otherwise_statements { get { return _otherwise_statements; } }
 
 		internal IfStatement(Parser p, int f, int l,
-				Expression t, Gee.List<Statement> s)
+				Expression t, Gee.List<Statement> s,
+				Gee.List<Statement>? o = null)
 		{
 			base(p,f,l);
 			_test = t;
-			_statements = s;
+			_then_statements = s;
+			_otherwise_statements = o;
+			if(_otherwise_statements == null)
+				_otherwise_statements = new Gee.ArrayList<Statement>();
 		}
 	}
 

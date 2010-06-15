@@ -175,8 +175,15 @@ public class MainProgram {
 			statement_node->add_child(children_node);
 
 			children_node = document->new_node(ns, "children");
-			children_node->set_prop("type", "statements");
-			foreach(var s in ifs.statements) {
+			children_node->set_prop("type", "then-statements");
+			foreach(var s in ifs.then_statements) {
+				children_node->add_child(new_statement_node(s));
+			}
+			statement_node->add_child(children_node);
+
+			children_node = document->new_node(ns, "children");
+			children_node->set_prop("type", "otherwise-statements");
+			foreach(var s in ifs.otherwise_statements) {
 				children_node->add_child(new_statement_node(s));
 			}
 			statement_node->add_child(children_node);

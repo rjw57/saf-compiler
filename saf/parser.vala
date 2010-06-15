@@ -224,9 +224,11 @@ namespace Saf
 		// parse zero or more statements until END and term_token_type is
 		// encountered. Append the parsed statements to statement_list. Any
 		// errors which are encountered are added to the error list. Return
-		// a non-null AST.Error if there is a fatal error
+		// a non-null AST.Error if there is a fatal error,
+		// HACK: If 'allow_otherwise' is true, we can also terminate on 'OTHERWISE' ':'.
 		private AST.Error? parse_statement_block(Token.Type term_token_type,
-				Gee.List<AST.Statement> statement_list)
+				Gee.List<AST.Statement> statement_list, 
+				bool allow_otherwise = false)
 			throws TokeniserError, ParserError
 		{
 			int first_token_idx = cur_token_idx;
@@ -234,10 +236,13 @@ namespace Saf
 			// keep going until we get an 'end <term>'
 			bool should_continue = true;
 			do {
-				if(cur_token.type == Token.Type.END) {
+				if((cur_token.type == Token.Type.END) ||
+						(allow_otherwise && (cur_token.type == Token.Type.OTHERWISE))) {
 					int end_token_idx = cur_token_idx;
+					bool was_otherwise = cur_token.type == Token.Type.OTHERWISE;
 					pop_token();
-					if(cur_token.type == term_token_type) {
+					if((!was_otherwise && (cur_token.type == term_token_type)) || 
+							(was_otherwise && cur_token.is_glyph(":"))) {
 						should_continue = false;
 					} else {
 						// this shouldn't happen. In case it does, however, try
@@ -274,8 +279,6 @@ namespace Saf
 						"was finished. Did you forget to finish the block " +
 						"with the right 'end' line?");
 			}
-
-			pop_token(); // pop termination token
 
 			return null;
 		}
@@ -371,6 +374,7 @@ namespace Saf
 			AST.Error? err = parse_statement_block(Token.Type.GOBBET,
 					gobbet_statements);
 			if(err != null) { return err; }
+			pop_token();
 
 			// we should've terminated on an 'end gobbet', look for the remaining
 			// semi-colon.
@@ -555,7 +559,8 @@ namespace Saf
 					var_name, expr);
 		}
 
-		// if_statement := IF expression: ( statement )* END IF
+		// if_statement := IF expression ':' ( statement )* 
+		//					( OTHERWISE ':' ( statement )* )? END IF
 		private AST.Node parse_if_statement()
 			throws TokeniserError, ParserError
 		{
@@ -588,15 +593,26 @@ namespace Saf
 			}
 			pop_token();
 
-			var if_statements = new ArrayList<AST.Statement>();
+			var then_statements = new ArrayList<AST.Statement>();
+			var otherwise_statements = new ArrayList<AST.Statement>();
 
 			AST.Error? err = parse_statement_block(Token.Type.IF,
-					if_statements);
+					then_statements, true);
 			if(err != null) { return err; }
+
+			if(cur_token.is_glyph(":")) {
+				// there was an otherwise block
+				pop_token();
+				err = parse_statement_block(Token.Type.IF,
+						otherwise_statements);
+				if(err != null) { return err; }
+			}
+
+			pop_token();
 
 			return new AST.IfStatement(this,
 						first_token_idx, cur_token_idx,
-						expr, if_statements);
+						expr, then_statements, otherwise_statements);
 		}
 
 		// return true iff list_a and list_b have the same number of elements
@@ -684,6 +700,7 @@ namespace Saf
 
 			AST.Error? err = parse_statement_block(Token.Type.WHILE,
 					while_statements);
+			pop_token();
 			if(err != null) { return err; }
 
 			var loop_name_2 = new ArrayList<string>();
