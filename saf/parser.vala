@@ -739,7 +739,7 @@ namespace Saf
 						expr, while_statements, loop_name_1);
 		}
 
-		// blessed_statement := blessed_identifer expression ';'
+		// blessed_statement := blessed_identifer expression? ';'
 		private AST.Node parse_blessed_statement()
 			throws TokeniserError, ParserError
 		{
@@ -756,15 +756,17 @@ namespace Saf
 			pop_token();
 
 			AST.Expression expr = null;
-			AST.Node node = parse_expression();
-			if(node.get_type().is_a(typeof(AST.Expression))) {
-				expr = (AST.Expression) node;
-			} else if(node.get_type().is_a(typeof(AST.Error))) {
-				return (AST.Error) node;
-			} else {
-				throw new ParserError.INTERNAL(
-						"parse_expression() returned a node which was " +
-						"neither an Expression or an Error.");
+			if(!cur_token.is_glyph(";")) {
+				AST.Node node = parse_expression();
+				if(node.get_type().is_a(typeof(AST.Expression))) {
+					expr = (AST.Expression) node;
+				} else if(node.get_type().is_a(typeof(AST.Error))) {
+					return (AST.Error) node;
+				} else {
+					throw new ParserError.INTERNAL(
+							"parse_expression() returned a node which was " +
+							"neither an Expression or an Error.");
+				}
 			}
 			
 			if(!cur_token.is_glyph(";")) {
@@ -775,7 +777,9 @@ namespace Saf
 			}
 
 			var arg_list = new Gee.ArrayList<AST.Expression>();
-			arg_list.add(expr);
+			if(expr != null) {
+				arg_list.add(expr);
+			}
 
 			var ie = new AST.ImplementExpression(this, 
 					first_token_idx, cur_token_idx,
