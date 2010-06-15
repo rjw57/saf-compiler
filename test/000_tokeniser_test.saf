@@ -34,6 +34,8 @@ make E = "4" =/= "6";
 make F = "hello" = "hello";
 make G = 4 = 4;
 make H = 5 =/= 6;
+make I = 5 > 7;
+make J = not 4 <= 3;
 
 if ! a ≥ 5:
   make foo = 5;
