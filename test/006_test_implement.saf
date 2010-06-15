@@ -1,0 +1,32 @@
+# A Gobbet that'll take a number and raise it to the power of exponent.
+gobbet power taking number only a number, exponent only a number giving result only a number:
+  make result = number;
+  make times_count = 1;
+  while times_count < exponent, called power loop:
+    make result = result * number;
+    make times_count = times_count + 1;
+    end while power loop;
+  end gobbet;
+
+gobbet square_noret taking A:
+  make B = A * A;
+  end gobbet;
+
+gobbet square taking A giving B:
+  make B = A * A;
+  end gobbet;
+
+gobbet nop:
+  make C = 4;
+  end gobbet;
+
+implement nop;
+implement square_noret with A = 4;
+implement square_noret with A = 5;
+
+make X = 4;
+make Y = 3;
+make B = 6;
+make A = "The square of " + X + " is " + implement square with A = X;
+make C = (X + 1) + " raised to the power of " + Y + " is " +
+	implement power with exponent = Y, number = X + 1;
