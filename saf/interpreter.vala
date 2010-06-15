@@ -187,6 +187,8 @@ namespace Saf
 				rv = -1 * (int64) v.get_uint64();
 			} else if(vt == typeof(int64)) {
 				rv = -1 * v.get_int64();
+			} else if(vt == typeof(int)) {
+				rv = -1 * v.get_int();
 			} else {
 				throw new InterpreterError.TYPE_ERROR("Cannot apply '-' operator to " +
 						"values of type %s", v.type().name());
@@ -203,6 +205,7 @@ namespace Saf
 			if((vt != typeof(double)) &&
 					(vt != typeof(uint64)) &&
 					(vt != typeof(int64)) &&
+					(vt != typeof(int)) &&
 					(vt != typeof(bool)) )
 			{
 				throw new InterpreterError.TYPE_ERROR("Cannot apply '+' operator to " +
