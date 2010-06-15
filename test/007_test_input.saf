@@ -1,0 +1,5 @@
+print "What is your name?";
+make name = implement input;
+print "And your age?";
+make age = implement input;
+print "Your name is " + name + " and your age is " + age;

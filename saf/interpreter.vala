@@ -31,6 +31,7 @@ namespace Saf
 		public Interpreter()
 		{
 			_builtin_gobbets.add("print");
+			_builtin_gobbets.add("input");
 		}
 
 		public void run()
@@ -253,7 +254,7 @@ namespace Saf
 
 			try {
 				if(_builtin_gobbets.contains(expr.gobbet)) {
-					run_builtin_gobbet(expr.gobbet, pos_args, named_args);
+					rv = run_builtin_gobbet(expr.gobbet, pos_args, named_args);
 				} else {
 					// find the gobbet we're dealing with
 					AST.Gobbet? gobbet = program.gobbet_map.get(expr.gobbet);
@@ -296,7 +297,7 @@ namespace Saf
 		}
 
 		// Builtin gobbets
-		internal void run_builtin_gobbet(string name,
+		internal Value? run_builtin_gobbet(string name,
 				Gee.List<Value?> pos_args, Gee.Map<string, Value?> named_args)
 			throws InterpreterError
 		{
@@ -313,11 +314,24 @@ namespace Saf
 				// new line?
 				if(pos_args.size == 0) {
 					stdout.printf("\n");
-					return;
+					return null;
 				}
 
 				// print value
 				stdout.printf("%s\n", cast_to_string(pos_args.get(0)));
+				return null;
+			} else if(name == "input") {
+				if(named_args.size > 0) {
+					throw new InterpreterError.GOBBET_ARGUMENTS(
+							"The input gobbet does not take any named arguments.");
+				}
+				if(pos_args.size > 1) {
+					throw new InterpreterError.GOBBET_ARGUMENTS(
+							"The input gobbet takes at most one positional argument.");
+				}
+
+				return Readline.readline(
+						(pos_args.size == 0) ? null : cast_to_string(pos_args.get(0)) );
 			} else {
 				throw new InterpreterError.INTERNAL(
 						"run_builtin_gobbet() called with unknown gobbet %s".printf(name));
