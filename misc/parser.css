@@ -261,6 +261,7 @@ li:first-child .ast_node.program {
 .token.implement,
 .token.make,
 .token.only,
+.token.otherwise,
 .token.taking,
 .token.with,
 .token.while
