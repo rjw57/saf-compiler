@@ -42,6 +42,11 @@ link_libraries(${GEE_LIBRARIES})
 link_directories(${GEE_LIBRARY_DIRS})
 include_directories(${GEE_INCLUDE_DIRS})
 
+# Look for GNU readline
+find_package(Readline REQUIRED)
+include_directories(${READLINE_INCLUDE_DIR})
+link_libraries(${READLINE_LIBRARY})
+
 # Add the SAF include directories
 include_directories(../saf)
 link_libraries(saf)
@@ -60,6 +65,7 @@ if(GTKSOURCEVIEW_FOUND AND GTK_FOUND)
 		gtksourceview-2.0
 		gee-1.0
 		gtk+-2.0
+		Readline
 	)
 
 	add_executable(saf_editor ${_saf_editor_c_sources})

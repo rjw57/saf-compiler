@@ -16,7 +16,7 @@ class Main : GLib.Object, Saf.BuiltinProvider {
 
 	public string input(string? prompt)
 	{
-		return stdin.read_line();
+		return Readline.readline(prompt);
 	}
 
 	internal void run_handler()

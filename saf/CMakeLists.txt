@@ -35,11 +35,6 @@ link_libraries(${GEE_LIBRARIES})
 link_directories(${GEE_LIBRARY_DIRS})
 include_directories(${GEE_INCLUDE_DIRS})
 
-# Look for GNU readline
-find_package(Readline)
-include_directories(${READLINE_INCLUDE_DIR})
-link_libraries(${READLINE_LIBRARY})
-
 vala_precompile(_saf_vala_c_sources
 	astnodes.vala
 	interpreter.vala
