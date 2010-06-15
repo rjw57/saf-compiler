@@ -149,6 +149,10 @@ namespace Saf
 
 				case '=':
 				case '≠':
+					v = equality(expr.operator,
+							evaluate_expression(expr.lhs), evaluate_expression(expr.rhs));
+					break;
+
 				case '>':
 				case '≥':
 				case '<':
@@ -327,6 +331,73 @@ namespace Saf
 					case '/':
 						throw new InterpreterError.TYPE_ERROR("Invalid operator '%s' for strings.",
 								unichar_to_string(op));
+					default:
+						throw new InterpreterError.INTERNAL("Unexpected operator '%s'.",
+								unichar_to_string(op));
+				}
+			} else {
+				throw new InterpreterError.INTERNAL("Type promotion returned invalid type: %s",
+						p_lhs.type().name());
+			}
+
+			return rv;
+		}
+
+		private static Value? equality(unichar op, Value lhs, Value rhs)
+			throws InterpreterError
+		{
+			Value rv = 0;
+
+			Value p_lhs, p_rhs;
+			if(!promote_types(lhs, rhs, out p_lhs, out p_rhs))
+			{
+				throw new InterpreterError.TYPE_ERROR("Cannot apply '%s' operator to " +
+						"values of type %s and %s", unichar_to_string(op),
+						lhs.type().name(), rhs.type().name());
+			}
+
+			// check promotion worked
+			assert(p_lhs.type() == p_rhs.type());
+
+			// implement operator
+			if(p_lhs.type().is_a(typeof(int64))) {
+				int64 l = p_lhs.get_int64();
+				int64 r = p_rhs.get_int64();
+				switch(op) {
+					case '=':
+						rv = l == r;
+						break;
+					case '≠':
+						rv = l != r;
+						break;
+					default:
+						throw new InterpreterError.INTERNAL("Unexpected operator '%s'.",
+								unichar_to_string(op));
+				}
+			} else if(p_lhs.type().is_a(typeof(double))) {
+				double l = p_lhs.get_double();
+				double r = p_rhs.get_double();
+				switch(op) {
+					case '=':
+						rv = l == r;
+						break;
+					case '≠':
+						rv = l != r;
+						break;
+					default:
+						throw new InterpreterError.INTERNAL("Unexpected operator '%s'.",
+								unichar_to_string(op));
+				}
+			} else if(p_lhs.type().is_a(typeof(string))) {
+				string l = p_lhs.get_string();
+				string r = p_rhs.get_string();
+				switch(op) {
+					case '=':
+						rv = l == r;
+						break;
+					case '≠':
+						rv = l != r;
+						break;
 					default:
 						throw new InterpreterError.INTERNAL("Unexpected operator '%s'.",
 								unichar_to_string(op));
