@@ -19,11 +19,17 @@ namespace Saf
 	{
 		private AST.Program _program = null;
 		private Deque<Map<string, Value?>> _scope_stack = null;
+		private Set<string> _builtin_gobbets = new HashSet<string>();
 
 		public AST.Program program 
 		{ 
 			get { return _program; } 
 			set { _program = value; }
+		}
+
+		public Interpreter()
+		{
+			_builtin_gobbets.add("print");
 		}
 
 		public void run()
@@ -46,7 +52,7 @@ namespace Saf
 
 		// EXECUTION ENGINE
 
-		private void run_statements(Gee.List<AST.Statement> statements)
+		internal void run_statements(Gee.List<AST.Statement> statements)
 			throws InterpreterError
 		{
 			// create a new scope for these statements
@@ -58,12 +64,11 @@ namespace Saf
 				}
 			} finally {
 				// pop the created scope
-				dump_scope();
 				pop_scope();
 			}
 		}
 
-		private void run_statement(AST.Statement statement)
+		internal void run_statement(AST.Statement statement)
 			throws InterpreterError
 		{
 			if(statement.get_type().is_a(typeof(AST.MakeStatement))) {
@@ -110,7 +115,7 @@ namespace Saf
 			}
 		}
 
-		private Value? evaluate_expression(AST.Expression expr)
+		internal Value? evaluate_expression(AST.Expression expr)
 			throws InterpreterError
 		{
 			Value v = 0;
@@ -157,7 +162,7 @@ namespace Saf
 			return v;
 		}
 
-		private Value? evaluate_unary_op_expr(AST.UnaryOpExpression expr)
+		internal Value? evaluate_unary_op_expr(AST.UnaryOpExpression expr)
 			throws InterpreterError
 		{
 			Value v = 0;
@@ -181,7 +186,7 @@ namespace Saf
 			return v;
 		}
 
-		private Value? evaluate_binary_op_expr(AST.BinaryOpExpression expr)
+		internal Value? evaluate_binary_op_expr(AST.BinaryOpExpression expr)
 			throws InterpreterError
 		{
 			Value v = 0;
@@ -223,7 +228,7 @@ namespace Saf
 			return v;
 		}
 
-		private Value? evaluate_implement_expr(AST.ImplementExpression expr)
+		internal Value? evaluate_implement_expr(AST.ImplementExpression expr)
 			throws InterpreterError
 		{
 			Value? rv = null;
@@ -246,35 +251,39 @@ namespace Saf
 			new_scope();
 
 			try {
-				// find the gobbet we're dealing with
-				AST.Gobbet? gobbet = program.gobbet_map.get(expr.gobbet);
-				if(gobbet == null) {
-					throw new InterpreterError.UNKNOWN_GOBBET("Unknown gobbet: %s",
-							expr.gobbet);
-				}
-
-				// set named args
-				foreach(var arg in named_args.entries) {
-					if(!gobbet.taking_map.has_key(arg.key)) {
-						throw new InterpreterError.UNKNOWN_GOBBET_ARGUMENT(
-								"Gobbet %s does not take a variable called %s."
-								.printf(gobbet.name, arg.key));
+				if(_builtin_gobbets.contains(expr.gobbet)) {
+					stderr.printf("FIXME: Skipping builtin gobbet: %s\n", expr.gobbet);
+				} else {
+					// find the gobbet we're dealing with
+					AST.Gobbet? gobbet = program.gobbet_map.get(expr.gobbet);
+					if(gobbet == null) {
+						throw new InterpreterError.UNKNOWN_GOBBET("Unknown gobbet: %s",
+								expr.gobbet);
 					}
-					set_variable(arg.key, arg.value);
-				}
 
-				// run statements
-				foreach(var statement in gobbet.statements) {
-					run_statement(statement);
-				}
+					// set named args
+					foreach(var arg in named_args.entries) {
+						if(!gobbet.taking_map.has_key(arg.key)) {
+							throw new InterpreterError.UNKNOWN_GOBBET_ARGUMENT(
+									"Gobbet %s does not take a variable called %s."
+									.printf(gobbet.name, arg.key));
+						}
+						set_variable(arg.key, arg.value);
+					}
 
-				// is there a giving?
-				if(gobbet.giving != null) {
-					rv = search_scope(gobbet.giving.name);
-					if(rv == null) {
-						throw new InterpreterError.MISSING_GIVING(
-								"The gobbet's giving value '%s' was not set."
-								.printf(gobbet.giving.name));
+					// run statements
+					foreach(var statement in gobbet.statements) {
+						run_statement(statement);
+					}
+
+					// is there a giving?
+					if(gobbet.giving != null) {
+						rv = search_scope(gobbet.giving.name);
+						if(rv == null) {
+							throw new InterpreterError.MISSING_GIVING(
+									"The gobbet's giving value '%s' was not set."
+									.printf(gobbet.giving.name));
+						}
 					}
 				}
 			} finally {
@@ -287,7 +296,7 @@ namespace Saf
 
 		// Actual operators
 
-		private static Value? negate(Value v)
+		internal static Value? negate(Value v)
 			throws InterpreterError
 		{
 			Value rv = 0;
@@ -309,7 +318,7 @@ namespace Saf
 			return rv;
 		}
 
-		private static Value? plus(Value v)
+		internal static Value? plus(Value v)
 			throws InterpreterError
 		{
 			Type vt = v.type();
@@ -328,7 +337,7 @@ namespace Saf
 			return v;
 		}
 
-		private static Value? not(Value v)
+		internal static Value? not(Value v)
 			throws InterpreterError
 		{
 			Type vt = v.type();
@@ -344,7 +353,7 @@ namespace Saf
 			return rv;
 		}
 
-		private static Value? and_or(unichar op, Value lhs, Value rhs)
+		internal static Value? and_or(unichar op, Value lhs, Value rhs)
 			throws InterpreterError
 		{
 			if((lhs.type() != typeof(bool)) || (rhs.type() != typeof(bool)))
@@ -370,7 +379,7 @@ namespace Saf
 			return rv;
 		}
 
-		private static Value? arithmetic(unichar op, Value lhs, Value rhs)
+		internal static Value? arithmetic(unichar op, Value lhs, Value rhs)
 			throws InterpreterError
 		{
 			Value rv = 0;
@@ -451,7 +460,7 @@ namespace Saf
 			return rv;
 		}
 
-		private static Value? equality(unichar op, Value lhs, Value rhs)
+		internal static Value? equality(unichar op, Value lhs, Value rhs)
 			throws InterpreterError
 		{
 			Value rv = 0;
@@ -518,7 +527,7 @@ namespace Saf
 			return rv;
 		}
 
-		private static Value? comparison(unichar op, Value lhs, Value rhs)
+		internal static Value? comparison(unichar op, Value lhs, Value rhs)
 			throws InterpreterError
 		{
 			Value rv = 0;
@@ -588,7 +597,7 @@ namespace Saf
 		}
 
 		// IMPLICIT TYPE PROMOTION RULES
-		private static bool promote_types(Value lhs, Value rhs,
+		internal static bool promote_types(Value lhs, Value rhs,
 				out Value p_lhs, out Value p_rhs)
 			throws InterpreterError
 		{
@@ -629,12 +638,12 @@ namespace Saf
 
 		// TYPE CONVERSION
 
-		private static bool is_integral_type(Type t)
+		internal static bool is_integral_type(Type t)
 		{
 			return t.is_a(typeof(int64)) || t.is_a(typeof(uint64)) || t.is_a(typeof(int));
 		}
 
-		private static string cast_to_string(Value v)
+		internal static string cast_to_string(Value v)
 			throws InterpreterError
 		{
 			Type vt = v.type();
@@ -657,7 +666,7 @@ namespace Saf
 					vt.name());
 		}
 
-		private static double cast_to_double(Value v)
+		internal static double cast_to_double(Value v)
 			throws InterpreterError
 		{
 			Type vt = v.type();
@@ -678,7 +687,7 @@ namespace Saf
 					vt.name());
 		}
 
-		private static int64 cast_to_int64(Value v)
+		internal static int64 cast_to_int64(Value v)
 			throws InterpreterError
 		{
 			Type vt = v.type();
@@ -701,17 +710,17 @@ namespace Saf
 
 		// NESTED SCOPE SUPPORT
 
-		private void new_scope()
+		internal void new_scope()
 		{
 			_scope_stack.offer_head(new HashMap<string, Value?>());
 		}
 
-		private void pop_scope()
+		internal void pop_scope()
 		{
 			_scope_stack.poll_head();
 		}
 
-		private void set_variable(string name, Value? val)
+		internal void set_variable(string name, Value? val)
 		{
 			// if there exists a variable in this scope, set it
 			if(_scope_stack.peek_head().has_key(name)) {
@@ -732,7 +741,7 @@ namespace Saf
 			_scope_stack.peek_head().set(name, val);
 		}
 
-		private Value? search_scope(string varname)
+		internal Value? search_scope(string varname)
 		{
 			foreach(var scope in _scope_stack)
 			{
@@ -743,7 +752,7 @@ namespace Saf
 			return null;
 		}
 
-		private void dump_scope()
+		internal void dump_scope()
 		{
 			stdout.printf("[\n");
 			foreach(var scope in _scope_stack) 
@@ -759,7 +768,7 @@ namespace Saf
 		}
 
 		// UTILITY METHODS
-		private static string unichar_to_string(unichar c)
+		internal static string unichar_to_string(unichar c)
 		{
 			int req_len = c.to_utf8(null);
 			var str = string.nfill(req_len, '\0');

@@ -27,6 +27,6 @@ implement square_noret with A = 5;
 make X = 4;
 make Y = 3;
 make B = 6;
-make A = "The square of " + X + " is " + implement square with A = X;
-make C = (X + 1) + " raised to the power of " + Y + " is " +
+print "The square of " + X + " is " + implement square with A = X;
+print (X + 1) + " raised to the power of " + Y + " is " +
 	implement power with exponent = Y, number = X + 1;
