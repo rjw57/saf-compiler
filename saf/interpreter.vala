@@ -3,7 +3,6 @@ using GLib;
 
 namespace Saf
 {
-
 	errordomain InterpreterError
 	{
 		INTERNAL,
@@ -16,11 +15,31 @@ namespace Saf
 		TYPE_ERROR,
 	}
 
+	public interface BuiltinProvider : GLib.Object
+	{
+		public abstract void print(string str);
+		public abstract string input(string? prompt);
+	}
+
+	internal class DefaultBuiltinProvider : GLib.Object, BuiltinProvider
+	{
+		public void print(string str)
+		{
+			stdout.printf("%s\n", str);
+		}
+
+		public string input(string? prompt)
+		{
+			return Readline.readline(prompt);
+		}
+	}
+
 	public class Interpreter : GLib.Object
 	{
 		private AST.Program _program = null;
 		private Deque<Map<string, Value?>> _scope_stack = null;
 		private Set<string> _builtin_gobbets = new HashSet<string>();
+		private BuiltinProvider _builtin_provider = new DefaultBuiltinProvider();
 
 		public AST.Program program 
 		{ 
@@ -318,7 +337,8 @@ namespace Saf
 				}
 
 				// print value
-				stdout.printf("%s\n", cast_to_string(pos_args.get(0)));
+				_builtin_provider.print(cast_to_string(pos_args.get(0)));
+
 				return null;
 			} else if(name == "input") {
 				if(named_args.size > 0) {
@@ -330,7 +350,7 @@ namespace Saf
 							"The input gobbet takes at most one positional argument.");
 				}
 
-				return Readline.readline(
+				return _builtin_provider.input(
 						(pos_args.size == 0) ? null : cast_to_string(pos_args.get(0)) );
 			} else {
 				throw new InterpreterError.INTERNAL(
