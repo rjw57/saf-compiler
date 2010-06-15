@@ -32,11 +32,12 @@ namespace Saf.AST
 
 	public class Program : Node
 	{
-		private Collection<Gobbet> _gobbets = null;
+		private Gee.Map<string, Gobbet> _gobbets = new Gee.HashMap<string, Gobbet>();
 		private Gee.List<Statement> _statements = null;
 		private string _input_name = null;
 
-		public Collection<Gobbet> gobbets { get { return _gobbets; } }
+		public Gee.Map<string, Gobbet> gobbet_map { get { return _gobbets; } }
+		public Collection<Gobbet> gobbets { owned get { return _gobbets.values; } }
 		public Gee.List<Statement> statements { get { return _statements; } }
 		public string input_name { get { return _input_name; } }
 
@@ -44,7 +45,9 @@ namespace Saf.AST
 				string _n, Collection<Gobbet> g, Gee.List<Statement> s)
 		{
 			base(p,f,l); 
-			_gobbets = g.read_only_view;
+			foreach(var gobbet in g) {
+				_gobbets.set(gobbet.name, gobbet);
+			}
 			_statements = s.read_only_view;
 			_input_name = _n;
 		}
