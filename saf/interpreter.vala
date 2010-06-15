@@ -73,7 +73,20 @@ namespace Saf
 				}
 			} else if(statement.get_type().is_a(typeof(AST.WhileStatement))) {
 				var cs = (AST.WhileStatement) statement;
-				stderr.printf("FIXME: Skipped statement type: %s\n", cs.get_type().name());
+
+				bool while_cond_val = true;
+				do {
+					Value cond = evaluate_expression(cs.test);
+					if(!cond.type().is_a(typeof(bool))) {
+						throw new InterpreterError.TYPE_ERROR(
+								"Expected while statement test to have boolean type");
+					}
+					while_cond_val = cond.get_boolean();
+
+					if(while_cond_val) {
+						run_statements(cs.statements);
+					}
+				} while(while_cond_val);
 			} else if(statement.get_type().is_a(typeof(AST.ImplementStatement))) {
 				var cs = (AST.ImplementStatement) statement;
 				stderr.printf("FIXME: Skipped statement type: %s\n", cs.get_type().name());
