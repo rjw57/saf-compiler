@@ -8,6 +8,8 @@ namespace Saf {
 		private TextTag _error_tag = new TextTag("saf:error");
 		public TextTag error_tag { get { return _error_tag; } }
 
+		public Parser parser { get { return monitor.parser; } }
+
 		public SourceBuffer() 
 		{
 			set_language(SourceLanguageManager.get_default().
