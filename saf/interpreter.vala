@@ -12,6 +12,7 @@ namespace Saf
 		DUPLICATE_GOBBET_ARGUMENT,
 		UNKNOWN_GOBBET_ARGUMENT,
 		MISSING_GIVING,
+		GOBBET_ARGUMENTS,
 		TYPE_ERROR,
 	}
 
@@ -234,9 +235,9 @@ namespace Saf
 			Value? rv = null;
 
 			// evaluate positional args
-			Gee.List<Value?> pos_vals = new Gee.ArrayList<Value?>();
+			Gee.List<Value?> pos_args = new Gee.ArrayList<Value?>();
 			foreach(var arg in expr.positional_arguments) {
-				pos_vals.add(evaluate_expression(arg));
+				pos_args.add(evaluate_expression(arg));
 			}
 
 			// evaluate named args
@@ -252,7 +253,7 @@ namespace Saf
 
 			try {
 				if(_builtin_gobbets.contains(expr.gobbet)) {
-					stderr.printf("FIXME: Skipping builtin gobbet: %s\n", expr.gobbet);
+					run_builtin_gobbet(expr.gobbet, pos_args, named_args);
 				} else {
 					// find the gobbet we're dealing with
 					AST.Gobbet? gobbet = program.gobbet_map.get(expr.gobbet);
@@ -292,6 +293,35 @@ namespace Saf
 			}
 
 			return rv;
+		}
+
+		// Builtin gobbets
+		internal void run_builtin_gobbet(string name,
+				Gee.List<Value?> pos_args, Gee.Map<string, Value?> named_args)
+			throws InterpreterError
+		{
+			if(name == "print") {
+				if(named_args.size > 0) {
+					throw new InterpreterError.GOBBET_ARGUMENTS(
+							"The print gobbet does not take any named arguments.");
+				}
+				if(pos_args.size > 1) {
+					throw new InterpreterError.GOBBET_ARGUMENTS(
+							"The print gobbet takes at most one positional argument.");
+				}
+
+				// new line?
+				if(pos_args.size == 0) {
+					stdout.printf("\n");
+					return;
+				}
+
+				// print value
+				stdout.printf("%s\n", cast_to_string(pos_args.get(0)));
+			} else {
+				throw new InterpreterError.INTERNAL(
+						"run_builtin_gobbet() called with unknown gobbet %s".printf(name));
+			}
 		}
 
 		// Actual operators
