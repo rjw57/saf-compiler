@@ -30,7 +30,8 @@ namespace Saf
 
 		public string input(string? prompt)
 		{
-			return Readline.readline(prompt);
+			stdout.printf("%s", prompt);
+			return stdin.read_line();
 		}
 	}
 
@@ -45,6 +46,12 @@ namespace Saf
 		{ 
 			get { return _program; } 
 			set { _program = value; }
+		}
+
+		public BuiltinProvider builtin_provider
+		{
+			get { return _builtin_provider; }
+			set { _builtin_provider = value; }
 		}
 
 		public Interpreter()
