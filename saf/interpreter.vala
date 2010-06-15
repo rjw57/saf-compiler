@@ -8,6 +8,10 @@ namespace Saf
 	{
 		INTERNAL,
 		UNKNOWN_VARIABLE,
+		UNKNOWN_GOBBET,
+		DUPLICATE_GOBBET_ARGUMENT,
+		UNKNOWN_GOBBET_ARGUMENT,
+		MISSING_GIVING,
 		TYPE_ERROR,
 	}
 
@@ -41,14 +45,15 @@ namespace Saf
 			// create a new scope for these statements
 			new_scope();
 
-			foreach(var statement in statements) {
-				run_statement(statement);
+			try {
+				foreach(var statement in statements) {
+					run_statement(statement);
+				}
+			} finally {
+				// pop the created scope
+				dump_scope();
+				pop_scope();
 			}
-
-			// pop the created scope
-			stdout.printf("Dump Scope:\n");
-			dump_scope();
-			pop_scope();
 		}
 
 		private void run_statement(AST.Statement statement)
@@ -89,7 +94,9 @@ namespace Saf
 				} while(while_cond_val);
 			} else if(statement.get_type().is_a(typeof(AST.ImplementStatement))) {
 				var cs = (AST.ImplementStatement) statement;
-				stderr.printf("FIXME: Skipped statement type: %s\n", cs.get_type().name());
+
+				// an explicit implement statement just throws away the return value
+				evaluate_implement_expr(cs.expression);
 			} else {
 				throw new InterpreterError.INTERNAL("Unknown statement type: %s",
 						statement.get_type().name());
@@ -126,6 +133,15 @@ namespace Saf
 			} else if(expr.get_type().is_a(typeof(AST.BinaryOpExpression))) {
 				var ce = (AST.BinaryOpExpression) expr;
 				v = evaluate_binary_op_expr(ce);
+			} else if(expr.get_type().is_a(typeof(AST.ImplementExpression))) {
+				var ce = (AST.ImplementExpression) expr;
+				Value? rv = evaluate_implement_expr(ce);
+				if(rv == null) {
+					throw new InterpreterError.MISSING_GIVING(
+							"The gobbet '%s' does not give a value."
+								.printf(ce.gobbet));
+				}
+				v = rv;
 			} else {
 				throw new InterpreterError.INTERNAL("Unknown expression type: %s",
 						expr.get_type().name());
@@ -198,6 +214,58 @@ namespace Saf
 			}
 
 			return v;
+		}
+
+		private Value? evaluate_implement_expr(AST.ImplementExpression expr)
+			throws InterpreterError
+		{
+			AST.Gobbet? gobbet = program.gobbet_map.get(expr.gobbet);
+			if(gobbet == null) {
+				throw new InterpreterError.UNKNOWN_GOBBET("Unknown gobbet: %s",
+						expr.gobbet);
+			}
+
+			Value? rv = null;
+
+			// a new gobbet scope
+			// FIXME: This needs a whole new stack!
+			new_scope();
+			try {
+				// evaluate positional args
+				Gee.List<Value?> pos_vals = new Gee.ArrayList<Value?>();
+				foreach(var arg in expr.positional_arguments) {
+					pos_vals.add(evaluate_expression(arg));
+				}
+
+				// evaluate named args
+				foreach(var arg in expr.named_arguments.entries) {
+					if(!gobbet.taking_map.has_key(arg.key)) {
+						throw new InterpreterError.UNKNOWN_GOBBET_ARGUMENT(
+								"Gobbet %s does not take a variable called %s."
+								.printf(gobbet.name, arg.key));
+					}
+					set_variable(arg.key, evaluate_expression(arg.value));
+				}
+
+				// run statements
+				foreach(var statement in gobbet.statements) {
+					run_statement(statement);
+				}
+
+				// is there a giving?
+				if(gobbet.giving != null) {
+					rv = search_scope(gobbet.giving.name);
+					if(rv == null) {
+						throw new InterpreterError.MISSING_GIVING(
+								"The gobbet's giving value '%s' was not set."
+									.printf(gobbet.giving.name));
+					}
+				}
+			} finally {
+				pop_scope();
+			}
+
+			return rv;
 		}
 
 		// Actual operators
