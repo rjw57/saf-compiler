@@ -42,6 +42,13 @@ link_libraries(${GEE_LIBRARIES})
 link_directories(${GEE_LIBRARY_DIRS})
 include_directories(${GEE_INCLUDE_DIRS})
 
+# Check libvte is installed
+pkg_check_modules(VTE REQUIRED vte)
+add_definitions(${VTE_CFLAGS} ${VTE_CFLAGS_OTHER})
+link_libraries(${VTE_LIBRARIES})
+link_directories(${VTE_LIBRARY_DIRS})
+include_directories(${VTE_INCLUDE_DIRS})
+
 # Look for GNU readline
 find_package(Readline REQUIRED)
 include_directories(${READLINE_INCLUDE_DIR})
@@ -66,6 +73,7 @@ if(GTKSOURCEVIEW_FOUND AND GTK_FOUND)
 		gee-1.0
 		gtk+-2.0
 		readline
+		vte
 	)
 
 	add_executable(saf_editor ${_saf_editor_c_sources})

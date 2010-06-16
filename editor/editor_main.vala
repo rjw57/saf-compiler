@@ -1,23 +1,50 @@
 using Gtk;
 using Pango;
 
-class Main : GLib.Object, Saf.BuiltinProvider {
-	private Saf.SourceBuffer source_buffer = null;
-	private Saf.Interpreter interpreter = new Saf.Interpreter();
-	private Gtk.Window window = null;
+class VteBuiltinProvider : GLib.Object, Saf.BuiltinProvider
+{
+	private Window 			_vte_win = null;
+	private Vte.Terminal	_vte_widget = null;
+
+	internal void vte_win_destroy_handler()
+	{
+		_vte_win = null;
+		_vte_widget = null;
+	}
+
+	internal void ensure_vte()
+	{
+		if(_vte_win == null) {
+			_vte_win = new Window(WindowType.TOPLEVEL);
+			_vte_widget = new Vte.Terminal();
+			_vte_win.add(_vte_widget);
+			_vte_win.position = WindowPosition.CENTER;
+			_vte_win.title = "SAF output";
+			_vte_win.destroy += vte_win_destroy_handler;
+			_vte_win.show_all();
+		}
+	}
 
 	// SAF builtins
 	public void print(string str)
 	{
-		var msg = new MessageDialog(window, DialogFlags.MODAL, 
-				MessageType.INFO, ButtonsType.OK, "%s", str);
-		msg.run(); msg.close();
+		ensure_vte();
+		string data = "%s\n\r".printf(str);
+		_vte_widget.feed(data, (long) data.size());
 	}
 
 	public string input(string? prompt)
 	{
+		ensure_vte();
 		return Readline.readline(prompt);
 	}
+}
+
+class Main : GLib.Object
+{
+	private Saf.SourceBuffer source_buffer = null;
+	private Saf.Interpreter interpreter = new Saf.Interpreter();
+	private Gtk.Window window = null;
 
 	internal void run_handler()
 	{
@@ -36,7 +63,7 @@ class Main : GLib.Object, Saf.BuiltinProvider {
 	{
 		Gtk.init(ref args);
 
-		interpreter.builtin_provider = this;
+		interpreter.builtin_provider = new VteBuiltinProvider();
 
 		var lang_manager = SourceLanguageManager.get_default();
 
