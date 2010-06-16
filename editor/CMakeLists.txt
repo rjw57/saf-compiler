@@ -65,7 +65,7 @@ if(GTKSOURCEVIEW_FOUND AND GTK_FOUND)
 		gtksourceview-2.0
 		gee-1.0
 		gtk+-2.0
-		Readline
+		readline
 	)
 
 	add_executable(saf_editor ${_saf_editor_c_sources})
