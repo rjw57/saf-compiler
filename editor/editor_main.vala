@@ -68,7 +68,7 @@ class Main : GLib.Object
 		int status;
 		if(0 == waitpid(last_process_pid, out status, WNOHANG)) {
 			// process is still running, kill it.
-			kill(last_process_pid, SIGINT);
+			kill(last_process_pid, SIGKILL);
 			waitpid(last_process_pid, out status, 0);
 		}
 		last_process_pid = -1;
@@ -143,6 +143,12 @@ class Main : GLib.Object
 		stop_program();
 	}
 
+	internal void editor_destroy_handler()
+	{
+		stop_program();
+		Gtk.main_quit();
+	}
+
 	public int run(string[] args) 
 	{
 		Gtk.init(ref args);
@@ -170,7 +176,7 @@ class Main : GLib.Object
 		window.title = "Simple SAF Editor";
 		window.set_default_size (640, 480);
 		window.position = WindowPosition.CENTER;
-		window.destroy.connect (Gtk.main_quit);
+		window.destroy += editor_destroy_handler;
 
 		var vbox = new Gtk.VBox(false, 0);
 		window.add(vbox);
