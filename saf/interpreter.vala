@@ -48,6 +48,84 @@ namespace Saf
 		{
 			return _value.strdup_contents();
 		}
+
+		// TYPE CONVERSION
+
+		public Type type()
+		{
+			return _value.type();
+		}
+
+		public bool is_integral_type()
+		{
+			Type t = _value.type();
+			return t.is_a(typeof(int64)) || t.is_a(typeof(uint64)) || t.is_a(typeof(int));
+		}
+
+		public string cast_to_string()
+			throws InterpreterError
+		{
+			Type value_type = _value.type();
+			if(value_type.is_a(typeof(string))) {
+				return _value.get_string();
+			} else if(value_type.is_a(typeof(uint64))) {
+				return _value.get_uint64().to_string();
+			} else if(value_type.is_a(typeof(int64))) {
+				return _value.get_int64().to_string();
+			} else if(value_type.is_a(typeof(int))) {
+				return _value.get_int().to_string();
+			} else if(value_type.is_a(typeof(double))) {
+				return _value.get_double().to_string();
+			} else if(value_type.is_a(typeof(bool))) {
+				return _value.get_boolean() ? "TRUE" : "FALSE";
+			}
+
+			// if we get this far, we don't know what type this is
+			throw new InterpreterError.TYPE_ERROR("Cannot convert type %s to a string.",
+					value_type.name());
+		}
+
+		public double cast_to_double()
+			throws InterpreterError
+		{
+			Type value_type = _value.type();
+			if(value_type.is_a(typeof(string))) {
+				return _value.get_string().to_double();
+			} else if(value_type.is_a(typeof(uint64))) {
+				return (double) _value.get_uint64();
+			} else if(value_type.is_a(typeof(int64))) {
+				return (double) _value.get_int64();
+			} else if(value_type.is_a(typeof(int))) {
+				return (double) _value.get_int();
+			} else if(value_type.is_a(typeof(double))) {
+				return _value.get_double();
+			}
+
+			// if we get this far, we don't know what type this is
+			throw new InterpreterError.TYPE_ERROR("Cannot convert type %s to a double.",
+					value_type.name());
+		}
+
+		public int64 cast_to_int64()
+			throws InterpreterError
+		{
+			Type value_type = _value.type();
+			if(value_type.is_a(typeof(string))) {
+				return _value.get_string().to_int64();
+			} else if(value_type.is_a(typeof(uint64))) {
+				return (int64) _value.get_uint64();
+			} else if(value_type.is_a(typeof(int64))) {
+				return _value.get_int64();
+			} else if(value_type.is_a(typeof(int))) {
+				return (int64) _value.get_int();
+			} else if(value_type.is_a(typeof(double))) {
+				return (int64) _value.get_double();
+			}
+
+			// if we get this far, we don't know what type this is
+			throw new InterpreterError.TYPE_ERROR("Cannot convert type %s to a int64.",
+					value_type.name());
+		}
 	}
 
 	public class Interpreter : GLib.Object
@@ -112,13 +190,13 @@ namespace Saf
 				set_variable(cs.name, expr_val);
 			} else if(statement.get_type().is_a(typeof(AST.IfStatement))) {
 				var cs = (AST.IfStatement) statement;
-				Value cond = evaluate_expression(cs.test);
-				if(!cond.type().is_a(typeof(bool))) {
+				BoxedValue cond = evaluate_expression(cs.test);
+				if(!cond.value.type().is_a(typeof(bool))) {
 					throw new InterpreterError.TYPE_ERROR("Expected if statement test to have " +
 							"boolean type");
 				}
 
-				if(cond.get_boolean()) {
+				if(cond.value.get_boolean()) {
 					run_statements(cs.then_statements);
 				} else {
 					run_statements(cs.otherwise_statements);
@@ -128,12 +206,12 @@ namespace Saf
 
 				bool while_cond_val = true;
 				do {
-					Value cond = evaluate_expression(cs.test);
-					if(!cond.type().is_a(typeof(bool))) {
+					BoxedValue cond = evaluate_expression(cs.test);
+					if(!cond.value.type().is_a(typeof(bool))) {
 						throw new InterpreterError.TYPE_ERROR(
 								"Expected while statement test to have boolean type");
 					}
-					while_cond_val = cond.get_boolean();
+					while_cond_val = cond.value.get_boolean();
 
 					if(while_cond_val) {
 						run_statements(cs.statements);
@@ -143,29 +221,28 @@ namespace Saf
 				var cs = (AST.ImplementStatement) statement;
 
 				// an explicit implement statement just throws away the return value
-				Value rv = 0;
-				evaluate_implement_expr(cs.expression, ref rv);
+				evaluate_implement_expr(cs.expression);
 			} else {
 				throw new InterpreterError.INTERNAL("Unknown statement type: %s",
 						statement.get_type().name());
 			}
 		}
 
-		internal Value evaluate_expression(AST.Expression expr)
+		internal BoxedValue evaluate_expression(AST.Expression expr)
 			throws InterpreterError
 		{
 			if(expr.get_type().is_a(typeof(AST.ConstantRealExpression))) {
-				var ce = (AST.ConstantRealExpression) expr;
-				return ce.value;
+				Value ce = ((AST.ConstantRealExpression) expr).value;
+				return new BoxedValue(ce);
 			} else if(expr.get_type().is_a(typeof(AST.ConstantIntegerExpression))) {
-				var ce = (AST.ConstantIntegerExpression) expr;
-				return ce.value;
+				Value ce = ((AST.ConstantIntegerExpression) expr).value;
+				return new BoxedValue(ce);
 			} else if(expr.get_type().is_a(typeof(AST.ConstantBooleanExpression))) {
-				var ce = (AST.ConstantBooleanExpression) expr;
-				return ce.value;
+				Value ce = ((AST.ConstantBooleanExpression) expr).value;
+				return new BoxedValue(ce);
 			} else if(expr.get_type().is_a(typeof(AST.ConstantStringExpression))) {
-				var ce = (AST.ConstantStringExpression) expr;
-				return ce.value;
+				Value ce = ((AST.ConstantStringExpression) expr).value;
+				return new BoxedValue(ce);
 			} else if(expr.get_type().is_a(typeof(AST.VariableExpression))) {
 				var ce = (AST.VariableExpression) expr;
 				return search_scope(ce.name);
@@ -177,8 +254,8 @@ namespace Saf
 				return evaluate_binary_op_expr(ce);
 			} else if(expr.get_type().is_a(typeof(AST.ImplementExpression))) {
 				var ce = (AST.ImplementExpression) expr;
-				Value rv = 0;
-				if(!evaluate_implement_expr(ce, ref rv)) {
+				BoxedValue rv = evaluate_implement_expr(ce);
+				if(rv == null) {
 					throw new InterpreterError.MISSING_GIVING(
 							"The gobbet '%s' does not give a value."
 								.printf(ce.gobbet));
@@ -190,68 +267,67 @@ namespace Saf
 					expr.get_type().name());
 		}
 
-		internal Value evaluate_unary_op_expr(AST.UnaryOpExpression expr)
+		internal BoxedValue evaluate_unary_op_expr(AST.UnaryOpExpression expr)
 			throws InterpreterError
 		{
 			switch(expr.operator) {
 				case '-':
-					Value ev = evaluate_expression(expr.rhs);
-					return negate(ev);
+					return new BoxedValue( negate(evaluate_expression(expr.rhs)) );
 				case '+':
-					return plus(evaluate_expression(expr.rhs));
+					return new BoxedValue( plus(evaluate_expression(expr.rhs)) );
 				case '¬':
-					return not(evaluate_expression(expr.rhs));
+					return new BoxedValue( not(evaluate_expression(expr.rhs)) );
 			}
 
 			throw new InterpreterError.INTERNAL("Unknown operator: %s",
 					unichar_to_string(expr.operator));
 		}
 
-		internal Value evaluate_binary_op_expr(AST.BinaryOpExpression expr)
+		internal BoxedValue evaluate_binary_op_expr(AST.BinaryOpExpression expr)
 			throws InterpreterError
 		{
 			switch(expr.operator) {
 				case '∨':
 				case '∧':
-					return and_or(expr.operator,
-							evaluate_expression(expr.lhs), evaluate_expression(expr.rhs));
+					return new BoxedValue( and_or(expr.operator,
+							evaluate_expression(expr.lhs), evaluate_expression(expr.rhs)) );
 				case '=':
 				case '≠':
-					return equality(expr.operator,
-							evaluate_expression(expr.lhs), evaluate_expression(expr.rhs));
+					return new BoxedValue( equality(expr.operator,
+							evaluate_expression(expr.lhs), evaluate_expression(expr.rhs)) );
 				case '>':
 				case '≥':
 				case '<':
 				case '≤':
-					return comparison(expr.operator,
-							evaluate_expression(expr.lhs), evaluate_expression(expr.rhs));
+					return new BoxedValue( comparison(expr.operator,
+							evaluate_expression(expr.lhs), evaluate_expression(expr.rhs)) );
 				case '+':
 				case '-':
 				case '*':
 				case '/':
-					return arithmetic(expr.operator,
-							evaluate_expression(expr.lhs), evaluate_expression(expr.rhs));
+					return new BoxedValue( arithmetic(expr.operator,
+							evaluate_expression(expr.lhs), evaluate_expression(expr.rhs)) );
 			}
 
 			throw new InterpreterError.INTERNAL("Unknown operator: %s",
 					unichar_to_string(expr.operator));
 		}
 
-		internal bool evaluate_implement_expr(AST.ImplementExpression expr, ref Value rv)
+		internal BoxedValue evaluate_implement_expr(AST.ImplementExpression expr)
 			throws InterpreterError
 		{
-			bool has_return_value = false;
+			BoxedValue rv = null;
 
 			// evaluate positional args
 			Gee.List<BoxedValue> pos_args = new Gee.ArrayList<BoxedValue>();
 			foreach(var arg in expr.positional_arguments) {
-				pos_args.add(new BoxedValue(evaluate_expression(arg)));
+				pos_args.add(evaluate_expression(arg));
 			}
 
 			// evaluate named args
 			var named_args = new Gee.HashMap<string, BoxedValue>();
 			foreach(var arg in expr.named_arguments.entries) {
-				named_args.set(arg.key, new BoxedValue(evaluate_expression(arg.value)));
+				named_args.set(arg.key, evaluate_expression(arg.value));
 			}
 
 			// a new gobbet scope
@@ -261,8 +337,7 @@ namespace Saf
 
 			try {
 				if(_builtin_gobbets.contains(expr.gobbet)) {
-					has_return_value = run_builtin_gobbet(expr.gobbet,
-							pos_args, named_args, ref rv);
+					rv = run_builtin_gobbet(expr.gobbet, pos_args, named_args);
 				} else {
 					// find the gobbet we're dealing with
 					AST.Gobbet? gobbet = program.gobbet_map.get(expr.gobbet);
@@ -290,7 +365,6 @@ namespace Saf
 					if(gobbet.giving != null) {
 						try {
 							rv = search_scope(gobbet.giving.name);
-							has_return_value = true;
 						} catch (InterpreterError e) {
 							throw new InterpreterError.MISSING_GIVING(
 									"The gobbet's giving value '%s' was not set."
@@ -303,13 +377,12 @@ namespace Saf
 				_scope_stack = old_scope;
 			}
 
-			return has_return_value;
+			return rv;
 		}
 
 		// Builtin gobbets
-		internal bool run_builtin_gobbet(string name,
-				Gee.List<BoxedValue> pos_args, Gee.Map<string, BoxedValue> named_args,
-				ref Value return_value)
+		internal BoxedValue? run_builtin_gobbet(string name,
+				Gee.List<BoxedValue> pos_args, Gee.Map<string, BoxedValue> named_args)
 			throws InterpreterError
 		{
 			if(name == "print") {
@@ -325,13 +398,13 @@ namespace Saf
 				// new line?
 				if(pos_args.size == 0) {
 					stdout.printf("\n");
-					return false;
+					return null;
 				}
 
 				// print value
-				_builtin_provider.print(cast_to_string(pos_args.get(0).value));
+				_builtin_provider.print(pos_args.get(0).cast_to_string());
 
-				return false;
+				return null;
 			} else if(name == "input") {
 				if(named_args.size > 0) {
 					throw new InterpreterError.GOBBET_ARGUMENTS(
@@ -342,9 +415,9 @@ namespace Saf
 							"The input gobbet takes at most one positional argument.");
 				}
 
-				return_value = _builtin_provider.input(
-						(pos_args.size == 0) ? null : cast_to_string(pos_args.get(0).value) );
-				return true;
+				Value rv = _builtin_provider.input(
+						(pos_args.size == 0) ? null : pos_args.get(0).cast_to_string());
+				return new BoxedValue(rv);
 			} 
 
 			throw new InterpreterError.INTERNAL(
@@ -353,31 +426,30 @@ namespace Saf
 
 		// Actual operators
 
-		internal static Value negate(Value v)
+		internal static Value negate(BoxedValue bv)
 			throws InterpreterError
 		{
-			Value rv = 0;
+			Value v = bv.value;
 			Type vt = v.type();
 
 			if(vt == typeof(double)) {
-				rv = -1.0 * v.get_double();
+				return -1.0 * v.get_double();
 			} else if(vt == typeof(uint64)) {
-				rv = -1 * (int64) v.get_uint64();
+				return -1 * (int64) v.get_uint64();
 			} else if(vt == typeof(int64)) {
-				rv = -1 * v.get_int64();
+				return -1 * v.get_int64();
 			} else if(vt == typeof(int)) {
-				rv = -1 * v.get_int();
-			} else {
-				throw new InterpreterError.TYPE_ERROR("Cannot apply '-' operator to " +
-						"values of type %s", v.type().name());
+				return -1 * v.get_int();
 			}
 
-			return rv;
+			throw new InterpreterError.TYPE_ERROR("Cannot apply '-' operator to " +
+					"values of type %s", v.type().name());
 		}
 
-		internal static Value plus(Value v)
+		internal static Value plus(BoxedValue bv)
 			throws InterpreterError
 		{
+			Value v = bv.value;
 			Type vt = v.type();
 
 			if((vt != typeof(double)) &&
@@ -391,12 +463,13 @@ namespace Saf
 			}
 
 			/* pretty much a nop. */
-			return v;
+			return bv.value;
 		}
 
-		internal static Value not(Value v)
+		internal static Value not(BoxedValue bv)
 			throws InterpreterError
 		{
+			Value v = bv.value;
 			Type vt = v.type();
 
 			if(vt != typeof(bool))
@@ -405,12 +478,10 @@ namespace Saf
 						"values of type %s", v.type().name());
 			}
 
-			Value rv = ! (v.get_boolean());
-
-			return rv;
+			return !(v.get_boolean());
 		}
 
-		internal static Value and_or(unichar op, Value lhs, Value rhs)
+		internal static Value and_or(unichar op, BoxedValue lhs, BoxedValue rhs)
 			throws InterpreterError
 		{
 			if((lhs.type() != typeof(bool)) || (rhs.type() != typeof(bool)))
@@ -420,23 +491,18 @@ namespace Saf
 						lhs.type().name(), rhs.type().name());
 			}
 
-			Value rv = 0;
 			switch(op) {
 				case '∨':
-					rv = (lhs.get_boolean()) || (rhs.get_boolean());
-					break;
+					return (lhs.value.get_boolean()) || (rhs.value.get_boolean());
 				case '∧':
-					rv = (lhs.get_boolean()) && (rhs.get_boolean());
-					break;
-				default:
-					assert(false); // should not be reached.
-					break;
+					return (lhs.value.get_boolean()) && (rhs.value.get_boolean());
 			}
 
-			return rv;
+			throw new InterpreterError.INTERNAL("Unexpected operator '%s'.",
+					unichar_to_string(op));
 		}
 
-		internal static Value arithmetic(unichar op, Value lhs, Value rhs)
+		internal static Value arithmetic(unichar op, BoxedValue lhs, BoxedValue rhs)
 			throws InterpreterError
 		{
 			Value p_lhs, p_rhs;
@@ -504,11 +570,9 @@ namespace Saf
 					p_lhs.type().name());
 		}
 
-		internal static Value equality(unichar op, Value lhs, Value rhs)
+		internal static Value equality(unichar op, BoxedValue lhs, BoxedValue rhs)
 			throws InterpreterError
 		{
-			Value rv = 0;
-
 			Value p_lhs, p_rhs;
 			if(!promote_types(lhs, rhs, out p_lhs, out p_rhs))
 			{
@@ -526,11 +590,9 @@ namespace Saf
 				int64 r = p_rhs.get_int64();
 				switch(op) {
 					case '=':
-						rv = l == r;
-						break;
+						return l == r;
 					case '≠':
-						rv = l != r;
-						break;
+						return l != r;
 					default:
 						throw new InterpreterError.INTERNAL("Unexpected operator '%s'.",
 								unichar_to_string(op));
@@ -540,11 +602,9 @@ namespace Saf
 				double r = p_rhs.get_double();
 				switch(op) {
 					case '=':
-						rv = l == r;
-						break;
+						return l == r;
 					case '≠':
-						rv = l != r;
-						break;
+						return l != r;
 					default:
 						throw new InterpreterError.INTERNAL("Unexpected operator '%s'.",
 								unichar_to_string(op));
@@ -554,28 +614,22 @@ namespace Saf
 				string r = p_rhs.get_string();
 				switch(op) {
 					case '=':
-						rv = l == r;
-						break;
+						return l == r;
 					case '≠':
-						rv = l != r;
-						break;
+						return l != r;
 					default:
 						throw new InterpreterError.INTERNAL("Unexpected operator '%s'.",
 								unichar_to_string(op));
 				}
-			} else {
-				throw new InterpreterError.INTERNAL("Type promotion returned invalid type: %s",
-						p_lhs.type().name());
 			}
 
-			return rv;
+			throw new InterpreterError.INTERNAL("Type promotion returned invalid type: %s",
+					p_lhs.type().name());
 		}
 
-		internal static Value comparison(unichar op, Value lhs, Value rhs)
+		internal static Value comparison(unichar op, BoxedValue lhs, BoxedValue rhs)
 			throws InterpreterError
 		{
-			Value rv = 0;
-
 			Value p_lhs, p_rhs;
 			if(!promote_types(lhs, rhs, out p_lhs, out p_rhs))
 			{
@@ -593,17 +647,13 @@ namespace Saf
 				int64 r = p_rhs.get_int64();
 				switch(op) {
 					case '>':
-						rv = l > r;
-						break;
+						return l > r;
 					case '≥':
-						rv = l >= r;
-						break;
+						return l >= r;
 					case '<':
-						rv = l < r;
-						break;
+						return l < r;
 					case '≤':
-						rv = l <= r;
-						break;
+						return l <= r;
 					default:
 						throw new InterpreterError.INTERNAL("Unexpected operator '%s'.",
 								unichar_to_string(op));
@@ -613,17 +663,13 @@ namespace Saf
 				double r = p_rhs.get_double();
 				switch(op) {
 					case '>':
-						rv = l > r;
-						break;
+						return l > r;
 					case '≥':
-						rv = l >= r;
-						break;
+						return l >= r;
 					case '<':
-						rv = l < r;
-						break;
+						return l < r;
 					case '≤':
-						rv = l <= r;
-						break;
+						return l <= r;
 					default:
 						throw new InterpreterError.INTERNAL("Unexpected operator '%s'.",
 								unichar_to_string(op));
@@ -632,124 +678,50 @@ namespace Saf
 				throw new InterpreterError.TYPE_ERROR("Cannot apply '%s' operator to " +
 						"values of type %s.", unichar_to_string(op),
 						p_lhs.type().name());
-			} else {
-				throw new InterpreterError.INTERNAL("Type promotion returned invalid type: %s",
-						p_lhs.type().name());
 			}
 
-			return rv;
+			throw new InterpreterError.INTERNAL("Type promotion returned invalid type: %s",
+					p_lhs.type().name());
 		}
 
 		// IMPLICIT TYPE PROMOTION RULES
-		internal static bool promote_types(Value lhs, Value rhs,
+		internal static bool promote_types(BoxedValue lhs, BoxedValue rhs,
 				out Value p_lhs, out Value p_rhs)
 			throws InterpreterError
 		{
 			// by default, do no promotion
-			p_lhs = lhs; p_rhs = rhs;
+			p_lhs = lhs.value; p_rhs = rhs.value;
 
 			// if the types are boolean, don't promote
-			if(lhs.type().is_a(typeof(bool)) && rhs.type().is_a(typeof(bool)))
+			if(lhs.value.type().is_a(typeof(bool)) && rhs.value.type().is_a(typeof(bool)))
 				return true;
 
 			// if either type is string, promote to string
-			if(lhs.type().is_a(typeof(string)) || rhs.type().is_a(typeof(string)))
+			if(lhs.value.type().is_a(typeof(string)) || rhs.value.type().is_a(typeof(string)))
 			{
-				p_lhs = cast_to_string(lhs);
-				p_rhs = cast_to_string(rhs);
+				p_lhs = lhs.cast_to_string();
+				p_rhs = rhs.cast_to_string();
 				return true;
 			}
 
 			// if either type is double, promote to double
-			if(lhs.type().is_a(typeof(double)) || rhs.type().is_a(typeof(double)))
+			if(lhs.value.type().is_a(typeof(double)) || rhs.value.type().is_a(typeof(double)))
 			{
-				p_lhs = cast_to_double(lhs);
-				p_rhs = cast_to_double(rhs);
+				p_lhs = lhs.cast_to_double();
+				p_rhs = rhs.cast_to_double();
 				return true;
 			}
 
 			// if either type is integral, promote to integer
-			if(is_integral_type(lhs.type()) || is_integral_type(rhs.type()))
+			if(lhs.is_integral_type() || rhs.is_integral_type())
 			{
-				p_lhs = cast_to_int64(lhs);
-				p_rhs = cast_to_int64(rhs);
+				p_lhs = lhs.cast_to_int64();
+				p_rhs = rhs.cast_to_int64();
 				return true;
 			}
 
 			// if we get this far, the types are incompatible
 			return false;
-		}
-
-		// TYPE CONVERSION
-
-		internal static bool is_integral_type(Type t)
-		{
-			return t.is_a(typeof(int64)) || t.is_a(typeof(uint64)) || t.is_a(typeof(int));
-		}
-
-		internal static string cast_to_string(Value v)
-			throws InterpreterError
-		{
-			Type vt = v.type();
-			if(vt.is_a(typeof(string))) {
-				return v.get_string();
-			} else if(vt.is_a(typeof(uint64))) {
-				return v.get_uint64().to_string();
-			} else if(vt.is_a(typeof(int64))) {
-				return v.get_int64().to_string();
-			} else if(vt.is_a(typeof(int))) {
-				return v.get_int().to_string();
-			} else if(vt.is_a(typeof(double))) {
-				return v.get_double().to_string();
-			} else if(vt.is_a(typeof(bool))) {
-				return v.get_boolean() ? "TRUE" : "FALSE";
-			}
-
-			// if we get this far, we don't know what type this is
-			throw new InterpreterError.TYPE_ERROR("Cannot convert type %s to a string.",
-					vt.name());
-		}
-
-		internal static double cast_to_double(Value v)
-			throws InterpreterError
-		{
-			Type vt = v.type();
-			if(vt.is_a(typeof(string))) {
-				return v.get_string().to_double();
-			} else if(vt.is_a(typeof(uint64))) {
-				return (double) v.get_uint64();
-			} else if(vt.is_a(typeof(int64))) {
-				return (double) v.get_int64();
-			} else if(vt.is_a(typeof(int))) {
-				return (double) v.get_int();
-			} else if(vt.is_a(typeof(double))) {
-				return v.get_double();
-			}
-
-			// if we get this far, we don't know what type this is
-			throw new InterpreterError.TYPE_ERROR("Cannot convert type %s to a double.",
-					vt.name());
-		}
-
-		internal static int64 cast_to_int64(Value v)
-			throws InterpreterError
-		{
-			Type vt = v.type();
-			if(vt.is_a(typeof(string))) {
-				return v.get_string().to_int64();
-			} else if(vt.is_a(typeof(uint64))) {
-				return (int64) v.get_uint64();
-			} else if(vt.is_a(typeof(int64))) {
-				return v.get_int64();
-			} else if(vt.is_a(typeof(int))) {
-				return (int64) v.get_int();
-			} else if(vt.is_a(typeof(double))) {
-				return (int64) v.get_double();
-			}
-
-			// if we get this far, we don't know what type this is
-			throw new InterpreterError.TYPE_ERROR("Cannot convert type %s to a int64.",
-					vt.name());
 		}
 
 		// NESTED SCOPE SUPPORT
@@ -764,13 +736,13 @@ namespace Saf
 			_scope_stack.poll_head();
 		}
 
-		internal void set_variable(string name, Value val)
+		internal void set_variable(string name, BoxedValue val)
 		{
 			var head = _scope_stack.peek_head();
 
 			// if there exists a variable in this scope, set it
 			if(head.has_key(name)) {
-				head.set(name, new BoxedValue(val));
+				head.set(name, val);
 				return;
 			}
 
@@ -778,22 +750,22 @@ namespace Saf
 			foreach(var scope in _scope_stack)
 			{
 				if(scope.has_key(name)) {
-					scope.set(name, new BoxedValue(val));
+					scope.set(name, val);
 					return;
 				}
 			}
 
 			// finally, if there is nothing else, create a new variable.
-			head.set(name,  new BoxedValue(val));
+			head.set(name, val);
 		}
 
-		internal Value? search_scope(string varname)
+		internal BoxedValue search_scope(string varname)
 			throws InterpreterError
 		{
 			foreach(var scope in _scope_stack)
 			{
 				if(scope.has_key(varname))
-					return scope.get(varname).value;
+					return scope.get(varname);
 			}
 			
 			throw new InterpreterError.UNKNOWN_VARIABLE("Unknown variable: %s", varname);
