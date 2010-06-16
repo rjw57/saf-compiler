@@ -1,0 +1,5 @@
+make sandwiches = 0;
+while true:
+	print "Robots have eaten " + sandwiches + " sandwiches.";
+	make sandwiches = sandwiches + 1;
+	end while;
