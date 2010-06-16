@@ -73,6 +73,7 @@ if(GTKSOURCEVIEW_FOUND AND GTK_FOUND)
 		gee-1.0
 		gtk+-2.0
 		readline
+		posix
 		vte
 	)
 
