@@ -35,10 +35,25 @@ namespace Saf
 		}
 	}
 
+	internal class BoxedValue : GLib.Object
+	{
+		private Value _value;
+		public Value? value { get { return _value; } }
+		public BoxedValue(Value? v)
+		{
+			_value = v;
+		}
+
+		public string to_string() 
+		{
+			return _value.strdup_contents();
+		}
+	}
+
 	public class Interpreter : GLib.Object
 	{
 		private AST.Program _program = null;
-		private Deque<Map<string, Value?>> _scope_stack = null;
+		private Deque<Map<string, BoxedValue>> _scope_stack = null;
 		private Set<string> _builtin_gobbets = new HashSet<string>();
 		private BuiltinProvider _builtin_provider = new DefaultBuiltinProvider();
 
@@ -66,15 +81,8 @@ namespace Saf
 			if(program == null)
 				return;
 
-			_scope_stack = new LinkedList<Map<string, Value?>>();
-			
-			new_scope();
-			try { 
-				run_statements(program.statements);
-			} finally {
-				pop_scope();
-			}
-
+			_scope_stack = new LinkedList<Map<string, BoxedValue>>();
+			run_statements(program.statements);
 			_scope_stack = null;
 		}
 
@@ -85,7 +93,6 @@ namespace Saf
 		{
 			// create a new scope for these statements
 			new_scope();
-
 			try {
 				foreach(var statement in statements) {
 					run_statement(statement);
@@ -136,151 +143,126 @@ namespace Saf
 				var cs = (AST.ImplementStatement) statement;
 
 				// an explicit implement statement just throws away the return value
-				evaluate_implement_expr(cs.expression);
+				Value rv = 0;
+				evaluate_implement_expr(cs.expression, ref rv);
 			} else {
 				throw new InterpreterError.INTERNAL("Unknown statement type: %s",
 						statement.get_type().name());
 			}
 		}
 
-		internal Value? evaluate_expression(AST.Expression expr)
+		internal Value evaluate_expression(AST.Expression expr)
 			throws InterpreterError
 		{
-			Value v = 0;
-
 			if(expr.get_type().is_a(typeof(AST.ConstantRealExpression))) {
 				var ce = (AST.ConstantRealExpression) expr;
-				v = ce.value;
+				return ce.value;
 			} else if(expr.get_type().is_a(typeof(AST.ConstantIntegerExpression))) {
 				var ce = (AST.ConstantIntegerExpression) expr;
-				v = ce.value;
+				return ce.value;
 			} else if(expr.get_type().is_a(typeof(AST.ConstantBooleanExpression))) {
 				var ce = (AST.ConstantBooleanExpression) expr;
-				v = ce.value;
+				return ce.value;
 			} else if(expr.get_type().is_a(typeof(AST.ConstantStringExpression))) {
 				var ce = (AST.ConstantStringExpression) expr;
-				v = ce.value;
+				return ce.value;
 			} else if(expr.get_type().is_a(typeof(AST.VariableExpression))) {
 				var ce = (AST.VariableExpression) expr;
-				Value? ev = search_scope(ce.name);
-				if(ev == null) {
-					throw new InterpreterError.UNKNOWN_VARIABLE("Unknown variable: %s", ce.name);
-				}
-				v = ev;
+				return search_scope(ce.name);
 			} else if(expr.get_type().is_a(typeof(AST.UnaryOpExpression))) {
 				var ce = (AST.UnaryOpExpression) expr;
-				v = evaluate_unary_op_expr(ce);
+				return evaluate_unary_op_expr(ce);
 			} else if(expr.get_type().is_a(typeof(AST.BinaryOpExpression))) {
 				var ce = (AST.BinaryOpExpression) expr;
-				v = evaluate_binary_op_expr(ce);
+				return evaluate_binary_op_expr(ce);
 			} else if(expr.get_type().is_a(typeof(AST.ImplementExpression))) {
 				var ce = (AST.ImplementExpression) expr;
-				Value? rv = evaluate_implement_expr(ce);
-				if(rv == null) {
+				Value rv = 0;
+				if(!evaluate_implement_expr(ce, ref rv)) {
 					throw new InterpreterError.MISSING_GIVING(
 							"The gobbet '%s' does not give a value."
 								.printf(ce.gobbet));
 				}
-				v = rv;
-			} else {
-				throw new InterpreterError.INTERNAL("Unknown expression type: %s",
-						expr.get_type().name());
+				return rv;
 			}
 
-			return v;
+			throw new InterpreterError.INTERNAL("Unknown expression type: %s",
+					expr.get_type().name());
 		}
 
-		internal Value? evaluate_unary_op_expr(AST.UnaryOpExpression expr)
+		internal Value evaluate_unary_op_expr(AST.UnaryOpExpression expr)
 			throws InterpreterError
 		{
-			Value v = 0;
-
 			switch(expr.operator) {
 				case '-':
 					Value ev = evaluate_expression(expr.rhs);
-					v = negate(ev);
-					break;
+					return negate(ev);
 				case '+':
-					v = plus(evaluate_expression(expr.rhs));
-					break;
+					return plus(evaluate_expression(expr.rhs));
 				case '¬':
-					v = not(evaluate_expression(expr.rhs));
-					break;
-				default:
-					throw new InterpreterError.INTERNAL("Unknown operator: %s",
-							unichar_to_string(expr.operator));
+					return not(evaluate_expression(expr.rhs));
 			}
 
-			return v;
+			throw new InterpreterError.INTERNAL("Unknown operator: %s",
+					unichar_to_string(expr.operator));
 		}
 
-		internal Value? evaluate_binary_op_expr(AST.BinaryOpExpression expr)
+		internal Value evaluate_binary_op_expr(AST.BinaryOpExpression expr)
 			throws InterpreterError
 		{
-			Value v = 0;
-
 			switch(expr.operator) {
 				case '∨':
 				case '∧':
-					v = and_or(expr.operator,
+					return and_or(expr.operator,
 							evaluate_expression(expr.lhs), evaluate_expression(expr.rhs));
-					break;
-
 				case '=':
 				case '≠':
-					v = equality(expr.operator,
+					return equality(expr.operator,
 							evaluate_expression(expr.lhs), evaluate_expression(expr.rhs));
-					break;
-
 				case '>':
 				case '≥':
 				case '<':
 				case '≤':
-					v = comparison(expr.operator,
+					return comparison(expr.operator,
 							evaluate_expression(expr.lhs), evaluate_expression(expr.rhs));
-					break;
-					
 				case '+':
 				case '-':
 				case '*':
 				case '/':
-					v = arithmetic(expr.operator,
+					return arithmetic(expr.operator,
 							evaluate_expression(expr.lhs), evaluate_expression(expr.rhs));
-					break;
-
-				default:
-					throw new InterpreterError.INTERNAL("Unknown operator: %s",
-							unichar_to_string(expr.operator));
 			}
 
-			return v;
+			throw new InterpreterError.INTERNAL("Unknown operator: %s",
+					unichar_to_string(expr.operator));
 		}
 
-		internal Value? evaluate_implement_expr(AST.ImplementExpression expr)
+		internal bool evaluate_implement_expr(AST.ImplementExpression expr, ref Value rv)
 			throws InterpreterError
 		{
-			Value? rv = null;
+			bool has_return_value = false;
 
 			// evaluate positional args
-			Gee.List<Value?> pos_args = new Gee.ArrayList<Value?>();
+			Gee.List<BoxedValue> pos_args = new Gee.ArrayList<BoxedValue>();
 			foreach(var arg in expr.positional_arguments) {
-				pos_args.add(evaluate_expression(arg));
+				pos_args.add(new BoxedValue(evaluate_expression(arg)));
 			}
 
 			// evaluate named args
-			var named_args = new Gee.HashMap<string, Value?>();
+			var named_args = new Gee.HashMap<string, BoxedValue>();
 			foreach(var arg in expr.named_arguments.entries) {
-				named_args.set(arg.key, evaluate_expression(arg.value));
+				named_args.set(arg.key, new BoxedValue(evaluate_expression(arg.value)));
 			}
 
 			// a new gobbet scope
 			var old_scope = _scope_stack;
-			_scope_stack = new LinkedList<Map<string, Value?>>();
+			_scope_stack = new LinkedList<Map<string, BoxedValue>>();
 			new_scope();
 
 			try {
 				if(_builtin_gobbets.contains(expr.gobbet)) {
-					rv = run_builtin_gobbet(expr.gobbet, pos_args, named_args);
+					has_return_value = run_builtin_gobbet(expr.gobbet,
+							pos_args, named_args, ref rv);
 				} else {
 					// find the gobbet we're dealing with
 					AST.Gobbet? gobbet = program.gobbet_map.get(expr.gobbet);
@@ -306,8 +288,10 @@ namespace Saf
 
 					// is there a giving?
 					if(gobbet.giving != null) {
-						rv = search_scope(gobbet.giving.name);
-						if(rv == null) {
+						try {
+							rv = search_scope(gobbet.giving.name);
+							has_return_value = true;
+						} catch (InterpreterError e) {
 							throw new InterpreterError.MISSING_GIVING(
 									"The gobbet's giving value '%s' was not set."
 									.printf(gobbet.giving.name));
@@ -319,12 +303,13 @@ namespace Saf
 				_scope_stack = old_scope;
 			}
 
-			return rv;
+			return has_return_value;
 		}
 
 		// Builtin gobbets
-		internal Value? run_builtin_gobbet(string name,
-				Gee.List<Value?> pos_args, Gee.Map<string, Value?> named_args)
+		internal bool run_builtin_gobbet(string name,
+				Gee.List<BoxedValue> pos_args, Gee.Map<string, BoxedValue> named_args,
+				ref Value return_value)
 			throws InterpreterError
 		{
 			if(name == "print") {
@@ -340,13 +325,13 @@ namespace Saf
 				// new line?
 				if(pos_args.size == 0) {
 					stdout.printf("\n");
-					return null;
+					return false;
 				}
 
 				// print value
-				_builtin_provider.print(cast_to_string(pos_args.get(0)));
+				_builtin_provider.print(cast_to_string(pos_args.get(0).value));
 
-				return null;
+				return false;
 			} else if(name == "input") {
 				if(named_args.size > 0) {
 					throw new InterpreterError.GOBBET_ARGUMENTS(
@@ -357,17 +342,18 @@ namespace Saf
 							"The input gobbet takes at most one positional argument.");
 				}
 
-				return _builtin_provider.input(
-						(pos_args.size == 0) ? null : cast_to_string(pos_args.get(0)) );
-			} else {
-				throw new InterpreterError.INTERNAL(
-						"run_builtin_gobbet() called with unknown gobbet %s".printf(name));
-			}
+				return_value = _builtin_provider.input(
+						(pos_args.size == 0) ? null : cast_to_string(pos_args.get(0).value) );
+				return true;
+			} 
+
+			throw new InterpreterError.INTERNAL(
+					"run_builtin_gobbet() called with unknown gobbet %s".printf(name));
 		}
 
 		// Actual operators
 
-		internal static Value? negate(Value v)
+		internal static Value negate(Value v)
 			throws InterpreterError
 		{
 			Value rv = 0;
@@ -389,7 +375,7 @@ namespace Saf
 			return rv;
 		}
 
-		internal static Value? plus(Value v)
+		internal static Value plus(Value v)
 			throws InterpreterError
 		{
 			Type vt = v.type();
@@ -408,7 +394,7 @@ namespace Saf
 			return v;
 		}
 
-		internal static Value? not(Value v)
+		internal static Value not(Value v)
 			throws InterpreterError
 		{
 			Type vt = v.type();
@@ -424,7 +410,7 @@ namespace Saf
 			return rv;
 		}
 
-		internal static Value? and_or(unichar op, Value lhs, Value rhs)
+		internal static Value and_or(unichar op, Value lhs, Value rhs)
 			throws InterpreterError
 		{
 			if((lhs.type() != typeof(bool)) || (rhs.type() != typeof(bool)))
@@ -450,11 +436,9 @@ namespace Saf
 			return rv;
 		}
 
-		internal static Value? arithmetic(unichar op, Value lhs, Value rhs)
+		internal static Value arithmetic(unichar op, Value lhs, Value rhs)
 			throws InterpreterError
 		{
-			Value rv = 0;
-
 			Value p_lhs, p_rhs;
 			if(!promote_types(lhs, rhs, out p_lhs, out p_rhs))
 			{
@@ -472,17 +456,13 @@ namespace Saf
 				int64 r = p_rhs.get_int64();
 				switch(op) {
 					case '+':
-						rv = l + r;
-						break;
+						return l + r;
 					case '-':
-						rv = l - r;
-						break;
+						return l - r;
 					case '*':
-						rv = l * r;
-						break;
+						return l * r;
 					case '/':
-						rv = l / r;
-						break;
+						return l / r;
 					default:
 						throw new InterpreterError.INTERNAL("Unexpected operator '%s'.",
 								unichar_to_string(op));
@@ -492,17 +472,13 @@ namespace Saf
 				double r = p_rhs.get_double();
 				switch(op) {
 					case '+':
-						rv = l + r;
-						break;
+						return l + r;
 					case '-':
-						rv = l - r;
-						break;
+						return l - r;
 					case '*':
-						rv = l * r;
-						break;
+						return l * r;
 					case '/':
-						rv = l / r;
-						break;
+						return l / r;
 					default:
 						throw new InterpreterError.INTERNAL("Unexpected operator '%s'.",
 								unichar_to_string(op));
@@ -512,8 +488,7 @@ namespace Saf
 				string r = p_rhs.get_string();
 				switch(op) {
 					case '+':
-						rv = l + r;
-						break;
+						return l + r;
 					case '-':
 					case '*':
 					case '/':
@@ -523,15 +498,13 @@ namespace Saf
 						throw new InterpreterError.INTERNAL("Unexpected operator '%s'.",
 								unichar_to_string(op));
 				}
-			} else {
-				throw new InterpreterError.INTERNAL("Type promotion returned invalid type: %s",
-						p_lhs.type().name());
 			}
 
-			return rv;
+			throw new InterpreterError.INTERNAL("Type promotion returned invalid type: %s",
+					p_lhs.type().name());
 		}
 
-		internal static Value? equality(unichar op, Value lhs, Value rhs)
+		internal static Value equality(unichar op, Value lhs, Value rhs)
 			throws InterpreterError
 		{
 			Value rv = 0;
@@ -598,7 +571,7 @@ namespace Saf
 			return rv;
 		}
 
-		internal static Value? comparison(unichar op, Value lhs, Value rhs)
+		internal static Value comparison(unichar op, Value lhs, Value rhs)
 			throws InterpreterError
 		{
 			Value rv = 0;
@@ -783,7 +756,7 @@ namespace Saf
 
 		internal void new_scope()
 		{
-			_scope_stack.offer_head(new HashMap<string, Value?>());
+			_scope_stack.offer_head(new HashMap<string, BoxedValue>());
 		}
 
 		internal void pop_scope()
@@ -791,11 +764,13 @@ namespace Saf
 			_scope_stack.poll_head();
 		}
 
-		internal void set_variable(string name, Value? val)
+		internal void set_variable(string name, Value val)
 		{
+			var head = _scope_stack.peek_head();
+
 			// if there exists a variable in this scope, set it
-			if(_scope_stack.peek_head().has_key(name)) {
-				_scope_stack.peek_head().set(name, val);
+			if(head.has_key(name)) {
+				head.set(name, new BoxedValue(val));
 				return;
 			}
 
@@ -803,24 +778,25 @@ namespace Saf
 			foreach(var scope in _scope_stack)
 			{
 				if(scope.has_key(name)) {
-					scope.set(name, val);
+					scope.set(name, new BoxedValue(val));
 					return;
 				}
 			}
 
 			// finally, if there is nothing else, create a new variable.
-			_scope_stack.peek_head().set(name, val);
+			head.set(name,  new BoxedValue(val));
 		}
 
 		internal Value? search_scope(string varname)
+			throws InterpreterError
 		{
 			foreach(var scope in _scope_stack)
 			{
 				if(scope.has_key(varname))
-					return scope.get(varname);
+					return scope.get(varname).value;
 			}
-
-			return null;
+			
+			throw new InterpreterError.UNKNOWN_VARIABLE("Unknown variable: %s", varname);
 		}
 
 		internal void dump_scope()
@@ -831,7 +807,7 @@ namespace Saf
 				stdout.printf(" > ");
 				foreach(var entry in scope.entries)
 				{
-					stdout.printf("%s: %s ", entry.key, entry.value.strdup_contents());
+					stdout.printf("%s: %s ", entry.key, entry.value.to_string());
 				}
 				stdout.printf("<\n");
 			}
