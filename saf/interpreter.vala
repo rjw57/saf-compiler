@@ -397,7 +397,7 @@ namespace Saf
 
 				// new line?
 				if(pos_args.size == 0) {
-					stdout.printf("\n");
+					_builtin_provider.print("");
 					return null;
 				}
 
