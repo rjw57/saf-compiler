@@ -902,7 +902,8 @@ namespace Saf
 		}
 
 		// primary_expr := ( INTEGER | REAL | STRING | TRUE | FALSE | 
-		//				     unary_op expr | identifier | '(' expr ')' | implement_expr )
+		//				     unary_op primary_expression | identifier | 
+		//					 '(' expr ')' | implement_expr )
 		//                 ( ONLY 'a'? type )?
 		private AST.Node parse_primary_expression()
 			throws TokeniserError, ParserError
@@ -943,7 +944,7 @@ namespace Saf
 				unichar op_char = cur_token.value.get_uint();
 				pop_token();
 
-				ret_val = parse_expression();
+				ret_val = parse_primary_expression();
 				if(ret_val.get_type().is_a(typeof(AST.Error))) {
 					return ret_val;
 				}
