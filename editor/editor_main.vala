@@ -6,11 +6,13 @@ class ForkedBuiltinProvider : GLib.Object, Saf.BuiltinProvider
 {
 	public ForkedBuiltinProvider(int fd)
 	{
+		base();
 		Readline.outstream = FileStream.fdopen(fd, "ab");
 		Readline.instream = FileStream.fdopen(fd, "rb");
 	}
 
 	// SAF builtins
+
 	public void print(string str)
 	{
 		Readline.outstream.printf("%s\n", str);
@@ -19,6 +21,12 @@ class ForkedBuiltinProvider : GLib.Object, Saf.BuiltinProvider
 	public string input(string? prompt)
 	{
 		return Readline.readline(prompt);
+	}
+
+	public void runtime_error(string message, Saf.Token.Location location)
+	{
+		Readline.outstream.printf("%u:%u: runtime error: %s\n",
+				location.line, location.column + 1, message);
 	}
 }
 
@@ -119,11 +127,7 @@ class Main : GLib.Object
 			foreach(var program in source_buffer.parser.programs)
 			{
 				interpreter.program = program;
-				try {
-					interpreter.run();
-				} catch (Saf.InterpreterError e) {
-					GLib.stderr.printf("Interpreter error: %s\n", e.message);
-				}
+				interpreter.run();
 			}
 
 			exit(0);

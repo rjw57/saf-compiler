@@ -19,6 +19,7 @@ namespace Saf
 	{
 		public abstract void print(string str);
 		public abstract string input(string? prompt);
+		public abstract void runtime_error(string message, Token.Location location);
 	}
 
 	internal class DefaultBuiltinProvider : GLib.Object, BuiltinProvider
@@ -32,6 +33,12 @@ namespace Saf
 		{
 			stdout.printf("%s", prompt);
 			return stdin.read_line();
+		}
+
+		public void runtime_error(string message, Token.Location location)
+		{
+			stdout.printf("%u:%u: runtime error: %s\n",
+					location.line, location.column + 1, message);
 		}
 	}
 
@@ -134,6 +141,7 @@ namespace Saf
 		private Deque<Map<string, BoxedValue>> _scope_stack = null;
 		private Set<string> _builtin_gobbets = new HashSet<string>();
 		private BuiltinProvider _builtin_provider = new DefaultBuiltinProvider();
+		private Token cur_token = null;
 
 		public AST.Program program 
 		{ 
@@ -154,13 +162,16 @@ namespace Saf
 		}
 
 		public void run()
-			throws InterpreterError
 		{
 			if(program == null)
 				return;
 
 			_scope_stack = new LinkedList<Map<string, BoxedValue>>();
-			run_statements(program.statements);
+			try {
+				run_statements(program.statements);
+			} catch (InterpreterError e) {
+				builtin_provider.runtime_error(e.message, cur_token.start);
+			}
 			_scope_stack = null;
 		}
 
@@ -184,6 +195,8 @@ namespace Saf
 		internal void run_statement(AST.Statement statement)
 			throws InterpreterError
 		{
+			cur_token = statement.tokens.first();
+
 			if(statement.get_type().is_a(typeof(AST.MakeStatement))) {
 				var cs = (AST.MakeStatement) statement;
 				var expr_val = evaluate_expression(cs.value);
@@ -231,6 +244,8 @@ namespace Saf
 		internal BoxedValue evaluate_expression(AST.Expression expr)
 			throws InterpreterError
 		{
+			cur_token = expr.tokens.first();
+
 			if(expr.get_type().is_a(typeof(AST.ConstantRealExpression))) {
 				Value ce = ((AST.ConstantRealExpression) expr).value;
 				return new BoxedValue(ce);

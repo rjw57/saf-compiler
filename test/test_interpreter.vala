@@ -40,11 +40,7 @@ public class MainProgram {
 		{
 			interpreter.program = program;
 			stdout.printf("Running program: %s\n", program.input_name);
-			try {
-				interpreter.run();
-			} catch (Saf.InterpreterError e) {
-				stderr.printf("Interpreter error: %s\n", e.message);
-			}
+			interpreter.run();
 		}
 
 		return 0;
