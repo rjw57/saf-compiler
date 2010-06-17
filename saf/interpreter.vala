@@ -365,6 +365,7 @@ namespace Saf
 
 			// a new gobbet scope
 			var old_scope = _scope_stack;
+
 			_scope_stack = new LinkedList<Map<string, BoxedValue>>();
 			new_scope();
 
@@ -396,9 +397,8 @@ namespace Saf
 
 					// is there a giving?
 					if(gobbet.giving != null) {
-						try {
-							rv = search_scope(gobbet.giving.name);
-						} catch (InterpreterError e) {
+						rv = search_scope(gobbet.giving.name, true);
+						if(rv == null) {
 							throw new InterpreterError.MISSING_GIVING(
 									"The gobbet's giving value '%s' was not set."
 									.printf(gobbet.giving.name));
@@ -761,12 +761,17 @@ namespace Saf
 
 		internal void new_scope()
 		{
+			assert(_scope_stack != null);
 			_scope_stack.offer_head(new HashMap<string, BoxedValue>());
 		}
 
 		internal void pop_scope()
 		{
-			_scope_stack.poll_head();
+			assert(_scope_stack != null);
+			if(_scope_stack.size > 0)
+				_scope_stack.poll_head();
+			else
+				warning("Asked to pop from empty scope stack.");
 		}
 
 		internal void set_variable(string name, BoxedValue val)
@@ -792,7 +797,7 @@ namespace Saf
 			head.set(name, val);
 		}
 
-		internal BoxedValue search_scope(string varname)
+		internal BoxedValue? search_scope(string varname, bool allow_missing = false)
 			throws InterpreterError
 		{
 			foreach(var scope in _scope_stack)
@@ -800,6 +805,9 @@ namespace Saf
 				if(scope.has_key(varname))
 					return scope.get(varname);
 			}
+
+			if(allow_missing)
+				return null;
 			
 			throw new InterpreterError.UNKNOWN_VARIABLE("Unknown variable: %s", varname);
 		}
