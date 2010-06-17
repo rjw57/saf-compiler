@@ -6,7 +6,11 @@ gobbet power taking number only a number, exponent only a number giving result o
     make result = result * number;
     make times_count = times_count + 1;
     end while power loop;
-  end gobbet;
+end gobbet;
+
+gobbet square taking A giving A2:
+  make A2 = A * A;
+end gobbet;
 
 print "The \"square\" of 4 is " + implement square with A = 4;
 print "The \"square\" of 5 is " + implement square with A = 5;
@@ -31,8 +35,6 @@ end if;
 if a =/= 4:
   make bar = 6;
 end if;
-
-make this = an error;
 
 if a > 3 and a <= 4:
   make bar = 7;
