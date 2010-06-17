@@ -1,0 +1,6 @@
+make sandwiches = 0;
+while sandwiches < 100:
+	print "Robots have eaten " + sandwiches + " sandwiches.";
+	make sandwiches = sandwiches + 1;
+end while;
+make sandwiches = 2 + a; # a doesn't exist and this is a runtime error
