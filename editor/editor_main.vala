@@ -42,31 +42,9 @@ class Main : GLib.Object
 	private Saf.Interpreter interpreter = new Saf.Interpreter();
 	private Gtk.Window window = null;
 
-	private Window 			vte_win = null;
 	private Vte.Terminal	vte_widget = null;
 
 	private pid_t			last_process_pid = -1;
-
-	internal void vte_win_destroy_handler()
-	{
-		stop_program();
-		vte_win = null;
-		vte_widget = null;
-	}
-
-	internal void ensure_vte()
-	{
-		if(vte_win == null) {
-			vte_win = new Window(WindowType.TOPLEVEL);
-			vte_widget = new Vte.Terminal();
-
-			vte_win.add(vte_widget);
-			vte_win.position = WindowPosition.CENTER;
-			vte_win.title = "SAF output";
-			vte_win.destroy += vte_win_destroy_handler;
-			vte_win.show_all();
-		}
-	}
 
 	internal void stop_program()
 	{
@@ -87,9 +65,6 @@ class Main : GLib.Object
 		// kill any existing process
 		stop_program();
 
-		// make sure there is a terminal on screen
-		ensure_vte();
-		
 		// Create a new PTS master for the VTE widget
 		var master_fd = posix_openpt(O_RDWR);
 		vte_widget.set_pty(master_fd);
@@ -197,10 +172,20 @@ class Main : GLib.Object
 
 		vbox.pack_start(toolbar, false, false, 0);
 
+		var paned_view = new Gtk.VPaned();
+
 		var source_view = new Saf.SourceView(source_buffer);
 		var scroll_view = new Gtk.ScrolledWindow(null, null);
 		scroll_view.add(source_view);
-		vbox.pack_start(scroll_view, true, true, 0);
+		paned_view.pack1(scroll_view, true, false);
+
+		var vte_scroll_view = new Gtk.ScrolledWindow(null, null);
+		vte_widget = new Vte.Terminal();
+		vte_widget.set_size_request(-1, 100);
+		vte_scroll_view.add(vte_widget);
+		paned_view.pack2(vte_scroll_view, true, false);
+
+		vbox.pack_start(paned_view, true, true, 0);
 
 		window.show_all ();
 
