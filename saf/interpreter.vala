@@ -387,7 +387,16 @@ namespace Saf
 									"Gobbet %s does not take a variable called %s."
 									.printf(gobbet.name, arg.key));
 						}
-						set_variable(arg.key, arg.value);
+
+						// enforce the 'only' arguments
+						var var_decl = gobbet.taking_map.get(arg.key);
+						if(var_decl.named_type == null) {
+							set_variable(arg.key, arg.value);
+						} else {
+							var cast_value = new BoxedValue( 
+									arg.value.cast_to_type(var_decl.named_type) );
+							set_variable(arg.key, cast_value);
+						}
 					}
 
 					// run statements
