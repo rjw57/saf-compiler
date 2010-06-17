@@ -133,6 +133,19 @@ namespace Saf
 			throw new InterpreterError.TYPE_ERROR("Cannot convert type %s to a int64.",
 					value_type.name());
 		}
+
+		public Value cast_to_type(AST.NamedType type)
+			throws InterpreterError
+		{
+			if(type.name == "number") {
+				return this.cast_to_double();
+			} else if(type.name == "text") {
+				return this.cast_to_string();
+			}
+
+			// if we get this far, we don't know what type this is
+			throw new InterpreterError.TYPE_ERROR("Unknown type '%s'.", type.name);
+		}
 	}
 
 	public class Interpreter : GLib.Object
@@ -276,6 +289,10 @@ namespace Saf
 								.printf(ce.gobbet));
 				}
 				return rv;
+			} else if(expr.get_type().is_a(typeof(AST.TypeCastExpression))) {
+				var ce = (AST.TypeCastExpression) expr;
+				return new BoxedValue(
+						evaluate_expression(ce.expression).cast_to_type(ce.cast_type));
 			}
 
 			throw new InterpreterError.INTERNAL("Unknown expression type: %s",
