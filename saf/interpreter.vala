@@ -31,7 +31,8 @@ namespace Saf
 
 		public string input(string? prompt)
 		{
-			stdout.printf("%s", prompt);
+			if(prompt != null)
+				stdout.printf("%s", prompt);
 			return stdin.read_line();
 		}
 
