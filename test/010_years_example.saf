@@ -1,0 +1,28 @@
+gobbet years_to_text taking num_years only a number giving text:
+	make text = 0; # FIXME: We have to do this to make sure 'text' is created
+	               # in the right scope, is this the right thing? 
+	if num_years = 1:
+		make text = num_years + " year";
+	otherwise:
+		make text = num_years + " years";
+	end if;
+end gobbet;
+
+print "What is your name?";
+make name = implement input only text;
+print "What is your age?";
+make age = implement input only a number;
+make years_in_future = 0;
+while years_in_future < 10:
+	print "Hello, " + name + ". In " +
+				(implement years_to_text with num_years = years_in_future) +
+				" in the future, you will be " + 
+				(implement years_to_text with num_years = age + years_in_future) +
+				" old.";
+	make years_in_future = years_in_future + 1;
+end while;
+
+# These could be used to check that the 'only' clause is enforced.
+# print implement years_to_text with num_years = "3";
+# print implement years_to_text with num_years = "1";
+# print implement years_to_text with num_years = "twelve";
