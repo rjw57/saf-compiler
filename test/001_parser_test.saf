@@ -22,9 +22,12 @@ make does_not_ツ_look_like_a_smiley = 4;
 make a = 3 * 4 + 5;
 make b = 5 + 3 * 4 + 6;
 
-implement power with number = 3 + a, exponent = 5 + "7" only a number + 6;
+print "a: " + a;
+print "a - 15: " + (a-15);
+print "-5 + \"7\" only a number + 1: " + (-5 + "7" only a number + 1);
+print "power with some casting: " + implement power with number = a - 15, exponent = -5 + "7" only a number + 1;
 
-if ! a ≥ 5:
+if ! ( a ≥ 5 ):
   make foo = 5;
 end if;
 
