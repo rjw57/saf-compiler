@@ -49,6 +49,20 @@ link_libraries(${VTE_LIBRARIES})
 link_directories(${VTE_LIBRARY_DIRS})
 include_directories(${VTE_INCLUDE_DIRS})
 
+# Check cairo is installed
+pkg_check_modules(CAIRO REQUIRED cairo)
+add_definitions(${CAIRO_CFLAGS} ${CAIRO_CFLAGS_OTHER})
+link_libraries(${CAIRO_LIBRARIES})
+link_directories(${CAIRO_LIBRARY_DIRS})
+include_directories(${CAIRO_INCLUDE_DIRS})
+
+# Check dbus is installed
+pkg_check_modules(DBUS REQUIRED dbus-glib-1)
+add_definitions(${DBUS_CFLAGS} ${DBUS_CFLAGS_OTHER})
+link_libraries(${DBUS_LIBRARIES})
+link_directories(${DBUS_LIBRARY_DIRS})
+include_directories(${DBUS_INCLUDE_DIRS})
+
 # Look for GNU readline
 find_package(Readline REQUIRED)
 include_directories(${READLINE_INCLUDE_DIR})
@@ -62,6 +76,7 @@ link_libraries(saf)
 if(GTKSOURCEVIEW_FOUND AND GTK_FOUND)
 	vala_precompile(_saf_editor_c_sources
 		editor_main.vala
+		graphics.vala
 		sourceview.vala
 		sourcebuffer.vala
 		sourcebuffersource.vala
@@ -69,6 +84,8 @@ if(GTKSOURCEVIEW_FOUND AND GTK_FOUND)
 	CUSTOM_VAPIS
 		../saf/saf.vapi
 	PACKAGES
+		cairo
+		dbus-glib-1
 		gtksourceview-2.0
 		gee-1.0
 		gtk+-2.0
