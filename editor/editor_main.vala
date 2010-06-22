@@ -2,7 +2,8 @@ using Gtk;
 using Pango;
 using Posix;
 
-class ForkedBuiltinProvider : Saf.DefaultBuiltinProvider, Saf.BuiltinProvider
+class ForkedBuiltinProvider : Saf.DefaultBuiltinProvider, 
+	Saf.BuiltinProvider, Saf.RuntimeErrorReporter
 {
 	public ForkedBuiltinProvider(int fd)
 	{
@@ -23,7 +24,7 @@ class ForkedBuiltinProvider : Saf.DefaultBuiltinProvider, Saf.BuiltinProvider
 		return Readline.readline(prompt);
 	}
 
-	public override void runtime_error(string message, Saf.Token.Location location)
+	public void runtime_error(string message, Saf.Token.Location location)
 	{
 		Readline.outstream.printf("%u:%u: runtime error: %s\n",
 				location.line, location.column + 1, message);
@@ -98,7 +99,9 @@ class Main : GLib.Object
 				exit(1);
 			}
 
-			interpreter.builtin_provider = new ForkedBuiltinProvider(slave_fd);
+			var special_provider = new ForkedBuiltinProvider(slave_fd);
+			interpreter.builtin_provider = special_provider;
+			interpreter.error_reporter = special_provider;
 			foreach(var program in source_buffer.parser.programs)
 			{
 				interpreter.program = program;
