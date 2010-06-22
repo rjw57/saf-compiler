@@ -56,6 +56,13 @@ link_libraries(${CAIRO_LIBRARIES})
 link_directories(${CAIRO_LIBRARY_DIRS})
 include_directories(${CAIRO_INCLUDE_DIRS})
 
+# Check dbus is installed
+pkg_check_modules(DBUS REQUIRED dbus-glib-1)
+add_definitions(${DBUS_CFLAGS} ${DBUS_CFLAGS_OTHER})
+link_libraries(${DBUS_LIBRARIES})
+link_directories(${DBUS_LIBRARY_DIRS})
+include_directories(${DBUS_INCLUDE_DIRS})
+
 # Look for GNU readline
 find_package(Readline REQUIRED)
 include_directories(${READLINE_INCLUDE_DIR})
@@ -78,6 +85,7 @@ if(GTKSOURCEVIEW_FOUND AND GTK_FOUND)
 		../saf/saf.vapi
 	PACKAGES
 		cairo
+		dbus-glib-1
 		gtksourceview-2.0
 		gee-1.0
 		gtk+-2.0
