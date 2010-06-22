@@ -68,6 +68,17 @@ namespace Saf
 						(positional_args.size == 0) ? 
 						null : positional_args.get(0).cast_to_string());
 				return_value = new BoxedValue(rv);
+			} else if(name == "random") {
+				double min = 0.0, max = 1.0;
+				if(named_args.has_key("min")) {
+					min = named_args.get("min").cast_to_double();
+				}
+				if(named_args.has_key("max")) {
+					max = named_args.get("max").cast_to_double();
+				}
+
+				Value rv = Random.double_range(min, max);
+				return_value = new BoxedValue(rv);
 			} else {
 				return false;
 			}
@@ -186,6 +197,27 @@ namespace Saf
 
 			// if we get this far, we don't know what type this is
 			throw new InterpreterError.TYPE_ERROR("Cannot convert type %s to a int64.",
+					value_type.name());
+		}
+
+		public bool cast_to_boolean()
+			throws InterpreterError
+		{
+			Type value_type = _value.type();
+			if(value_type.is_a(typeof(uint64))) {
+				return _value.get_uint64() != 0;
+			} else if(value_type.is_a(typeof(int64))) {
+				return _value.get_int64() != 0;
+			} else if(value_type.is_a(typeof(int))) {
+				return _value.get_int() != 0;
+			} else if(value_type.is_a(typeof(double))) {
+				return _value.get_double() != 0.0;
+			} else if(value_type.is_a(typeof(bool))) {
+				return _value.get_boolean();
+			}
+
+			// if we get this far, we don't know what type this is
+			throw new InterpreterError.TYPE_ERROR("Cannot convert type %s to a double.",
 					value_type.name());
 		}
 
