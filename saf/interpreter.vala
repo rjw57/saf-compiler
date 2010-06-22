@@ -21,7 +21,10 @@ namespace Saf
 				Gee.List<BoxedValue> positional_args,
 				Gee.Map<string, BoxedValue> named_args, 
 				out BoxedValue? return_value) throws InterpreterError;
+	}
 
+	public interface RuntimeErrorReporter : GLib.Object
+	{
 		public abstract void runtime_error(string message, Token.Location location);
 	}
 
@@ -83,7 +86,10 @@ namespace Saf
 				stdout.printf("%s", prompt);
 			return stdin.read_line();
 		}
+	}
 
+	public class DefaultErrorReporter : GLib.Object, RuntimeErrorReporter
+	{
 		public virtual void runtime_error(string message, Token.Location location)
 		{
 			stdout.printf("%u:%u: runtime error: %s\n",
@@ -202,6 +208,7 @@ namespace Saf
 		private AST.Program _program = null;
 		private Deque<Map<string, BoxedValue>> _scope_stack = null;
 		private BuiltinProvider _builtin_provider = new DefaultBuiltinProvider();
+		private RuntimeErrorReporter _error_reporter = new DefaultErrorReporter();
 		private Token cur_token = null;
 
 		public AST.Program program 
@@ -216,6 +223,12 @@ namespace Saf
 			set { _builtin_provider = value; }
 		}
 
+		public RuntimeErrorReporter error_reporter
+		{
+			get { return _error_reporter; }
+			set { _error_reporter = value; }
+		}
+
 		public void run()
 		{
 			if(program == null)
@@ -225,7 +238,7 @@ namespace Saf
 			try {
 				run_statements(program.statements);
 			} catch (InterpreterError e) {
-				builtin_provider.runtime_error(e.message, cur_token.start);
+				error_reporter.runtime_error(e.message, cur_token.start);
 			}
 			_scope_stack = null;
 		}
