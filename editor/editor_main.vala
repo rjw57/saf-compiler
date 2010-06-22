@@ -158,7 +158,7 @@ class Main : GLib.Object
 		window.title = "Simple SAF Editor";
 		window.set_default_size (640, 480);
 		window.position = WindowPosition.CENTER;
-		window.destroy += editor_destroy_handler;
+		window.destroy.connect(editor_destroy_handler);
 
 		var vbox = new Gtk.VBox(false, 0);
 		window.add(vbox);
@@ -166,11 +166,11 @@ class Main : GLib.Object
 		var toolbar = new Gtk.Toolbar();
 		
 		var run_button = new Gtk.ToolButton.from_stock(Gtk.STOCK_MEDIA_PLAY);
-		run_button.clicked += run_handler;
+		run_button.clicked.connect(run_handler);
 		toolbar.insert(run_button, -1);
 		
 		var stop_button = new Gtk.ToolButton.from_stock(Gtk.STOCK_MEDIA_STOP);
-		stop_button.clicked += stop_handler;
+		stop_button.clicked.connect(stop_handler);
 		toolbar.insert(stop_button, -1);
 
 		vbox.pack_start(toolbar, false, false, 0);

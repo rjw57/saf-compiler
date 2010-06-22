@@ -19,7 +19,7 @@ namespace Saf {
 			tag_table.add(_error_tag);
 
 			monitor = new SourceBufferMonitor(this);
-			monitor.parser_updated += parser_updated_handler;
+			monitor.parser_updated.connect(parser_updated_handler);
 		}
 
 		public void load_file(string filename) throws GLib.FileError
