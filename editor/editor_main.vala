@@ -2,17 +2,148 @@ using Gtk;
 using Pango;
 using Posix;
 
+[CCode (cheader_filename = "dbus/dbus-glib-lowlevel.h,dbus/dbus-glib.h")]
+namespace DBus
+{
+	namespace BusExtras {
+		[CCode (cname = "dbus_g_bus_get_private")]
+		public extern static Connection get_private (BusType type, MainContext context) throws Error;
+	}
+}
+
 class ForkedBuiltinProvider : Saf.DefaultBuiltinProvider, 
 	Saf.BuiltinProvider, Saf.RuntimeErrorReporter
 {
-	public ForkedBuiltinProvider(int fd)
+	private DBus.Connection connection;
+	private string server_connection_name;
+	private dynamic DBus.Object graphics_server;
+	private Gee.Map<int, dynamic DBus.Object> renderers =
+		new Gee.HashMap<int, dynamic DBus.Object>();
+	private int next_handle = 0;
+	private int current_renderer_handle = -1;
+
+	public dynamic DBus.Object renderer { 
+		owned get { return renderers.get(current_renderer_handle); }
+	}
+
+	public ForkedBuiltinProvider(int fd, string graphics_connection_name)
 	{
 		base();
 		Readline.outstream = FileStream.fdopen(fd, "ab");
 		Readline.instream = FileStream.fdopen(fd, "rb");
+
+		server_connection_name = graphics_connection_name;
+
+		try {
+			connection = DBus.BusExtras.get_private(
+					DBus.BusType.SESSION, MainContext.get_thread_default());
+
+			graphics_server = connection.get_object(
+					graphics_connection_name,
+					GraphicsServer.object_path,
+					GraphicsServer.interface_name);
+		} catch (DBus.Error e) {
+			error("D-Bus error: %s", e.message);
+		}
 	}
 
 	// SAF builtins
+
+	public bool call_builtin(string name,
+			Gee.List<Saf.BoxedValue> positional_args,
+			Gee.Map<string, Saf.BoxedValue> named_args, 
+			out Saf.BoxedValue? return_value) throws Saf.InterpreterError
+	{
+		if(base.call_builtin(name, positional_args, named_args, out return_value))
+			return true;
+
+		if(name == "screen") {
+			if(positional_args.size != 0) {
+				throw new Saf.InterpreterError.GOBBET_ARGUMENTS(
+						"The screen gobbet does not take any positional arguments.");
+			}
+
+			if((named_args.size != 2) || 
+					!named_args.has_key("width") || !named_args.has_key("height")) {
+				throw new Saf.InterpreterError.GOBBET_ARGUMENTS(
+						"The screen gobbet expects a 'width' and 'heighe' named argument.");
+			}
+
+			int w = (int) named_args.get("width").cast_to_int64();
+			int h = (int) named_args.get("height").cast_to_int64();
+
+			int handle = next_handle++;
+			renderers.set(handle, connection.get_object(
+					server_connection_name,
+					graphics_server.get_renderer(w, h),
+					GraphicsRenderer.interface_name));
+
+			Value rv = (int64) handle;
+			return_value = new Saf.BoxedValue(rv);
+			current_renderer_handle = handle;
+
+			return true;
+		} else if(name == "colour") {
+			if(positional_args.size != 0) {
+				throw new Saf.InterpreterError.GOBBET_ARGUMENTS(
+						"The colour gobbet does not take any positional arguments.");
+			}
+
+			if((named_args.size != 3) || 
+					!named_args.has_key("red") || 
+					!named_args.has_key("green") ||
+					!named_args.has_key("blue")) {
+				throw new Saf.InterpreterError.GOBBET_ARGUMENTS(
+						"The colour gobbet expects a 'red', 'green' and 'blue' named argument.");
+			}
+
+			double r = named_args.get("red").cast_to_double();
+			double g = named_args.get("green").cast_to_double();
+			double b = named_args.get("blue").cast_to_double();
+
+			renderer.set_source_rgb(r, g, b);
+
+			return true;
+		} else if(name == "rectangle") {
+			if(positional_args.size != 0) {
+				throw new Saf.InterpreterError.GOBBET_ARGUMENTS(
+						"The rectangle gobbet does not take any positional arguments.");
+			}
+
+			if(!named_args.has_key("x") || 
+					!named_args.has_key("y") ||
+					!named_args.has_key("width") ||
+					!named_args.has_key("height")) {
+				throw new Saf.InterpreterError.GOBBET_ARGUMENTS(
+						"The rectangle gobbet expects a 'x', 'y', 'width' and 'height' " +
+						"named argument.");
+			}
+
+			double x = named_args.get("x").cast_to_double();
+			double y = named_args.get("y").cast_to_double();
+			double width = named_args.get("width").cast_to_double();
+			double height = named_args.get("height").cast_to_double();
+
+			bool filled = true;
+
+			if(named_args.has_key("filled")) {
+				filled = named_args.get("filled").cast_to_boolean();
+			}
+
+			renderer.new_path();
+			renderer.rectangle(x,y,width,height);
+
+			if(filled) {
+				renderer.fill();
+			} else {
+				renderer.stroke();
+			}
+
+			return true;
+		}
+
+		return false;
+	}
 
 	public override void print(string str)
 	{
@@ -42,6 +173,7 @@ class Main : GLib.Object
 	private Saf.SourceBuffer source_buffer = null;
 	private Saf.Interpreter interpreter = new Saf.Interpreter();
 	private Gtk.Window window = null;
+	private GraphicsServer graphics_server = null;
 
 	private Vte.Terminal	vte_widget = null;
 
@@ -99,7 +231,8 @@ class Main : GLib.Object
 				exit(1);
 			}
 
-			var special_provider = new ForkedBuiltinProvider(slave_fd);
+			var special_provider = new ForkedBuiltinProvider(slave_fd,
+					graphics_server.connection_name);
 			interpreter.builtin_provider = special_provider;
 			interpreter.error_reporter = special_provider;
 			foreach(var program in source_buffer.parser.programs)
@@ -134,6 +267,8 @@ class Main : GLib.Object
 	public int run(string[] args) 
 	{
 		Gtk.init(ref args);
+
+		graphics_server = new GraphicsServer();
 
 		var lang_manager = SourceLanguageManager.get_default();
 
