@@ -8,17 +8,19 @@ namespace Saf {
 
 		public SourceBufferMonitor(SourceBuffer buffer)
 		{
-			buffer.changed += reparse_buffer;
+			buffer.changed.connect(reparse_buffer);
 		}
 
-		internal void reparse_buffer(SourceBuffer buffer)
+		internal void reparse_buffer(TextBuffer buffer)
 		{
 			// reset the parser
 			parser.reset();
 
+			assert(buffer is SourceBuffer);
+
 			// try to parse the contents of the buffer
 			try {
-				parser.parse_from(new Tokeniser(new SourceBufferSource(buffer)));
+				parser.parse_from(new Tokeniser(new SourceBufferSource((SourceBuffer)buffer)));
 			} catch(ParserError e) {
 				error("Unexpected parser error: %s", e.message);
 			} catch(TokeniserError e) {
