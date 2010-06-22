@@ -2,7 +2,7 @@ using Gtk;
 using Pango;
 using Posix;
 
-class ForkedBuiltinProvider : GLib.Object, Saf.BuiltinProvider
+class ForkedBuiltinProvider : Saf.DefaultBuiltinProvider, Saf.BuiltinProvider
 {
 	public ForkedBuiltinProvider(int fd)
 	{
@@ -13,17 +13,17 @@ class ForkedBuiltinProvider : GLib.Object, Saf.BuiltinProvider
 
 	// SAF builtins
 
-	public void print(string str)
+	public override void print(string str)
 	{
 		Readline.outstream.printf("%s\n", str);
 	}
 
-	public string input(string? prompt)
+	public override string input(string? prompt)
 	{
 		return Readline.readline(prompt);
 	}
 
-	public void runtime_error(string message, Saf.Token.Location location)
+	public override void runtime_error(string message, Saf.Token.Location location)
 	{
 		Readline.outstream.printf("%u:%u: runtime error: %s\n",
 				location.line, location.column + 1, message);

@@ -17,33 +17,81 @@ namespace Saf
 
 	public interface BuiltinProvider : GLib.Object
 	{
-		public abstract void print(string str);
-		public abstract string input(string? prompt);
+		public abstract bool call_builtin(string name,
+				Gee.List<BoxedValue> positional_args,
+				Gee.Map<string, BoxedValue> named_args, 
+				out BoxedValue? return_value) throws InterpreterError;
+
 		public abstract void runtime_error(string message, Token.Location location);
 	}
 
 	internal class DefaultBuiltinProvider : GLib.Object, BuiltinProvider
 	{
-		public void print(string str)
+		public bool call_builtin(string name,
+				Gee.List<BoxedValue> positional_args,
+				Gee.Map<string, BoxedValue> named_args, 
+				out BoxedValue? return_value) throws InterpreterError
+		{
+			// by default, we don't return anything.
+			return_value = null;
+
+			if(name == "print") {
+				if(named_args.size > 0) {
+					throw new InterpreterError.GOBBET_ARGUMENTS(
+							"The print gobbet does not take any named arguments.");
+				}
+				if(positional_args.size > 1) {
+					throw new InterpreterError.GOBBET_ARGUMENTS(
+							"The print gobbet takes at most one positional argument.");
+				}
+
+				// new line?
+				if(positional_args.size == 0) {
+					print("");
+				} else {
+					print(positional_args.get(0).cast_to_string());
+				}
+			} else if(name == "input") {
+				if(named_args.size > 0) {
+					throw new InterpreterError.GOBBET_ARGUMENTS(
+							"The input gobbet does not take any named arguments.");
+				}
+				if(positional_args.size > 1) {
+					throw new InterpreterError.GOBBET_ARGUMENTS(
+							"The input gobbet takes at most one positional argument.");
+				}
+
+				Value rv = input(
+						(positional_args.size == 0) ? 
+						null : positional_args.get(0).cast_to_string());
+				return_value = new BoxedValue(rv);
+			} else {
+				return false;
+			}
+
+			return true;
+		}
+
+		public virtual void print(string str)
 		{
 			stdout.printf("%s\n", str);
 		}
 
-		public string input(string? prompt)
+		public virtual string input(string? prompt)
 		{
 			if(prompt != null)
 				stdout.printf("%s", prompt);
 			return stdin.read_line();
 		}
 
-		public void runtime_error(string message, Token.Location location)
+		public virtual void runtime_error(string message, Token.Location location)
 		{
 			stdout.printf("%u:%u: runtime error: %s\n",
 					location.line, location.column + 1, message);
 		}
 	}
 
-	internal class BoxedValue : GLib.Object
+	public class BoxedValue : GLib.Object
 	{
 		private Value _value;
 		public Value? value { get { return _value; } }
@@ -153,7 +201,6 @@ namespace Saf
 	{
 		private AST.Program _program = null;
 		private Deque<Map<string, BoxedValue>> _scope_stack = null;
-		private Set<string> _builtin_gobbets = new HashSet<string>();
 		private BuiltinProvider _builtin_provider = new DefaultBuiltinProvider();
 		private Token cur_token = null;
 
@@ -167,12 +214,6 @@ namespace Saf
 		{
 			get { return _builtin_provider; }
 			set { _builtin_provider = value; }
-		}
-
-		public Interpreter()
-		{
-			_builtin_gobbets.add("print");
-			_builtin_gobbets.add("input");
 		}
 
 		public void run()
@@ -370,9 +411,9 @@ namespace Saf
 			new_scope();
 
 			try {
-				if(_builtin_gobbets.contains(expr.gobbet)) {
-					rv = run_builtin_gobbet(expr.gobbet, pos_args, named_args);
-				} else {
+				// try using a builtin first
+				if(!_builtin_provider.call_builtin(expr.gobbet, pos_args, named_args, out rv)) 
+				{
 					// find the gobbet we're dealing with
 					AST.Gobbet? gobbet = program.gobbet_map.get(expr.gobbet);
 					if(gobbet == null) {
@@ -420,50 +461,6 @@ namespace Saf
 			}
 
 			return rv;
-		}
-
-		// Builtin gobbets
-		internal BoxedValue? run_builtin_gobbet(string name,
-				Gee.List<BoxedValue> pos_args, Gee.Map<string, BoxedValue> named_args)
-			throws InterpreterError
-		{
-			if(name == "print") {
-				if(named_args.size > 0) {
-					throw new InterpreterError.GOBBET_ARGUMENTS(
-							"The print gobbet does not take any named arguments.");
-				}
-				if(pos_args.size > 1) {
-					throw new InterpreterError.GOBBET_ARGUMENTS(
-							"The print gobbet takes at most one positional argument.");
-				}
-
-				// new line?
-				if(pos_args.size == 0) {
-					_builtin_provider.print("");
-					return null;
-				}
-
-				// print value
-				_builtin_provider.print(pos_args.get(0).cast_to_string());
-
-				return null;
-			} else if(name == "input") {
-				if(named_args.size > 0) {
-					throw new InterpreterError.GOBBET_ARGUMENTS(
-							"The input gobbet does not take any named arguments.");
-				}
-				if(pos_args.size > 1) {
-					throw new InterpreterError.GOBBET_ARGUMENTS(
-							"The input gobbet takes at most one positional argument.");
-				}
-
-				Value rv = _builtin_provider.input(
-						(pos_args.size == 0) ? null : pos_args.get(0).cast_to_string());
-				return new BoxedValue(rv);
-			} 
-
-			throw new InterpreterError.INTERNAL(
-					"run_builtin_gobbet() called with unknown gobbet %s".printf(name));
 		}
 
 		// Actual operators
