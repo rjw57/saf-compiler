@@ -17,6 +17,10 @@ public class DBusGraphicsRenderer : GraphicsRenderer
 	public new void stroke() { base.stroke(); }
 	public new void set_do_redraw(bool r) { base.set_do_redraw(r); }
 	public new void paint() { base.paint(); }
+	public new void move_to(double x, double y) { base.move_to(x,y); }
+	public new void line_to(double x, double y) { base.line_to(x,y); }
+	public new void arc(double xc, double yc, double r, double a1, double a2) 
+		{ base.arc(xc,yc,r,a1,a2); }
 }
 
 [DBus (name = "uk.me.l4.saf.graphics.server")]

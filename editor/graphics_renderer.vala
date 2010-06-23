@@ -76,6 +76,21 @@ public class GraphicsRenderer : GLib.Object {
 		redraw();
 	}
 
+	public void move_to(double x, double y)
+	{
+		context.move_to(x, y);
+	}
+
+	public void line_to(double x, double y)
+	{
+		context.line_to(x, y);
+	}
+
+	public void arc(double xc, double yc, double radius, double a1, double a2)
+	{
+		context.arc(xc, yc, radius, a1, a2);
+	}
+
 	// PRIVATE METHODS
 
 	// Ensure there is a window on the screen.
