@@ -79,6 +79,12 @@ namespace Saf
 
 				Value rv = Random.double_range(min, max);
 				return_value = new BoxedValue(rv);
+			} else if(name == "sleep") {
+				double seconds = 1.0;
+				if(named_args.has_key("seconds")) {
+					seconds = named_args.get("seconds").cast_to_double();
+				}
+				Posix.usleep((uint)(1.0e6 * seconds));
 			} else {
 				return false;
 			}
