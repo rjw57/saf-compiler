@@ -14,8 +14,12 @@ public class GraphicsRenderer : GLib.Object {
 	private int width = -1;
 	private int height = -1;
 
+	private bool do_updates = true;
+
 	private void redraw()
 	{
+		if(!do_updates)
+			return;
 		ensure_window();
 		drawing_area.queue_draw();
 	}
@@ -57,6 +61,13 @@ public class GraphicsRenderer : GLib.Object {
 	{
 		context.stroke();
 		redraw();
+	}
+
+	public void set_do_redraw(bool redraw_flag)
+	{
+		do_updates = redraw_flag;
+		if(do_updates)
+			redraw();
 	}
 
 	// PRIVATE METHODS

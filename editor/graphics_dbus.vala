@@ -15,6 +15,7 @@ public class DBusGraphicsRenderer : GraphicsRenderer
 	public new void rectangle(double x, double y, double w, double h) { base.rectangle(x,y,w,h); }
 	public new void fill() { base.fill(); }
 	public new void stroke() { base.stroke(); }
+	public new void set_do_redraw(bool r) { base.set_do_redraw(r); }
 }
 
 [DBus (name = "uk.me.l4.saf.graphics.server")]
