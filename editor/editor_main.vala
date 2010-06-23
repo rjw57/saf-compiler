@@ -140,6 +140,60 @@ class ForkedBuiltinProvider : Saf.DefaultBuiltinProvider,
 			renderer.set_do_redraw(false);
 		} else if(name == "clear_screen") {
 			renderer.paint();
+		} else if(name == "line") {
+			if(positional_args.size != 0) {
+				throw new Saf.InterpreterError.GOBBET_ARGUMENTS(
+						"The rectangle gobbet does not take any positional arguments.");
+			}
+
+			if(!named_args.has_key("x1") || 
+					!named_args.has_key("y1") ||
+					!named_args.has_key("x2") ||
+					!named_args.has_key("y2")) {
+				throw new Saf.InterpreterError.GOBBET_ARGUMENTS(
+						"The line gobbet expects a 'x1', 'y1', 'x2' and 'y2' " +
+						"named argument.");
+			}
+
+			double x1 = named_args.get("x1").cast_to_double();
+			double y1 = named_args.get("y1").cast_to_double();
+			double x2 = named_args.get("x2").cast_to_double();
+			double y2 = named_args.get("y2").cast_to_double();
+
+			renderer.move_to(x1,y1);
+			renderer.line_to(x2,y2);
+			renderer.stroke();
+		} else if(name == "circle") {
+			if(positional_args.size != 0) {
+				throw new Saf.InterpreterError.GOBBET_ARGUMENTS(
+						"The rectangle gobbet does not take any positional arguments.");
+			}
+
+			if(!named_args.has_key("x") || 
+					!named_args.has_key("y") ||
+					!named_args.has_key("radius")) {
+				throw new Saf.InterpreterError.GOBBET_ARGUMENTS(
+						"The circle gobbet expects a 'x', 'y' and 'radius' " +
+						"named argument.");
+			}
+
+			double x = named_args.get("x").cast_to_double();
+			double y = named_args.get("y").cast_to_double();
+			double r = named_args.get("radius").cast_to_double();
+
+			renderer.arc(x,y,r,0.0,2.0*3.141596);
+			
+			bool filled = true;
+
+			if(named_args.has_key("filled")) {
+				filled = named_args.get("filled").cast_to_boolean();
+			}
+
+			if(filled) {
+				renderer.fill();
+			} else {
+				renderer.stroke();
+			}
 		} else {
 			return false;
 		}
