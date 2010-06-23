@@ -623,7 +623,7 @@ namespace Saf
 					case '*':
 						return l * r;
 					case '/':
-						return l / r;
+						return (double) l / (double) r;
 					default:
 						throw new InterpreterError.INTERNAL("Unexpected operator '%s'.",
 								unichar_to_string(op));
