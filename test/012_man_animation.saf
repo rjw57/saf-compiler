@@ -35,5 +35,5 @@ while true:
 
 	implement draw_man with x = x, y = 300;
 	implement start_drawing;
-	implement sleep with seconds = 1 / 25;
+	implement sleep with seconds = 1 / 50;
 end while;
