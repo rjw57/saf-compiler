@@ -76,7 +76,8 @@ link_libraries(saf)
 if(GTKSOURCEVIEW_FOUND AND GTK_FOUND)
 	vala_precompile(_saf_editor_c_sources
 		editor_main.vala
-		graphics.vala
+		graphics_dbus.vala
+		graphics_renderer.vala
 		sourceview.vala
 		sourcebuffer.vala
 		sourcebuffersource.vala

@@ -40,8 +40,8 @@ class ForkedBuiltinProvider : Saf.DefaultBuiltinProvider,
 
 			graphics_server = connection.get_object(
 					graphics_connection_name,
-					GraphicsServer.object_path,
-					GraphicsServer.interface_name);
+					DBusGraphicsServer.object_path,
+					DBusGraphicsServer.interface_name);
 		} catch (DBus.Error e) {
 			error("D-Bus error: %s", e.message);
 		}
@@ -76,7 +76,7 @@ class ForkedBuiltinProvider : Saf.DefaultBuiltinProvider,
 			renderers.set(handle, connection.get_object(
 					server_connection_name,
 					graphics_server.get_renderer(w, h),
-					GraphicsRenderer.interface_name));
+					DBusGraphicsRenderer.interface_name));
 
 			Value rv = (int64) handle;
 			return_value = new Saf.BoxedValue(rv);
@@ -173,7 +173,7 @@ class Main : GLib.Object
 	private Saf.SourceBuffer source_buffer = null;
 	private Saf.Interpreter interpreter = new Saf.Interpreter();
 	private Gtk.Window window = null;
-	private GraphicsServer graphics_server = null;
+	private DBusGraphicsServer graphics_server = null;
 
 	private Vte.Terminal	vte_widget = null;
 
@@ -269,7 +269,7 @@ class Main : GLib.Object
 	{
 		Gtk.init(ref args);
 
-		graphics_server = new GraphicsServer();
+		graphics_server = new DBusGraphicsServer();
 
 		var lang_manager = SourceLanguageManager.get_default();
 
