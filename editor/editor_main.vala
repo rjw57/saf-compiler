@@ -81,8 +81,6 @@ class ForkedBuiltinProvider : Saf.DefaultBuiltinProvider,
 			Value rv = (int64) handle;
 			return_value = new Saf.BoxedValue(rv);
 			current_renderer_handle = handle;
-
-			return true;
 		} else if(name == "colour") {
 			if(positional_args.size != 0) {
 				throw new Saf.InterpreterError.GOBBET_ARGUMENTS(
@@ -102,8 +100,6 @@ class ForkedBuiltinProvider : Saf.DefaultBuiltinProvider,
 			double b = named_args.get("blue").cast_to_double();
 
 			renderer.set_source_rgb(r, g, b);
-
-			return true;
 		} else if(name == "rectangle") {
 			if(positional_args.size != 0) {
 				throw new Saf.InterpreterError.GOBBET_ARGUMENTS(
@@ -138,11 +134,11 @@ class ForkedBuiltinProvider : Saf.DefaultBuiltinProvider,
 			} else {
 				renderer.stroke();
 			}
-
-			return true;
+		} else {
+			return false;
 		}
 
-		return false;
+		return true;
 	}
 
 	public override void print(string str)
