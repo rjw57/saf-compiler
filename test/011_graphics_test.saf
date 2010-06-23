@@ -1,0 +1,35 @@
+make width = 640;
+make height = 480;
+
+make handle = implement screen with width = width, height = height;
+print "Screen handle is " + handle;
+
+gobbet set_random_colour:
+	implement colour with 
+		red = (implement random),
+		green = (implement random),
+		blue = (implement random);
+end gobbet;
+
+make rectangle_count = 0;
+while rectangle_count < 1000:
+	make w = implement random with max = width;
+	make h = implement random with max = height;
+	make x = implement random with 
+    min = -0.5 * w, max = width;
+	make y = implement random with 
+    min = -0.5 * h, max = height;
+
+	implement set_random_colour;
+	implement rectangle with x = x, y = y,
+    width = w, height = h;
+
+	implement set_random_colour;
+	implement rectangle with x = x, y = y,
+    width = w, height = h, filled = false;
+  
+	print "Drawn " + rectangle_count + " rectangles";
+	make rectangle_count = rectangle_count + 1;
+end while;
+
+# vim:sw=2:ts=2:et:autoindent
