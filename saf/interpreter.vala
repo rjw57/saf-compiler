@@ -30,6 +30,8 @@ namespace Saf
 
 	internal class DefaultBuiltinProvider : GLib.Object, BuiltinProvider
 	{
+		private Timer timer = new Timer();
+
 		public bool call_builtin(string name,
 				Gee.List<BoxedValue> positional_args,
 				Gee.Map<string, BoxedValue> named_args, 
@@ -85,6 +87,9 @@ namespace Saf
 					seconds = named_args.get("seconds").cast_to_double();
 				}
 				Posix.usleep((uint)(1.0e6 * seconds));
+			} else if(name == "time") {
+				Value rv = timer.elapsed();
+				return_value = new BoxedValue(rv);
 			} else {
 				return false;
 			}
