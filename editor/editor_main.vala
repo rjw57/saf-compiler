@@ -138,6 +138,8 @@ class ForkedBuiltinProvider : Saf.DefaultBuiltinProvider,
 			renderer.set_do_redraw(true);
 		} else if(name == "stop_drawing") {
 			renderer.set_do_redraw(false);
+		} else if(name == "clear_screen") {
+			renderer.paint();
 		} else {
 			return false;
 		}

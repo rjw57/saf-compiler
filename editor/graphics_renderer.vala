@@ -69,6 +69,12 @@ public class GraphicsRenderer : GLib.Object {
 		if(do_updates)
 			redraw();
 	}
+	
+	public void paint()
+	{
+		context.paint();
+		redraw();
+	}
 
 	// PRIVATE METHODS
 
