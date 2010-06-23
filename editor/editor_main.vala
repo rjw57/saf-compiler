@@ -134,6 +134,10 @@ class ForkedBuiltinProvider : Saf.DefaultBuiltinProvider,
 			} else {
 				renderer.stroke();
 			}
+		} else if(name == "start_drawing") {
+			renderer.set_do_redraw(true);
+		} else if(name == "stop_drawing") {
+			renderer.set_do_redraw(false);
 		} else {
 			return false;
 		}
