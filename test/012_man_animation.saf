@@ -1,0 +1,36 @@
+gobbet draw_man taking x, y:
+	implement colour with red = 1, green = 1, blue = 1;
+	implement circle with x = x, y = y, radius = 20, filled = false;
+	implement line with x1 = x, x2 = x, y1 = y + 20, y2 = y + 70;
+	implement line with x1 = x, x2 = x - 20, y1 = y + 70, y2 = y + 100;
+	implement line with x1 = x, x2 = x + 20, y1 = y + 70, y2 = y + 100;
+	implement line with x1 = x - 20, x2 = x + 20, y1 = y + 40, y2 = y + 40;
+end gobbet;
+
+implement screen with width = 640, height = 480;
+
+make x = 0;
+make y = 300;
+make then = implement time;
+
+while true:
+	implement stop_drawing;
+
+	implement colour with red = 0, green = 0, blue = 0;
+	implement clear_screen;
+
+	make now = implement time;
+	make elapsed = now - then;
+	make then = now;
+
+	make x = x + 300 * elapsed;
+	if x > 700:
+		make x = x - 780;
+	end if;
+
+	implement draw_man with x = x, y = 300;
+
+	implement start_drawing;
+
+	implement sleep with seconds = 1 / 25;
+end while;
