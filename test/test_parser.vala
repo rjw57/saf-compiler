@@ -76,7 +76,7 @@ public class MainProgram {
 		// Append the text as a CDATA. We use 'size' here since we are directly
 		// storing the UTF-8 encoding.
 		token_node->add_child(document->new_cdata_block(token.text, 
-					(int) token.text.size()));
+					(int) token.text.length));
 
 		return token_node;
 	}
@@ -241,7 +241,7 @@ public class MainProgram {
 			var cast_expr = (Saf.AST.ConstantStringExpression) expression;
 			expression_node->add_child(
 					document->new_cdata_block(cast_expr.value, 
-						(int) cast_expr.value.size()));
+						(int) cast_expr.value.length));
 		} else if(expression.get_type().is_a(
 					typeof(Saf.AST.VariableExpression))) {
 			var cast_expr = (Saf.AST.VariableExpression) expression;
