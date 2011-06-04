@@ -5,7 +5,7 @@ find_package(PkgConfig)
 
 # Check Vala is installed.
 find_package(Vala)
-ensure_vala_version("0.8.0" MINIMUM)
+ensure_vala_version("0.12.0" MINIMUM)
 
 # Check GLib is installed
 pkg_check_modules(GLIB REQUIRED glib-2.0)
