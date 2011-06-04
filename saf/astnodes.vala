@@ -1,5 +1,6 @@
 using Gee;
 
+[CCode (cprefix = "SafAST", lower_case_cprefix = "saf_ast_", gir_namespace = "Saf.AST", gir_version = "1.0")]
 namespace Saf.AST
 {
 	public class Node : Object
