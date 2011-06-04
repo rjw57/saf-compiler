@@ -69,7 +69,7 @@ include_directories(${READLINE_INCLUDE_DIR})
 link_libraries(${READLINE_LIBRARY})
 
 # Add the SAF include directories
-include_directories(../saf)
+include_directories(${PROJECT_BINARY_DIR}/saf)
 link_libraries(saf)
 
 # If we have GTK source view, compile the editor
@@ -83,7 +83,7 @@ if(GTKSOURCEVIEW_FOUND AND GTK_FOUND)
 		sourcebuffersource.vala
 		sourcebuffermonitor.vala
 	CUSTOM_VAPIS
-		../saf/saf.vapi
+		${PROJECT_BINARY_DIR}/saf/saf.vapi
 	PACKAGES
 		cairo
 		dbus-glib-1

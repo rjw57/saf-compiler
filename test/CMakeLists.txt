@@ -36,13 +36,13 @@ link_directories(${GEE_LIBRARY_DIRS})
 include_directories(${GEE_INCLUDE_DIRS})
 
 # Add the SAF include directories
-include_directories(../saf)
+include_directories(${PROJECT_BINARY_DIR}/saf)
 link_libraries(saf)
 
 vala_precompile(_test_tokeniser_vala_c_sources
 	test_tokeniser.vala
 CUSTOM_VAPIS
-	../saf/saf.vapi
+	${PROJECT_BINARY_DIR}/saf/saf.vapi
 PACKAGES
 	libxml-2.0
 	gee-1.0
@@ -54,7 +54,7 @@ target_link_libraries(test_tokeniser)
 vala_precompile(_test_parser_vala_c_sources
 	test_parser.vala
 CUSTOM_VAPIS
-	../saf/saf.vapi
+	${PROJECT_BINARY_DIR}/saf/saf.vapi
 PACKAGES
 	libxml-2.0
 	gee-1.0
@@ -66,7 +66,7 @@ target_link_libraries(test_parser)
 vala_precompile(_test_interpreter_vala_c_sources
 	test_interpreter.vala
 CUSTOM_VAPIS
-	../saf/saf.vapi
+	${PROJECT_BINARY_DIR}/saf/saf.vapi
 PACKAGES
 	gee-1.0
 )
