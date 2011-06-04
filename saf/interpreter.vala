@@ -174,7 +174,7 @@ namespace Saf
 		{
 			Type value_type = _value.type();
 			if(value_type.is_a(typeof(string))) {
-				return _value.get_string().to_double();
+				return double.parse(_value.get_string());
 			} else if(value_type.is_a(typeof(uint64))) {
 				return (double) _value.get_uint64();
 			} else if(value_type.is_a(typeof(int64))) {
@@ -195,7 +195,7 @@ namespace Saf
 		{
 			Type value_type = _value.type();
 			if(value_type.is_a(typeof(string))) {
-				return _value.get_string().to_int64();
+				return int64.parse(_value.get_string());
 			} else if(value_type.is_a(typeof(uint64))) {
 				return (int64) _value.get_uint64();
 			} else if(value_type.is_a(typeof(int64))) {

@@ -289,9 +289,9 @@ namespace Saf {
 			}
 
 			if(token.type == Token.Type.INTEGER) {
-				token.value = token.text.to_uint64();
+				token.value = uint64.parse(token.text);
 			} else if(token.type == Token.Type.REAL) {
-				token.value = token.text.to_double();
+				token.value = double.parse(token.text);
 			} else {
 				assert(false);
 			}
