@@ -2,7 +2,7 @@ using Gee;
 
 namespace Saf
 {
-	errordomain ParserError
+	public errordomain ParserError
 	{
 		INTERNAL, /* an internal parser error */
 	}

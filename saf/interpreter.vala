@@ -3,7 +3,7 @@ using GLib;
 
 namespace Saf
 {
-	errordomain InterpreterError
+	public errordomain InterpreterError
 	{
 		INTERNAL,
 		UNKNOWN_VARIABLE,

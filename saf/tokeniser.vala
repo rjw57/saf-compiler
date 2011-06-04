@@ -1,7 +1,7 @@
 using Gee;
 
 namespace Saf {
-	errordomain TokeniserError
+	public errordomain TokeniserError
 	{
 		EOF,
 		INVALID_ESCAPE,
