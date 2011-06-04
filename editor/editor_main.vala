@@ -357,11 +357,11 @@ class Main : GLib.Object
 
 		var toolbar = new Gtk.Toolbar();
 		
-		var run_button = new Gtk.ToolButton.from_stock(Gtk.STOCK_MEDIA_PLAY);
+		var run_button = new Gtk.ToolButton.from_stock(Gtk.Stock.MEDIA_PLAY);
 		run_button.clicked.connect(run_handler);
 		toolbar.insert(run_button, -1);
 		
-		var stop_button = new Gtk.ToolButton.from_stock(Gtk.STOCK_MEDIA_STOP);
+		var stop_button = new Gtk.ToolButton.from_stock(Gtk.Stock.MEDIA_STOP);
 		stop_button.clicked.connect(stop_handler);
 		toolbar.insert(stop_button, -1);
 

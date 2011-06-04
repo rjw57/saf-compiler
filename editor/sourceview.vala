@@ -12,7 +12,7 @@ namespace Saf {
 
 			modify_font(FontDescription.from_string("mono"));
 
-			set_mark_category_icon_from_stock("saf:error", STOCK_DIALOG_ERROR);
+			set_mark_category_icon_from_stock("saf:error", Stock.DIALOG_ERROR);
 
 			has_tooltip = true;
 			query_tooltip.connect(query_tooltip_handler);
